@@ -20,5 +20,5 @@ make
 - read provided yaml file
 - create drivers, set options (buttons SRC and DST)
 - update drivers (double click to update)
-- move drivers (click to move, click again to release)
-- delete drivers (work in progress) (right click to delete)
+- move drivers (click to select, click again to release)
+- delete drivers (after selected, press Delete)

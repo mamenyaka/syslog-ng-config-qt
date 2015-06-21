@@ -15,7 +15,7 @@ Dialog::Dialog(Driver& driver, QWidget* parent) :
   QDialog(parent),
   driver(driver)
 {
-  setWindowTitle(QString::fromStdString("Configure " + driver.get_id()));
+  setWindowTitle(QString::fromStdString("Configure " + driver.get_name()));
 
   QLabel* label = new QLabel;
   label->setText(QString::fromStdString(driver.get_description()));
@@ -55,11 +55,10 @@ QWidget* Dialog::create_form()
   QWidget* widget = new QWidget;
   QFormLayout* formLayout = new QFormLayout(widget);
 
-  const std::vector<Option>& options = driver.get_options();
-  for (const Option& option : options)
+  for (const Option& option : driver.get_options())
   {
-    const std::string& name = option.get_name();
     OptionType type = option.get_type();
+    const std::string& name = option.get_name();
     const std::string& description = option.get_description();
     const std::string& current_value = option.get_current_value();
 
@@ -92,8 +91,7 @@ QWidget* Dialog::create_form()
       {
         QComboBox* comboBox = new QComboBox;
 
-        const std::vector<std::string> values = option.get_values();
-        for (const std::string& value : values)
+        for (const std::string& value : option.get_values())
         {
           comboBox->addItem(QString::fromStdString(value));
         }
@@ -105,10 +103,8 @@ QWidget* Dialog::create_form()
       }
       case OptionType::set:
       {
-        const std::vector<std::string> values = option.get_values();
-        for (std::vector<std::string>::const_iterator it = values.cbegin(); it != values.cend(); ++it)
+        for (const std::string& value : option.get_values())
         {
-          const std::string& value = *it;
           QCheckBox* checkBox = new QCheckBox(QString::fromStdString(value));
 
           if (current_value.find(value) != std::string::npos)
@@ -116,7 +112,8 @@ QWidget* Dialog::create_form()
             checkBox->setChecked(true);
           }
 
-          formLayout->addRow(std::distance(values.cbegin(), it) == 0 ? label : 0, checkBox);
+          formLayout->addRow(label, checkBox);
+          label = 0;
         }
 
         break;
@@ -132,8 +129,7 @@ void Dialog::update_values()
   QFormLayout* formLayout = this->findChild<QFormLayout*>();
 
   int row = 0;
-  std::vector<Option>& options = driver.get_options();
-  for (Option& option : options)
+  for (Option& option : driver.get_options())
   {
     OptionType type = option.get_type();
     switch (type)

@@ -18,26 +18,27 @@ class MainWindow : public QMainWindow
 
   Ui::MainWindow* ui;
   Widget* widget;
+  const std::vector<DefaultDriver>& default_drivers;
 
-  std::vector<DefaultDriver> default_drivers;
   std::vector<Driver> drivers;
 
 public:
-  explicit MainWindow(QWidget* parent = 0);
+  explicit MainWindow(const std::vector<DefaultDriver>& default_drivers, QWidget* parent = 0);
   ~MainWindow();
 
 signals:
-  void create_shape(const std::string& id);
+  void add_driver(Driver* driver);
+
+protected:
+  void keyPressEvent(QKeyEvent* event);
 
 private:
-  void parse_yaml();
+  void driver_select_dialog(const std::string type);
+  int driver_form_dialog(Driver& driver);
 
-  void driver_select_dialog(const std::string& type);
-  int form_dialog(Driver& driver);
+  const DefaultDriver& get_driver(const std::string& name, const std::string& type) const;
 
-  std::vector<DefaultDriver>::const_iterator get_default_driver_iterator(const std::string& name, const std::string& type) const;
-  std::vector<Driver>::iterator get_driver_iterator(const std::string& id);
-  int get_count(const std::string& name, const std::string& type) const;
+  int get_next_driver_id(const std::string& name, const std::string& type) const;
 };
 
 #endif // MAINWINDOW_H

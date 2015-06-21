@@ -5,43 +5,42 @@
 
 #include <QMessageBox>
 #include <QInputDialog>
+#include <QKeyEvent>
 
-#include <yaml-cpp/yaml.h>
-
-MainWindow::MainWindow(QWidget* parent) :
+MainWindow::MainWindow(const std::vector<DefaultDriver>& default_drivers, QWidget* parent) :
   QMainWindow(parent),
-  ui(new Ui::MainWindow)
+  ui(new Ui::MainWindow),
+  widget(new Widget(drivers)),
+  default_drivers(default_drivers)
 {
   ui->setupUi(this);
+  ui->horizontalLayout->addWidget(widget);
 
+  connect(this, &MainWindow::add_driver, widget, &Widget::add_driver);
+  connect(widget, &Widget::update_driver, [=](Driver& driver) {
+    driver_form_dialog(driver);
+  });
+
+  connect(ui->actionNew, &QAction::triggered, [=]() {
+    const int exec = QMessageBox::question(this, tr("New configuration"),
+                                           tr("Warning: All unsaved data will be lost! Are you sure?"));
+
+    if (exec == QMessageBox::Yes)
+    {
+      drivers.clear();
+      emit add_driver(nullptr);
+      widget->update();
+    }
+  });
   connect(ui->actionAbout, &QAction::triggered, [=]() {
     QMessageBox::aboutQt(this);
   });
-
-  widget = new Widget;
-  ui->horizontalLayout->addWidget(widget);
-
-  connect(this, &MainWindow::create_shape, widget, &Widget::add_shape);
-
-  connect(widget, &Widget::driver_added, [=]() {
-    ui->statusBar->clearMessage();
-  });
-  connect(widget, &Widget::update_driver, [=](const std::string& id) {
-    Driver& driver = *get_driver_iterator(id);
-    form_dialog(driver);
-  });
-  connect(widget, &Widget::delete_driver, [=](const std::string& id) {
-    drivers.erase(get_driver_iterator(id));
-  });
-
   connect(ui->actionSource, &QAction::triggered, [=]() {
     driver_select_dialog("source");
   });
   connect(ui->actionDestination, &QAction::triggered, [=]() {
     driver_select_dialog("destination");
   });
-
-  parse_yaml();
 }
 
 MainWindow::~MainWindow()
@@ -50,7 +49,7 @@ MainWindow::~MainWindow()
   delete widget;
 }
 
-void MainWindow::driver_select_dialog(const std::string& type)
+void MainWindow::driver_select_dialog(const std::string type)
 {
   QStringList items;
   for (const DefaultDriver& driver : default_drivers)
@@ -61,70 +60,44 @@ void MainWindow::driver_select_dialog(const std::string& type)
     }
   }
 
-  if (items.isEmpty())
-  {
-    QMessageBox::warning(this, tr("Warning"), tr("No drivers found!"));
-    return;
-  }
-
   bool ok;
-  const std::string& name = QInputDialog::getItem(this, tr("Create new"), QString::fromStdString("Select " + type),
-                                                  items, 0, false, &ok).toStdString();
+  const std::string name = QInputDialog::getItem(this, QString::fromStdString("Create new " + type), tr("Select subtype"),
+                                                 items, 0, false, &ok).toStdString();
 
   if (ok && !name.empty())
   {
-    Driver driver = *get_default_driver_iterator(name, type);
-    driver.set_id(get_count(name, type));
+    Driver new_driver = get_driver(name, type);
+    new_driver.set_id(get_next_driver_id(name, type));
 
-    int exec = form_dialog(driver);
-
+    const int exec = driver_form_dialog(new_driver);
     if (exec == QDialog::Accepted)
     {
-      drivers.push_back(driver);
+      drivers.push_back(std::move(new_driver));
 
-      emit create_shape(driver.get_id());
-
-      ui->statusBar->showMessage(QString::fromStdString("Click to add " + driver.get_id()));
+      emit add_driver(&drivers.back());
     }
   }
 }
 
-int MainWindow::form_dialog(Driver& driver)
+int MainWindow::driver_form_dialog(Driver& driver)
 {
   Dialog dialog(driver, this);
 
   return dialog.exec();
 }
 
-std::vector<DefaultDriver>::const_iterator MainWindow::get_default_driver_iterator(const std::string& name, const std::string& type) const
+const DefaultDriver& MainWindow::get_driver(const std::string& name, const std::string& type) const
 {
-  for (std::vector<DefaultDriver>::const_iterator it = default_drivers.cbegin(); it != default_drivers.cend(); ++it)
+  for (const DefaultDriver& driver : default_drivers)
   {
-    const DefaultDriver& driver = *it;
     if (driver.get_name() == name && driver.get_type() == type)
     {
-      return it;
+      return driver;
     }
   }
-
-  return default_drivers.cend();
 }
 
-std::vector<Driver>::iterator MainWindow::get_driver_iterator(const std::string& id)
-{
-  for (std::vector<Driver>::iterator it = drivers.begin(); it != drivers.end(); ++it)
-  {
-    const Driver& driver = *it;
-    if (driver.get_id() == id)
-    {
-      return it;
-    }
-  }
-
-  return drivers.end();
-}
-
-int MainWindow::get_count(const std::string& name, const std::string& type) const
+int MainWindow::get_next_driver_id(const std::string& name, const std::string& type) const
 {
   int count = 0;
   for (const Driver& driver : drivers)
@@ -138,45 +111,7 @@ int MainWindow::get_count(const std::string& name, const std::string& type) cons
   return count;
 }
 
-void MainWindow::parse_yaml()
+void MainWindow::keyPressEvent(QKeyEvent* event)
 {
-  const YAML::Node root = YAML::LoadFile("config.yml");
-  for (YAML::const_iterator driver_it = root.begin(); driver_it != root.end(); ++driver_it)
-  {
-    const YAML::Node& yaml_driver = driver_it->second;
-
-    const std::string name = yaml_driver["name"].as<std::string>();
-    const std::string type = yaml_driver["type"].as<std::string>();
-    const std::string description = yaml_driver["description"] ? yaml_driver["description"].as<std::string>() : "";
-    const YAML::Node& options = yaml_driver["options"];
-
-    DefaultDriver driver(name, type, description);
-
-    for (YAML::const_iterator option_it = options.begin(); option_it != options.end(); ++option_it)
-    {
-      YAML::const_iterator tmp = option_it->begin();
-      const YAML::Node& yaml_option = tmp->second;
-
-      const std::string name = tmp->first.as<std::string>();
-      const std::string type = yaml_option["type"].as<std::string>();
-      const std::string description = yaml_option["description"] ? yaml_option["description"].as<std::string>() : "";
-      const std::string default_value = yaml_option["default"] ? yaml_option["default"].as<std::string>() : "";
-
-      Option option(name, type, description, default_value);
-
-      if (type == "list" || type == "set")
-      {
-        const YAML::Node& values = yaml_option["values"];
-        for (YAML::const_iterator value_it = values.begin(); value_it != values.end(); ++value_it)
-        {
-          const std::string value = value_it->as<std::string>();
-          option.add_value(value);
-        }
-      }
-
-      driver.add_option(option);
-    }
-
-    default_drivers.push_back(std::move(driver));
-  }
+  QApplication::sendEvent(widget, event);
 }

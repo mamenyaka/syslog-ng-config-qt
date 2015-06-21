@@ -1,40 +1,38 @@
 #ifndef WIDGET_H
 #define WIDGET_H
 
-#include "shape.h"
-
 #include <QWidget>
 
 #include <vector>
+
+class Driver;
 
 class Widget : public QWidget
 {
   Q_OBJECT
 
-  std::vector<Shape> shapes;
-  Shape* shape_to_move = nullptr;
+  std::vector<Driver>& drivers;
+  Driver* selected_driver = nullptr;
 
 public:
-  explicit Widget(QWidget* parent = 0);
+  explicit Widget(std::vector<Driver>& drivers, QWidget* parent = 0);
   ~Widget();
 
 public slots:
-  void add_shape(const std::string& id);
+  void add_driver(Driver* driver);
 
 signals:
-  void update_driver(const std::string& id);
-  void delete_driver(const std::string& id);
-  void driver_added();
+  void update_driver(Driver& driver);
 
 protected:
-  void paintEvent(QPaintEvent *);
-  void mouseDoubleClickEvent(QMouseEvent* event);
+  void mouseDoubleClickEvent(QMouseEvent *);
   void mousePressEvent(QMouseEvent* event);
   void mouseMoveEvent(QMouseEvent* event);
+  void keyPressEvent(QKeyEvent* event);
+  void paintEvent(QPaintEvent *);
 
 private:
-  Shape* get_nearest(const QPoint& point);
-  std::vector<Shape>::iterator get_shape_iterator(const std::string& id);
+  Driver* get_nearest_driver(const QPoint& point);
 };
 
 #endif  // WIDGET_H

@@ -33,18 +33,22 @@ public:
   {
     return type;
   }
+
   const std::string& get_name() const
   {
     return name;
   }
+
   const std::string& get_description() const
   {
     return description;
   }
+
   const std::vector<std::string>& get_values() const
   {
     return values;
   }
+
   const std::string& get_current_value() const
   {
     return current_value;
@@ -52,8 +56,9 @@ public:
 
   void add_value(const std::string& value)
   {
-    values.push_back(value);
+    values.push_back(std::move(value));
   }
+
   void set_current_value(const std::string& current_value)
   {
     this->current_value = current_value;

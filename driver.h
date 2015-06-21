@@ -3,6 +3,8 @@
 
 #include "option.h"
 
+#include <QPoint>
+
 #include <string>
 #include <vector>
 
@@ -20,7 +22,7 @@ public:
     return name;
   }
 
-  const std::string get_type() const
+  const std::string& get_type() const
   {
     return type;
   }
@@ -47,21 +49,37 @@ protected:
 
 class Driver : public DefaultDriver
 {
-  std::string id;
+  int id;
+  QPoint location;
 
 public:
   Driver(const DefaultDriver& default_driver) :
     DefaultDriver(default_driver)
   {}
 
-  const std::string& get_id() const
+  int get_id() const
   {
     return id;
   }
 
-  void set_id(const int count)
+  const QPoint& get_location() const
   {
-    id = type.substr(0, 1) + "_" + name + std::to_string(count);
+    return location;
+  }
+
+  void set_id(const int id)
+  {
+    this->id = id;
+  }
+
+  void set_location(const QPoint& location)
+  {
+    this->location = location;
+  }
+
+  bool operator==(const Driver& driver)
+  {
+    return name == driver.get_name() && type == driver.get_type() && id == driver.get_id();
   }
 };
 

@@ -1,12 +1,15 @@
 #include "widget.h"
+#include "driver.h"
 
 #include <QMouseEvent>
+#include <QKeyEvent>
 #include <QPaintEvent>
 #include <QPainter>
 #include <QLine>
 
-Widget::Widget(QWidget* parent) :
-  QWidget(parent)
+Widget::Widget(std::vector<Driver>& drivers, QWidget* parent) :
+  QWidget(parent),
+  drivers(drivers)
 {
   setMouseTracking(true);
 }
@@ -14,87 +17,85 @@ Widget::Widget(QWidget* parent) :
 Widget::~Widget()
 {}
 
-void Widget::add_shape(const std::string& id)
+void Widget::add_driver(Driver* driver)
 {
-  Shape shape(id);
-  shapes.push_back(std::move(shape));
-
-  shape_to_move = &shapes.back();
+  selected_driver = driver;
 }
 
-Shape* Widget::get_nearest(const QPoint& point)
+Driver* Widget::get_nearest_driver(const QPoint& point)
 {
-  Shape* nearest = nullptr;
+  Driver* nearest = nullptr;
   double max = 25.0;
-  for (Shape& shape : shapes)
+
+  for (Driver& driver : drivers)
   {
-    double dist = QLineF(shape.get_location(), point).length();
+    const double dist = QLineF(driver.get_location(), point).length();
     if (dist < max)
     {
       max = dist;
-      nearest = &shape;
+      nearest = &driver;
     }
   }
 
   return nearest;
 }
 
-std::vector<Shape>::iterator Widget::get_shape_iterator(const std::string& id)
-{
-  for (std::vector<Shape>::iterator it = shapes.begin(); it != shapes.end(); ++it)
-  {
-    const Shape& shape = *it;
-    if (shape.get_id() == id)
-    {
-      return it;
-    }
-  }
-
-  return shapes.end();
-}
-
 void Widget::mousePressEvent(QMouseEvent* event)
 {
-  if (shape_to_move != nullptr)
+  if (selected_driver != nullptr)
   {
-    shape_to_move = nullptr;
-    emit driver_added();
-
-    return;
+    selected_driver = nullptr;
+  }
+  else
+  {
+    selected_driver = get_nearest_driver(event->pos());
   }
 
-  shape_to_move = get_nearest(event->pos());
+  update();
+}
 
-  if (event->button() == Qt::RightButton && shape_to_move != nullptr)
+void Widget::mouseDoubleClickEvent(QMouseEvent *)
+{
+  if (selected_driver != nullptr)
   {
-    const std::string& id = shape_to_move->get_id();
+    emit update_driver(*selected_driver);
 
-    emit delete_driver(id);
-    shapes.erase(get_shape_iterator(id));
+    selected_driver = nullptr;
+  }
+}
 
-    shape_to_move = nullptr;
+void Widget::mouseMoveEvent(QMouseEvent* event)
+{
+  if (selected_driver != nullptr)
+  {
+    selected_driver->set_location(event->pos());
 
     update();
   }
 }
 
-void Widget::mouseDoubleClickEvent(QMouseEvent* event)
+void Widget::keyPressEvent(QKeyEvent* event)
 {
-  Shape* nearest = get_nearest(event->pos());
-
-  if (nearest != nullptr)
+  if (selected_driver != nullptr)
   {
-    emit update_driver(nearest->get_id());
-  }
+    if (event->key() == Qt::Key_Delete)
+    {
+      const std::string& name = selected_driver->get_name();
+      const std::string& type = selected_driver->get_type();
+      const int id = selected_driver->get_id();
 
-  shape_to_move = nullptr;
-}
+      drivers.erase(std::find(drivers.begin(), drivers.end(), *selected_driver));
 
-void Widget::mouseMoveEvent(QMouseEvent* event)
-{
-  if (shape_to_move != nullptr)
-  {
-    shape_to_move->get_location() = event->pos();
+      for (Driver& driver : drivers)
+      {
+        if (driver.get_name() == name && driver.get_type() == type && driver.get_id() > id)
+        {
+          driver.set_id(driver.get_id() - 1);
+        }
+      }
+    }
+
+    selected_driver = nullptr;
 
     update();
   }
@@ -105,32 +106,34 @@ void Widget::paintEvent(QPaintEvent *)
   QPainter painter(this);
   painter.setRenderHint(QPainter::Antialiasing);
 
-  for (Shape& shape : shapes)
+  for (const Driver& driver : drivers)
   {
-    painter.setPen(QPen(Qt::black));
+    painter.setPen(&driver == selected_driver ? QPen(QBrush(Qt::black), 3) : QPen(QBrush(Qt::black), 1));
 
-    QPoint& location = shape.get_location();
+    const QPoint& location = driver.get_location();
+    const std::string id = driver.get_name() + "_" + std::to_string(driver.get_id());
 
-    switch (shape.get_type())
+    const char type = driver.get_type().at(0);
+    switch (type)
     {
       case 's':
       {
         painter.setBrush(QColor(Qt::blue));
         painter.drawEllipse(location.x() - 20, location.y() - 20, 40, 40);
-        painter.drawText(location.x() - 20, location.y() - 25, QString::fromStdString(shape.get_id()));
+        painter.drawText(location.x() - 20, location.y() - 25, QString::fromStdString(id));
         break;
       }
       case 'd':
       {
         painter.setBrush(QColor(Qt::red));
         painter.drawRect(location.x() - 30, location.y() - 20, 60, 40);
-        painter.drawText(location.x() - 30, location.y() - 25, QString::fromStdString(shape.get_id()));
+        painter.drawText(location.x() - 30, location.y() - 25, QString::fromStdString(id));
         break;
       }
       case 'p':
       {
-        QPainterPath path;
-        /*path.moveTo(points.at(0).x(), points.at(0).y());
+        /*QPainterPath path;
+        path.moveTo(points.at(0).x(), points.at(0).y());
         path.lineTo(points.at(1).x(), points.at(1).y());
         path.lineTo(points.at(2).x(), points.at(2).y());
         path.lineTo(points.at(0).x(), points.at(0).y());
