@@ -53,8 +53,9 @@ class Driver : public DefaultDriver
   QPoint location;
 
 public:
-  Driver(const DefaultDriver& default_driver) :
-    DefaultDriver(default_driver)
+  Driver(const DefaultDriver& default_driver, const int id) :
+    DefaultDriver(default_driver),
+    id(id)
   {}
 
   int get_id() const

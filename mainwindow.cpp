@@ -66,11 +66,20 @@ void MainWindow::driver_select_dialog(const std::string type)
 
   if (ok && !name.empty())
   {
-    Driver new_driver = get_driver(name, type);
-    new_driver.set_id(get_next_driver_id(name, type));
+    const auto cit = std::find_if(default_drivers.cbegin(), default_drivers.cend(),
+                                  [&name, &type](const DefaultDriver& driver)->bool {
+                                    return driver.get_name() == name && driver.get_type() == type;
+                                  });
 
-    const int exec = driver_form_dialog(new_driver);
-    if (exec == QDialog::Accepted)
+    const auto crit = std::find_if(drivers.crbegin(), drivers.crend(),
+                                   [&name, &type](const Driver& driver)->bool {
+                                     return driver.get_name() == name && driver.get_type() == type;
+                                   });
+    const int id = crit != drivers.crend() ? crit->get_id() + 1 : 0;
+
+    Driver new_driver(*cit, id);
+
+    if (driver_form_dialog(new_driver) == QDialog::Accepted)
     {
       drivers.push_back(std::move(new_driver));
 
@@ -84,31 +93,6 @@ int MainWindow::driver_form_dialog(Driver& driver)
   Dialog dialog(driver, this);
 
   return dialog.exec();
-}
-
-const DefaultDriver& MainWindow::get_driver(const std::string& name, const std::string& type) const
-{
-  for (const DefaultDriver& driver : default_drivers)
-  {
-    if (driver.get_name() == name && driver.get_type() == type)
-    {
-      return driver;
-    }
-  }
-}
-
-int MainWindow::get_next_driver_id(const std::string& name, const std::string& type) const
-{
-  int count = 0;
-  for (const Driver& driver : drivers)
-  {
-    if (driver.get_name() == name && driver.get_type() == type)
-    {
-      count++;
-    }
-  }
-
-  return count;
 }
 
 void MainWindow::keyPressEvent(QKeyEvent* event)

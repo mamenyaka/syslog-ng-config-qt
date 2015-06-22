@@ -35,10 +35,6 @@ protected:
 private:
   void driver_select_dialog(const std::string type);
   int driver_form_dialog(Driver& driver);
-
-  const DefaultDriver& get_driver(const std::string& name, const std::string& type) const;
-
-  int get_next_driver_id(const std::string& name, const std::string& type) const;
 };
 
 #endif // MAINWINDOW_H
