@@ -23,7 +23,7 @@ void Widget::clear()
 
   selected_driver = nullptr;
   selected_log = nullptr;
-  log_selected_for_update = false;
+  log_update = false;
 
   update();
 }
@@ -101,7 +101,7 @@ void Widget::select_nearest(const QPoint& point)
 
 void Widget::mousePressEvent(QMouseEvent* event)
 {
-  if (log_selected_for_update)
+  if (log_update)
   {
     Driver* const driver = get_nearest_driver(event->pos());
 
@@ -133,7 +133,7 @@ void Widget::mousePressEvent(QMouseEvent* event)
 
 void Widget::mouseDoubleClickEvent(QMouseEvent *)
 {
-  if (log_selected_for_update)
+  if (log_update)
   {
     return;
   }
@@ -147,13 +147,13 @@ void Widget::mouseDoubleClickEvent(QMouseEvent *)
   {
     emit update_statusbar("Click to select/unselect drivers, press Esc when finished");
 
-    log_selected_for_update = true;
+    log_update = true;
   }
 }
 
 void Widget::mouseMoveEvent(QMouseEvent* event)
 {
-  if (log_selected_for_update)
+  if (log_update)
   {
     return;
   }
@@ -178,7 +178,7 @@ void Widget::keyPressEvent(QKeyEvent* event)
     clear();
   }
 
-  if (log_selected_for_update)
+  if (log_update)
   {
     return;
   }
@@ -234,7 +234,7 @@ void Widget::paintEvent(QPaintEvent *)
 
   for (const Log& log : config.get_logs())
   {
-    painter.setPen(&log == selected_log ? QPen(QBrush(Qt::black), 3) : QPen(QBrush(Qt::black), 1));
+    painter.setPen(&log == selected_log ? QPen(QBrush(Qt::black), 5) : QPen(QBrush(Qt::black), 3));
     painter.setBrush(QColor(128, 62, 192));
 
     const QPoint& location = log.get_location();

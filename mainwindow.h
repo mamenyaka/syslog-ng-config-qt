@@ -22,7 +22,7 @@ public:
   ~MainWindow();
 
 protected:
-  void keyPressEvent(QKeyEvent* event);
+  bool eventFilter(QObject *, QEvent* event);
 
 private:
   void driver_select_dialog(const std::string type);

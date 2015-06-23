@@ -15,7 +15,7 @@ class Widget : public QWidget
 
   Driver* selected_driver = nullptr;
   Log* selected_log = nullptr;
-  bool log_selected_for_update = false;
+  bool log_update = false;
 
   const double max_dist = 25.0;
 

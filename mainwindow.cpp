@@ -6,7 +6,6 @@
 
 #include <QMessageBox>
 #include <QInputDialog>
-#include <QKeyEvent>
 
 #include <iostream>
 
@@ -21,6 +20,8 @@ MainWindow::MainWindow(Config& config, QWidget* parent) :
 
   widget = new Widget(config);
   setCentralWidget(widget);
+
+  installEventFilter(this);
 
   connect(widget, &Widget::update_driver, [=](Driver& driver) {
     Dialog(driver, this).exec();
@@ -116,7 +117,17 @@ void MainWindow::driver_select_dialog(const std::string type)
   }
 }
 
-void MainWindow::keyPressEvent(QKeyEvent* event)
+bool MainWindow::eventFilter(QObject *, QEvent* event)
 {
-  QApplication::sendEvent(widget, event);
+  if (event->type() == QEvent::StatusTip)
+  {
+    return true;
+  }
+
+  if (event->type() == QEvent::KeyPress)
+  {
+    QApplication::sendEvent(widget, event);
+  }
+
+  return false;
 }
