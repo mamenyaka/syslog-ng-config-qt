@@ -22,3 +22,4 @@ make
 - update drivers (double click to update)
 - move drivers (click to select, click again to release)
 - delete drivers (after selected, press Delete)
+- assign drivers to logs (double-click on created log)
