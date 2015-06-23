@@ -1,5 +1,5 @@
 #include "dialog.h"
-#include "driver.h"
+#include "config.h"
 
 #include <QLabel>
 #include <QScrollArea>
@@ -15,7 +15,7 @@ Dialog::Dialog(Driver& driver, QWidget* parent) :
   QDialog(parent),
   driver(driver)
 {
-  setWindowTitle(QString::fromStdString("Configure " + driver.get_name()));
+  setWindowTitle(QString::fromStdString("Configure " + driver.print_id()));
 
   QLabel* label = new QLabel;
   label->setText(QString::fromStdString(driver.get_description()));

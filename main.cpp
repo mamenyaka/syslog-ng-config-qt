@@ -1,14 +1,12 @@
 #include "mainwindow.h"
-#include "driver.h"
+#include "config.h"
 
 #include <QApplication>
 
 #include <yaml-cpp/yaml.h>
 
-const std::vector<DefaultDriver> parse_yaml()
+void parse_yaml(Config& config)
 {
-  std::vector<DefaultDriver> default_drivers;
-
   const YAML::Node root = YAML::LoadFile("config.yml");
   for (YAML::const_iterator driver_it = root.begin(); driver_it != root.end(); ++driver_it)
   {
@@ -46,18 +44,17 @@ const std::vector<DefaultDriver> parse_yaml()
       driver.add_option(option);
     }
 
-    default_drivers.push_back(std::move(driver));
+    config.add_default_driver(driver);
   }
-
-  return default_drivers;
 }
 
 int main(int argc, char *argv[])
 {
-  const std::vector<DefaultDriver> default_drivers = parse_yaml();
+  Config config;
+  parse_yaml(config);
 
   QApplication a(argc, argv);
-  MainWindow w(default_drivers);
+  MainWindow w(config);
   w.show();
 
   return a.exec();

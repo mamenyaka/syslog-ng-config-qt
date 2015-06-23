@@ -3,26 +3,34 @@
 
 #include <QWidget>
 
-#include <vector>
-
+class Config;
 class Driver;
+class Log;
 
 class Widget : public QWidget
 {
   Q_OBJECT
 
-  std::vector<Driver>& drivers;
+  Config& config;
+
   Driver* selected_driver = nullptr;
+  Log* selected_log = nullptr;
+  bool log_selected_for_update = false;
+
+  const double max_dist = 25.0;
 
 public:
-  explicit Widget(std::vector<Driver>& drivers, QWidget* parent = 0);
+  explicit Widget(Config& config, QWidget* parent = 0);
   ~Widget();
 
-public slots:
-  void add_driver(Driver* driver);
+  void set_selected_driver(Driver* driver);
+  void set_selected_log(Log* log);
+  void clear();
 
 signals:
   void update_driver(Driver& driver);
+  void update_statusbar(const std::string message);
+  void clear_statusbar();
 
 protected:
   void mouseDoubleClickEvent(QMouseEvent *);
@@ -33,6 +41,8 @@ protected:
 
 private:
   Driver* get_nearest_driver(const QPoint& point);
+  Log* get_nearest_log(const QPoint& point);
+  void select_nearest(const QPoint& point);
 };
 
 #endif  // WIDGET_H

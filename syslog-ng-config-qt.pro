@@ -9,6 +9,6 @@ LIBS += -lyaml-cpp
 
 SOURCES += main.cpp mainwindow.cpp widget.cpp dialog.cpp
 
-HEADERS += mainwindow.h widget.h dialog.h driver.h option.h
+HEADERS += mainwindow.h widget.h dialog.h config.h
 
 FORMS += mainwindow.ui

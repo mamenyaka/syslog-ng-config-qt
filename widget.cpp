@@ -1,5 +1,5 @@
 #include "widget.h"
-#include "driver.h"
+#include "config.h"
 
 #include <QMouseEvent>
 #include <QKeyEvent>
@@ -7,9 +7,9 @@
 #include <QPainter>
 #include <QLine>
 
-Widget::Widget(std::vector<Driver>& drivers, QWidget* parent) :
+Widget::Widget(Config& config, QWidget* parent) :
   QWidget(parent),
-  drivers(drivers)
+  config(config)
 {
   setMouseTracking(true);
 }
@@ -17,17 +17,41 @@ Widget::Widget(std::vector<Driver>& drivers, QWidget* parent) :
 Widget::~Widget()
 {}
 
-void Widget::add_driver(Driver* driver)
+void Widget::clear()
 {
+  emit clear_statusbar();
+
+  selected_driver = nullptr;
+  selected_log = nullptr;
+  log_selected_for_update = false;
+
+  update();
+}
+
+void Widget::set_selected_driver(Driver* driver)
+{
+  clear();
+
   selected_driver = driver;
+
+  update();
+}
+
+void Widget::set_selected_log(Log* log)
+{
+  clear();
+
+  selected_log = log;
+
+  update();
 }
 
 Driver* Widget::get_nearest_driver(const QPoint& point)
 {
   Driver* nearest = nullptr;
-  double max = 25.0;
+  double max = max_dist;
 
-  for (Driver& driver : drivers)
+  for (Driver& driver : config.get_drivers())
   {
     const double dist = QLineF(driver.get_location(), point).length();
     if (dist < max)
@@ -40,35 +64,108 @@ Driver* Widget::get_nearest_driver(const QPoint& point)
   return nearest;
 }
 
+Log* Widget::get_nearest_log(const QPoint& point)
+{
+  Log* nearest = nullptr;
+  double max = max_dist;
+
+  for (Log& log : config.get_logs())
+  {
+    const double dist = QLineF(log.get_location(), point).length();
+    if (dist < max)
+    {
+      max = dist;
+      nearest = &log;
+    }
+  }
+
+  return nearest;
+}
+
+void Widget::select_nearest(const QPoint& point)
+{
+  selected_driver = get_nearest_driver(point);
+  selected_log = get_nearest_log(point);
+
+  if (selected_driver != nullptr && selected_log != nullptr)
+  {
+    const double driver_dist = QLineF(selected_driver->get_location(), point).length();
+    const double log_dist = QLineF(selected_log->get_location(), point).length();
+
+    if (driver_dist < log_dist)
+      selected_log = nullptr;
+    else
+      selected_driver = nullptr;
+  }
+}
+
 void Widget::mousePressEvent(QMouseEvent* event)
 {
-  if (selected_driver != nullptr)
+  if (log_selected_for_update)
   {
-    selected_driver = nullptr;
+    Driver* const driver = get_nearest_driver(event->pos());
+
+    if (driver != nullptr)
+    {
+      selected_log->has_driver(driver) ? selected_log->remove_driver(driver) : selected_log->add_driver(driver);
+
+      update();
+    }
   }
   else
   {
-    selected_driver = get_nearest_driver(event->pos());
-  }
+    if (selected_driver != nullptr)
+    {
+      clear();
+    }
+    else if (selected_log != nullptr)
+    {
+      clear();
+    }
+    else
+    {
+      select_nearest(event->pos());
 
-  update();
+      update();
+    }
+  }
 }
 
 void Widget::mouseDoubleClickEvent(QMouseEvent *)
 {
-  if (selected_driver != nullptr)
+  if (log_selected_for_update)
+  {
+    return;
+  }
+  else if (selected_driver != nullptr)
   {
     emit update_driver(*selected_driver);
 
-    selected_driver = nullptr;
+    clear();
+  }
+  else if (selected_log != nullptr)
+  {
+    emit update_statusbar("Click to select/unselect drivers, press Esc when finished");
+
+    log_selected_for_update = true;
   }
 }
 
 void Widget::mouseMoveEvent(QMouseEvent* event)
 {
-  if (selected_driver != nullptr)
+  if (log_selected_for_update)
+  {
+    return;
+  }
+  else if (selected_driver != nullptr)
   {
     selected_driver->set_location(event->pos());
+
+    update();
+  }
+  else if (selected_log != nullptr)
+  {
+    selected_log->set_location(event->pos());
 
     update();
   }
@@ -76,71 +173,90 @@ void Widget::mouseMoveEvent(QMouseEvent* event)
 
 void Widget::keyPressEvent(QKeyEvent* event)
 {
-  if (selected_driver != nullptr)
+  if (event->key() == Qt::Key_Escape)
   {
-    if (event->key() == Qt::Key_Delete)
+    clear();
+  }
+
+  if (log_selected_for_update)
+  {
+    return;
+  }
+
+  if (event->key() == Qt::Key_Delete)
+  {
+    if (selected_driver != nullptr)
     {
-      const std::string& name = selected_driver->get_name();
-      const std::string& type = selected_driver->get_type();
-      const int id = selected_driver->get_id();
+      config.erase_driver(selected_driver);
 
-      drivers.erase(std::find(drivers.begin(), drivers.end(), *selected_driver));
-
-      for (Driver& driver : drivers)
-      {
-        if (driver.get_name() == name && driver.get_type() == type && driver.get_id() > id)
-        {
-          driver.set_id(driver.get_id() - 1);
-        }
-      }
+      clear();
     }
+    else if (selected_log != nullptr)
+    {
+      config.erase_log(selected_log);
 
-    selected_driver = nullptr;
-
-    update();
+      clear();
+    }
   }
 }
 
 void Widget::paintEvent(QPaintEvent *)
 {
   QPainter painter(this);
-  painter.setRenderHint(QPainter::Antialiasing);
+  painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
 
-  for (const Driver& driver : drivers)
+  for (const Driver& driver : config.get_drivers())
   {
     painter.setPen(&driver == selected_driver ? QPen(QBrush(Qt::black), 3) : QPen(QBrush(Qt::black), 1));
 
     const QPoint& location = driver.get_location();
-    const std::string id = driver.get_name() + "_" + std::to_string(driver.get_id());
+    const std::string id = driver.print_id();
 
     const char type = driver.get_type().at(0);
     switch (type)
     {
       case 's':
       {
-        painter.setBrush(QColor(Qt::blue));
+        painter.setBrush(QColor(255, 128, 128));
         painter.drawEllipse(location.x() - 20, location.y() - 20, 40, 40);
         painter.drawText(location.x() - 20, location.y() - 25, QString::fromStdString(id));
         break;
       }
       case 'd':
       {
-        painter.setBrush(QColor(Qt::red));
+        painter.setBrush(QColor(128, 128, 225));
         painter.drawRect(location.x() - 30, location.y() - 20, 60, 40);
         painter.drawText(location.x() - 30, location.y() - 25, QString::fromStdString(id));
         break;
       }
-      case 'p':
-      {
-        /*QPainterPath path;
-        path.moveTo(points.at(0).x(), points.at(0).y());
-        path.lineTo(points.at(1).x(), points.at(1).y());
-        path.lineTo(points.at(2).x(), points.at(2).y());
-        path.lineTo(points.at(0).x(), points.at(0).y());
+    }
+  }
 
-        painter.fillPath(path, painter.brush());*/
-        break;
-      }
+  for (const Log& log : config.get_logs())
+  {
+    painter.setPen(&log == selected_log ? QPen(QBrush(Qt::black), 3) : QPen(QBrush(Qt::black), 1));
+    painter.setBrush(QColor(128, 62, 192));
+
+    const QPoint& location = log.get_location();
+
+    QPainterPath path;
+    path.moveTo(location.x() - 30, location.y() - 20);
+    path.lineTo(location.x() + 30, location.y() - 20);
+    path.lineTo(location.x(), location.y() + 20);
+    path.closeSubpath();
+
+    painter.drawPath(path);
+    painter.fillPath(path, painter.brush());
+    painter.drawText(location.x() - 30, location.y() - 25,
+                     QString::fromStdString("log_" + std::to_string(log.get_id())));
+  }
+
+  for (const Log& log : config.get_logs())
+  {
+    for (Driver* const driver : log.get_drivers())
+    {
+      painter.setPen(QPen(Qt::black));
+      painter.drawLine(log.get_location(), driver->get_location());
     }
   }
 
