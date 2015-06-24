@@ -1,5 +1,5 @@
-#ifndef DRIVER_H
-#define DRIVER_H
+#ifndef CONFIG_H
+#define CONFIG_H
 
 #include <QPoint>
 
@@ -311,4 +311,4 @@ public:
   }
 };
 
-#endif  // DRIVER_H
+#endif  // CONFIG_H
