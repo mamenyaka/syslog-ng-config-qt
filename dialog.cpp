@@ -4,12 +4,16 @@
 #include <QLabel>
 #include <QScrollArea>
 #include <QDialogButtonBox>
+#include <QPushButton>
 #include <QVBoxLayout>
 #include <QFormLayout>
 #include <QLineEdit>
 #include <QSpinBox>
 #include <QComboBox>
+#include <QGroupBox>
 #include <QCheckBox>
+
+#include <limits>
 
 Dialog::Dialog(Driver& driver, QWidget* parent) :
   QDialog(parent),
@@ -21,7 +25,8 @@ Dialog::Dialog(Driver& driver, QWidget* parent) :
   label->setText(QString::fromStdString(driver.get_description()));
   label->setWordWrap(true);
 
-  QWidget* widget = create_form();
+  QWidget* widget = new QWidget;
+  QFormLayout* formLayout = new QFormLayout(widget);
 
   QScrollArea* scrollArea = new QScrollArea;
   scrollArea->setWidget(widget);
@@ -29,62 +34,56 @@ Dialog::Dialog(Driver& driver, QWidget* parent) :
   scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
   scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-  QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-  connect(buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
-  connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
+  QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::RestoreDefaults);
+  connect(buttonBox, &QDialogButtonBox::rejected, [&]() {
+    QDialog::reject();
+  });
+  connect(buttonBox, &QDialogButtonBox::accepted, [&]() {
+    set_driver_options();
+    QDialog::accept();
+  });
+  connect(buttonBox->button(QDialogButtonBox::RestoreDefaults), &QPushButton::pressed, [&]() {
+    driver.restore_defaults();
+    set_form_values();
+  });
 
   QVBoxLayout* mainLayout = new QVBoxLayout(this);
   mainLayout->setSizeConstraint(QLayout::SetFixedSize);
   mainLayout->addWidget(label);
   mainLayout->addWidget(scrollArea);
   mainLayout->addWidget(buttonBox);
+
+  create_form();
+  set_form_values();
 }
 
 Dialog::~Dialog()
 {}
 
-void Dialog::accept()
+void Dialog::create_form()
 {
-  update_values();
-
-  QDialog::accept();
-}
-
-QWidget* Dialog::create_form()
-{
-  QWidget* widget = new QWidget;
-  QFormLayout* formLayout = new QFormLayout(widget);
-
-  for (const Option& option : driver.get_options())
+  for (Option& option : driver.get_options())
   {
-    OptionType type = option.get_type();
-    const std::string& name = option.get_name();
-    const std::string& description = option.get_description();
-    const std::string& current_value = option.get_current_value();
+    QGroupBox* groupBox = new QGroupBox(QString::fromStdString(option.get_name()));
+    groupBox->setToolTip(QString::fromStdString(option.get_description()));
 
-    QLabel* label = new QLabel(QString::fromStdString(name));
-    label->setToolTip(QString::fromStdString(description));
+    QVBoxLayout* vboxLayout = new QVBoxLayout(groupBox);
 
-    switch (type)
+    switch (option.get_type())
     {
       case OptionType::string:
       {
-        QLineEdit* lineEdit = new QLineEdit(QString::fromStdString(current_value));
+        QLineEdit* lineEdit = new QLineEdit;
 
-        formLayout->addRow(label, lineEdit);
+        vboxLayout->addWidget(lineEdit);
         break;
       }
       case OptionType::number:
       {
         QSpinBox* spinBox = new QSpinBox;
-        spinBox->setRange(0, std::numeric_limits<int>::max());
+        spinBox->setRange(-1, std::numeric_limits<int>::max());
 
-        if (!current_value.empty())
-        {
-          spinBox->setValue(std::stoi(current_value));
-        }
-
-        formLayout->addRow(label, spinBox);
+        vboxLayout->addWidget(spinBox);
         break;
       }
       case OptionType::list:
@@ -96,9 +95,7 @@ QWidget* Dialog::create_form()
           comboBox->addItem(QString::fromStdString(value));
         }
 
-        current_value.empty() ? comboBox->setCurrentIndex(-1) : comboBox->setCurrentText(QString::fromStdString(current_value));
-
-        formLayout->addRow(label, comboBox);
+        vboxLayout->addWidget(comboBox);
         break;
       }
       case OptionType::set:
@@ -106,63 +103,101 @@ QWidget* Dialog::create_form()
         for (const std::string& value : option.get_values())
         {
           QCheckBox* checkBox = new QCheckBox(QString::fromStdString(value));
-
-          if (current_value.find(value) != std::string::npos)
-          {
-            checkBox->setChecked(true);
-          }
-
-          formLayout->addRow(label, checkBox);
-          label = 0;
+          vboxLayout->addWidget(checkBox);
         }
 
         break;
       }
     }
-  }
 
-  return widget;
+    QFormLayout* formLayout = findChild<QFormLayout*>();
+    formLayout->addRow(groupBox);
+  }
 }
 
-void Dialog::update_values()
+void Dialog::set_form_values()
 {
-  QFormLayout* formLayout = this->findChild<QFormLayout*>();
+  QList<QGroupBox*> groupBoxes = findChildren<QGroupBox*>();
+  auto groupBox_it = groupBoxes.begin();
 
-  int row = 0;
   for (Option& option : driver.get_options())
   {
-    OptionType type = option.get_type();
-    switch (type)
+    QGroupBox* groupBox = *groupBox_it++;
+    const std::string& current_value = option.get_current_value();
+
+    switch (option.get_type())
     {
       case OptionType::string:
       {
-        QLineEdit* lineEdit = static_cast<QLineEdit*>(formLayout->itemAt(row++, QFormLayout::FieldRole)->widget());
+        QLineEdit* lineEdit = groupBox->findChild<QLineEdit*>();
+        lineEdit->setText(QString::fromStdString(current_value));
+        break;
+      }
+      case OptionType::number:
+      {
+        QSpinBox* spinBox = groupBox->findChild<QSpinBox*>();
+        current_value.empty() ? spinBox->setValue(-1) : spinBox->setValue(std::stoi(current_value));
+        break;
+      }
+      case OptionType::list:
+      {
+        QComboBox* comboBox = groupBox->findChild<QComboBox*>();
+        current_value.empty() ? comboBox->setCurrentIndex(-1) : comboBox->setCurrentText(QString::fromStdString(current_value));
+        break;
+      }
+      case OptionType::set:
+      {
+        QList<QCheckBox*> checkBoxes = groupBox->findChildren<QCheckBox*>();
 
+        auto checkBox_it = checkBoxes.begin();
+        for (const std::string& value : option.get_values())
+        {
+          QCheckBox* checkBox = *checkBox_it++;
+          current_value.find(value) == std::string::npos ? checkBox->setChecked(false) : checkBox->setChecked(true);
+        }
+        break;
+      }
+    }
+  }
+}
+
+void Dialog::set_driver_options()
+{
+  QList<QGroupBox*> groupBoxes = findChildren<QGroupBox*>();
+  auto groupBox_it = groupBoxes.begin();
+
+  for (Option& option : driver.get_options())
+  {
+    QGroupBox* groupBox = *groupBox_it++;
+    switch (option.get_type())
+    {
+      case OptionType::string:
+      {
+        QLineEdit* lineEdit = groupBox->findChild<QLineEdit*>();
         option.set_current_value(lineEdit->text().toStdString());
         break;
       }
       case OptionType::number:
       {
-        QSpinBox* spinBox = static_cast<QSpinBox*>(formLayout->itemAt(row++, QFormLayout::FieldRole)->widget());
-
-        option.set_current_value(spinBox->text().toStdString());
+        QSpinBox* spinBox = groupBox->findChild<QSpinBox*>();
+        option.set_current_value(std::to_string(spinBox->value()));
         break;
       }
       case OptionType::list:
       {
-        QComboBox* comboBox = static_cast<QComboBox*>(formLayout->itemAt(row++, QFormLayout::FieldRole)->widget());
-
+        QComboBox* comboBox = groupBox->findChild<QComboBox*>();
         option.set_current_value(comboBox->currentText().toStdString());
         break;
       }
       case OptionType::set:
       {
-        std::string current_value;
-        const int n = option.get_values().size();
-        for (int i = 0; i < n; i++)
-        {
-          QCheckBox* checkBox = static_cast<QCheckBox*>(formLayout->itemAt(row++, QFormLayout::FieldRole)->widget());
+        QList<QCheckBox*> checkBoxes = groupBox->findChildren<QCheckBox*>();
 
+        std::string current_value;
+        auto checkBox_it = checkBoxes.begin();
+        for (const std::string& value : option.get_values())
+        {
+          QCheckBox* checkBox = *checkBox_it++;
           if (checkBox->isChecked())
           {
             current_value += current_value.empty() ? "" : ", ";

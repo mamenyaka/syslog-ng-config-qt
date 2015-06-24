@@ -17,9 +17,8 @@ make
 ```
 
 # Current features
-- read provided yaml file
-- create drivers, set options (buttons SRC and DST)
-- update drivers (double click to update)
-- move drivers (click to select, click again to release)
-- delete drivers (after selected, press Delete)
-- assign drivers to logs (double-click on created log)
+- read provided yaml file to create form with options for drivers
+- create drivers and logs (buttons SRC, DST, LOG)
+- update drivers and logs (double click to update)
+- move drivers (click&hold to move)
+- delete drivers (when moving, press Delete)

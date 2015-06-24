@@ -46,7 +46,7 @@ MainWindow::MainWindow(Config& config, QWidget* parent) :
       std::cerr << std::endl << "log_" << log.get_id() << ":" << std::endl;
       for (Driver* const driver : log.get_drivers())
       {
-        std::cerr << "  " << driver->get_type().at(0) << "_" << driver->print_id() << std::endl;
+        std::cerr << "  " << driver->to_string() << std::endl;
       }
     }
   });

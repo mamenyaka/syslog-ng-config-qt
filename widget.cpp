@@ -24,8 +24,6 @@ void Widget::clear()
   selected_driver = nullptr;
   selected_log = nullptr;
   log_update = false;
-
-  update();
 }
 
 void Widget::set_selected_driver(Driver* driver)
@@ -33,8 +31,6 @@ void Widget::set_selected_driver(Driver* driver)
   clear();
 
   selected_driver = driver;
-
-  update();
 }
 
 void Widget::set_selected_log(Log* log)
@@ -42,8 +38,6 @@ void Widget::set_selected_log(Log* log)
   clear();
 
   selected_log = log;
-
-  update();
 }
 
 Driver* Widget::get_nearest_driver(const QPoint& point)
@@ -112,42 +106,30 @@ void Widget::mousePressEvent(QMouseEvent* event)
       update();
     }
   }
+  else if (selected_driver != nullptr)
+  {
+    clear();
+  }
+  else if (selected_log != nullptr)
+  {
+    clear();
+  }
   else
   {
-    if (selected_driver != nullptr)
-    {
-      clear();
-    }
-    else if (selected_log != nullptr)
-    {
-      clear();
-    }
-    else
-    {
-      select_nearest(event->pos());
-
-      update();
-    }
+    select_nearest(event->pos());
   }
 }
 
-void Widget::mouseDoubleClickEvent(QMouseEvent *)
+void Widget::mouseReleaseEvent(QMouseEvent *)
 {
   if (log_update)
   {
     return;
   }
-  else if (selected_driver != nullptr)
+  else
   {
-    emit update_driver(*selected_driver);
-
-    clear();
-  }
-  else if (selected_log != nullptr)
-  {
-    emit update_statusbar("Click to select/unselect drivers, press Esc when finished");
-
-    log_update = true;
+    selected_driver = nullptr;
+    selected_log = nullptr;
   }
 }
 
@@ -171,6 +153,28 @@ void Widget::mouseMoveEvent(QMouseEvent* event)
   }
 }
 
+void Widget::mouseDoubleClickEvent(QMouseEvent *event)
+{
+  select_nearest(event->pos());
+
+  if (log_update)
+  {
+    return;
+  }
+  else if (selected_driver != nullptr)
+  {
+    emit update_driver(*selected_driver);
+
+    clear();
+  }
+  else if (selected_log != nullptr)
+  {
+    emit update_statusbar("Click to select/unselect drivers, press Esc when finished");
+
+    log_update = true;
+  }
+}
+
 void Widget::keyPressEvent(QKeyEvent* event)
 {
   if (event->key() == Qt::Key_Escape)
@@ -188,15 +192,14 @@ void Widget::keyPressEvent(QKeyEvent* event)
     if (selected_driver != nullptr)
     {
       config.erase_driver(selected_driver);
-
-      clear();
     }
     else if (selected_log != nullptr)
     {
       config.erase_log(selected_log);
-
-      clear();
     }
+
+    clear();
+    update();
   }
 }
 
@@ -204,11 +207,10 @@ void Widget::paintEvent(QPaintEvent *)
 {
   QPainter painter(this);
   painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
+  painter.setPen(QPen(Qt::black));
 
   for (const Driver& driver : config.get_drivers())
   {
-    painter.setPen(&driver == selected_driver ? QPen(QBrush(Qt::black), 3) : QPen(QBrush(Qt::black), 1));
-
     const QPoint& location = driver.get_location();
     const std::string id = driver.print_id();
 
@@ -234,7 +236,6 @@ void Widget::paintEvent(QPaintEvent *)
 
   for (const Log& log : config.get_logs())
   {
-    painter.setPen(&log == selected_log ? QPen(QBrush(Qt::black), 5) : QPen(QBrush(Qt::black), 3));
     painter.setBrush(QColor(128, 62, 192));
 
     const QPoint& location = log.get_location();
@@ -255,7 +256,6 @@ void Widget::paintEvent(QPaintEvent *)
   {
     for (Driver* const driver : log.get_drivers())
     {
-      painter.setPen(QPen(Qt::black));
       painter.drawLine(log.get_location(), driver->get_location());
     }
   }

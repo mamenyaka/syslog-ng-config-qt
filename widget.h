@@ -33,8 +33,9 @@ signals:
   void clear_statusbar();
 
 protected:
-  void mouseDoubleClickEvent(QMouseEvent *);
+  void mouseDoubleClickEvent(QMouseEvent* event);
   void mousePressEvent(QMouseEvent* event);
+  void mouseReleaseEvent(QMouseEvent *);
   void mouseMoveEvent(QMouseEvent* event);
   void keyPressEvent(QKeyEvent* event);
   void paintEvent(QPaintEvent *);

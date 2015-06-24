@@ -15,12 +15,10 @@ public:
   explicit Dialog(Driver& driver, QWidget* parent = 0);
   ~Dialog();
 
-public slots:
-  void accept();
-
 private:
-  QWidget* create_form();
-  void update_values();
+  void create_form();
+  void set_form_values();
+  void set_driver_options();
 };
 
 #endif  // DIALOG_H

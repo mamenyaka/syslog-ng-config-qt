@@ -71,6 +71,10 @@ public:
 
 class DefaultDriver
 {
+protected:
+  std::string name, type, description;
+  std::vector<Option> options;
+
 public:
   DefaultDriver(const std::string& name, const std::string& type, const std::string& description) :
     name(name),
@@ -93,7 +97,7 @@ public:
     return description;
   }
 
-  std::vector<Option>& get_options()
+  const std::vector<Option>& get_options() const
   {
     return options;
   }
@@ -102,21 +106,19 @@ public:
   {
     options.push_back(std::move(option));
   }
-
-protected:
-  std::string name, type, description;
-  std::vector<Option> options;
 };
 
 class Driver : public DefaultDriver
 {
   int id;
   QPoint location;
+  const DefaultDriver& default_driver;
 
 public:
   Driver(const DefaultDriver& default_driver, const int id) :
     DefaultDriver(default_driver),
-    id(id)
+    id(id),
+    default_driver(default_driver)
   {}
 
   int get_id() const
@@ -129,9 +131,19 @@ public:
     return name + "_" + std::to_string(id);
   }
 
+  const std::string to_string() const
+  {
+    return std::string(1, type.at(0)) + "_" + name + std::to_string(id);
+  }
+
   const QPoint& get_location() const
   {
     return location;
+  }
+
+  std::vector<Option>& get_options()
+  {
+    return options;
   }
 
   void set_id(const int id)
@@ -142,6 +154,16 @@ public:
   void set_location(const QPoint& location)
   {
     this->location = location;
+  }
+
+  void restore_defaults()
+  {
+    auto options_it = options.begin();
+    for (const Option& default_option : default_driver.get_options())
+    {
+      Option& option = *options_it++;
+      option.set_current_value(default_option.get_current_value());
+    }
   }
 };
 
