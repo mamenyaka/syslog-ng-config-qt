@@ -155,13 +155,14 @@ void Widget::mouseMoveEvent(QMouseEvent* event)
 
 void Widget::mouseDoubleClickEvent(QMouseEvent *event)
 {
-  select_nearest(event->pos());
-
   if (log_update)
   {
     return;
   }
-  else if (selected_driver != nullptr)
+
+  select_nearest(event->pos());
+
+  if (selected_driver != nullptr)
   {
     emit update_driver(*selected_driver);
 
@@ -191,11 +192,11 @@ void Widget::keyPressEvent(QKeyEvent* event)
   {
     if (selected_driver != nullptr)
     {
-      config.erase_driver(selected_driver);
+      config.delete_driver(selected_driver);
     }
     else if (selected_log != nullptr)
     {
-      config.erase_log(selected_log);
+      config.delete_log(selected_log);
     }
 
     clear();
@@ -214,8 +215,7 @@ void Widget::paintEvent(QPaintEvent *)
     const QPoint& location = driver.get_location();
     const std::string id = driver.print_id();
 
-    const char type = driver.get_type().at(0);
-    switch (type)
+    switch (driver.get_type().at(0))
     {
       case 's':
       {
@@ -248,8 +248,7 @@ void Widget::paintEvent(QPaintEvent *)
 
     painter.drawPath(path);
     painter.fillPath(path, painter.brush());
-    painter.drawText(location.x() - 30, location.y() - 25,
-                     QString::fromStdString("log_" + std::to_string(log.get_id())));
+    painter.drawText(location.x() - 30, location.y() - 25, "log");
   }
 
   for (const Log& log : config.get_logs())

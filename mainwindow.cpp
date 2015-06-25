@@ -40,21 +40,14 @@ MainWindow::MainWindow(Config& config, QWidget* parent) :
       widget->clear();
     }
   });
-  connect(ui->actionSave, &QAction::triggered, [&]() {
-    for (const Log& log : config.get_logs())
-    {
-      std::cerr << std::endl << "log_" << log.get_id() << ":" << std::endl;
-      for (Driver* const driver : log.get_drivers())
-      {
-        std::cerr << "  " << driver->to_string() << std::endl;
-      }
-    }
-  });
-  connect(ui->actionExit, &QAction::triggered, [&]() {
+  connect(ui->actionExit, &QAction::triggered, [=]() {
     if (QMessageBox::question(this, "Exit", WARNING) == QMessageBox::Yes)
     {
       close();
     }
+  });
+  connect(ui->actionSave, &QAction::triggered, [=]() {
+    print_config();
   });
   connect(ui->actionAbout, &QAction::triggered, [=]() {
     QMessageBox::aboutQt(this);
@@ -67,8 +60,8 @@ MainWindow::MainWindow(Config& config, QWidget* parent) :
     driver_select_dialog("destination");
   });
   connect(ui->actionLog, &QAction::triggered, [&]() {
-    widget->set_selected_log(config.add_new_log());
-    ui->statusBar->showMessage("Click to place log");
+    widget->set_selected_log(config.add_log(Log()));
+    ui->statusBar->showMessage("Click to place new log");
   });
 }
 
@@ -114,6 +107,26 @@ void MainWindow::driver_select_dialog(const std::string type)
 
       ui->statusBar->showMessage(QString::fromStdString("Click to place new " + type));
     }
+  }
+}
+
+void MainWindow::print_config() const
+{
+  std::cout << std::endl;
+  for (const Driver& driver : config.get_drivers())
+  {
+    std::cout << driver.to_string() << std::endl;
+  }
+
+  std::cout << std::endl;
+  for (const Log& log : config.get_logs())
+  {
+    std::cout << "log { ";
+    for (Driver* const driver : log.get_drivers())
+    {
+      std::cerr << driver->get_type() << "(" << driver->print_id() << "); ";
+    }
+    std::cout << "};\n";
   }
 }
 

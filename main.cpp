@@ -7,7 +7,7 @@
 
 void parse_yaml(Config& config)
 {
-  const YAML::Node root = YAML::LoadFile("config.yml");
+  const YAML::Node root = YAML::LoadFile("drivers.yml");
   for (YAML::const_iterator driver_it = root.begin(); driver_it != root.end(); ++driver_it)
   {
     const YAML::Node& yaml_driver = driver_it->second;

@@ -62,7 +62,7 @@ Dialog::~Dialog()
 
 void Dialog::create_form()
 {
-  for (Option& option : driver.get_options())
+  for (const Option& option : driver.get_default_driver().get_options())
   {
     QGroupBox* groupBox = new QGroupBox(QString::fromStdString(option.get_name()));
     groupBox->setToolTip(QString::fromStdString(option.get_description()));

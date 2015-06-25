@@ -7,6 +7,7 @@
 #include <vector>
 #include <list>
 #include <algorithm>
+#include <functional>
 
 enum class OptionType { string, number, list, set };
 
@@ -15,13 +16,13 @@ class Option
   OptionType type;
   std::string name, description;
   std::vector<std::string> values;
-  std::string current_value;
+  std::string default_value, current_value;
 
 public:
-  Option(const std::string& name, const std::string& type, const std::string& description, const std::string& current_value) :
-  name(name),
-  description(description),
-  current_value(current_value)
+  Option(const std::string& name, const std::string& type, const std::string& description, const std::string& default_value) :
+    name(name),
+    description(description),
+    default_value(default_value)
   {
     if (type == "string")
       this->type = OptionType::string;
@@ -53,6 +54,11 @@ public:
     return values;
   }
 
+  const std::string& get_default_value() const
+  {
+    return default_value;
+  }
+
   const std::string& get_current_value() const
   {
     return current_value;
@@ -66,6 +72,32 @@ public:
   void set_current_value(const std::string& current_value)
   {
     this->current_value = current_value;
+  }
+
+  const std::string to_string() const
+  {
+    if (current_value == default_value)
+    {
+      return "";
+    }
+
+    std::string config = "\t\t" + name + "(";
+
+    auto it = std::find_if(current_value.cbegin(), current_value.cend(),
+                           std::not1(std::function<bool(char)>(isdigit)));
+
+    if (it == current_value.cend())
+    {
+      config += std::to_string(std::stoi(current_value));
+    }
+    else
+    {
+      config += "\"" + current_value + "\"";
+    }
+
+    config += ")\n";
+
+    return config;
   }
 };
 
@@ -119,7 +151,9 @@ public:
     DefaultDriver(default_driver),
     id(id),
     default_driver(default_driver)
-  {}
+  {
+    restore_defaults();
+  }
 
   int get_id() const
   {
@@ -128,17 +162,17 @@ public:
 
   const std::string print_id() const
   {
-    return name + "_" + std::to_string(id);
-  }
-
-  const std::string to_string() const
-  {
     return std::string(1, type.at(0)) + "_" + name + std::to_string(id);
   }
 
   const QPoint& get_location() const
   {
     return location;
+  }
+
+  const DefaultDriver& get_default_driver() const
+  {
+    return default_driver;
   }
 
   std::vector<Option>& get_options()
@@ -162,26 +196,33 @@ public:
     for (const Option& default_option : default_driver.get_options())
     {
       Option& option = *options_it++;
-      option.set_current_value(default_option.get_current_value());
+      option.set_current_value(default_option.get_default_value());
     }
+  }
+
+  const std::string to_string() const
+  {
+    std::string config = type + " " + print_id() + " {\n";
+
+    config += "\t" + name + "(\n";
+    for (const Option& option : options)
+    {
+      config += option.to_string();
+    }
+    config += "\t);\n};\n";
+
+    return config;
   }
 };
 
 class Log
 {
-  int id;
   QPoint location;
   std::list<Driver*> drivers;
 
 public:
-  Log(const int id) :
-    id(id)
+  Log()
   {}
-
-  int get_id() const
-  {
-    return id;
-  }
 
   const QPoint& get_location() const
   {
@@ -191,11 +232,6 @@ public:
   const std::list<Driver*>& get_drivers() const
   {
     return drivers;
-  }
-
-  void set_id(const int id)
-  {
-    this->id = id;
   }
 
   void set_location(const QPoint& location)
@@ -258,14 +294,22 @@ public:
     return &drivers.back();
   }
 
-  Log* add_new_log()
+  Log* add_log(const Log& log)
   {
-    logs.push_back(Log(logs.size()));
+    logs.push_back(std::move(log));
     return &logs.back();
   }
 
-  void erase_driver(Driver* const driver)
+  void delete_driver(Driver* const driver)
   {
+    for (Log& log : logs)
+    {
+      if (log.has_driver(driver))
+      {
+        log.remove_driver(driver);
+      }
+    }
+
     for (Driver& d : drivers)
     {
       if (d.get_name() == driver->get_name() &&
@@ -276,29 +320,13 @@ public:
       }
     }
 
-    for (Log& log : logs)
-    {
-      if (log.has_driver(driver))
-      {
-        log.remove_driver(driver);
-      }
-    }
-
     drivers.remove_if([driver](const Driver& d)->bool {
                         return &d == driver;
                       });
   }
 
-  void erase_log(Log* const log)
+  void delete_log(Log* const log)
   {
-    for (Log& l : logs)
-    {
-      if (l.get_id() > log->get_id())
-      {
-        l.set_id(l.get_id() - 1);
-      }
-    }
-
     logs.remove_if([log](const Log& l)->bool {
                      return &l == log;
                    });

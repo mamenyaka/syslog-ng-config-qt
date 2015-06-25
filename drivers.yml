@@ -66,8 +66,9 @@ network_source:
         description: The IP address to bind to.
         default: 0.0.0.0
     - ip-protocol:
-        type: number
+        type: list
         description: Determines the internet protocol version of the given driver.
+        values: [4, 6]
         default: 4
     - ip-tos:
         type: number
@@ -94,6 +95,10 @@ network_source:
         type: number
         description: Specifies the maximum length of incoming log messages.
         default: 8192
+    - port:
+        type: number
+        description: The port number to bind to.
+        default: 601
     - time-zone:
         type: string
         description: The default timezone for messages read from the source.

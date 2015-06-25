@@ -26,6 +26,8 @@ protected:
 
 private:
   void driver_select_dialog(const std::string type);
+
+  void print_config() const;
 };
 
 #endif // MAINWINDOW_H
