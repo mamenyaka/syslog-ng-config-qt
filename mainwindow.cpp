@@ -112,34 +112,27 @@ void MainWindow::driver_select_dialog(const std::string type)
 
 void MainWindow::print_config() const
 {
-  std::cout << std::endl;
   for (const Driver& driver : config.get_drivers())
   {
     std::cout << driver.to_string() << std::endl;
   }
 
-  std::cout << std::endl;
   for (const Log& log : config.get_logs())
   {
-    std::cout << "log { ";
-    for (Driver* const driver : log.get_drivers())
-    {
-      std::cerr << driver->get_type() << "(" << driver->print_id() << "); ";
-    }
-    std::cout << "};\n";
+    std::cout << log.to_string() << std::endl;
   }
 }
 
 bool MainWindow::eventFilter(QObject *, QEvent* event)
 {
-  if (event->type() == QEvent::StatusTip)
-  {
-    return true;
-  }
-
   if (event->type() == QEvent::KeyPress)
   {
     QApplication::sendEvent(widget, event);
+  }
+
+  if (event->type() == QEvent::StatusTip)
+  {
+    return true;
   }
 
   return false;

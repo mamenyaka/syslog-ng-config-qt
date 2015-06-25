@@ -7,6 +7,8 @@
 #include <QPainter>
 #include <QLine>
 
+//#include <iostream>
+
 Widget::Widget(Config& config, QWidget* parent) :
   QWidget(parent),
   config(config)
@@ -29,15 +31,15 @@ void Widget::clear()
 void Widget::set_selected_driver(Driver* driver)
 {
   clear();
-
   selected_driver = driver;
+  update();
 }
 
 void Widget::set_selected_log(Log* log)
 {
   clear();
-
   selected_log = log;
+  update();
 }
 
 Driver* Widget::get_nearest_driver(const QPoint& point)
@@ -139,17 +141,19 @@ void Widget::mouseMoveEvent(QMouseEvent* event)
   {
     return;
   }
-  else if (selected_driver != nullptr)
-  {
-    selected_driver->set_location(event->pos());
 
-    update();
-  }
-  else if (selected_log != nullptr)
+  if (rect().contains(event->pos()))
   {
-    selected_log->set_location(event->pos());
-
-    update();
+    if (selected_driver != nullptr)
+    {
+      selected_driver->set_location(event->pos());
+      update();
+    }
+    else if (selected_log != nullptr)
+    {
+      selected_log->set_location(event->pos());
+      update();
+    }
   }
 }
 

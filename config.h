@@ -7,7 +7,6 @@
 #include <vector>
 #include <list>
 #include <algorithm>
-#include <functional>
 
 enum class OptionType { string, number, list, set };
 
@@ -83,10 +82,8 @@ public:
 
     std::string config = "\t\t" + name + "(";
 
-    auto it = std::find_if(current_value.cbegin(), current_value.cend(),
-                           std::not1(std::function<bool(char)>(isdigit)));
-
-    if (it == current_value.cend())
+    if (type == OptionType::number ||
+      (type == OptionType::list && current_value.cend() == std::find_if_not(current_value.cbegin(), current_value.cend(), isdigit)))
     {
       config += std::to_string(std::stoi(current_value));
     }
@@ -150,6 +147,7 @@ public:
   Driver(const DefaultDriver& default_driver, const int id) :
     DefaultDriver(default_driver),
     id(id),
+    location(QPoint(50, 50)),
     default_driver(default_driver)
   {
     restore_defaults();
@@ -221,7 +219,8 @@ class Log
   std::list<Driver*> drivers;
 
 public:
-  Log()
+  Log() :
+    location(QPoint(50, 50))
   {}
 
   const QPoint& get_location() const
@@ -255,6 +254,18 @@ public:
   void remove_driver(Driver* const driver)
   {
     drivers.remove(driver);
+  }
+
+  const std::string to_string() const
+  {
+    std::string config = "log { ";
+    for (Driver* const driver : drivers)
+    {
+      config += driver->get_type() + "(" + driver->print_id() + "); ";
+    }
+    config += "};\n";
+
+    return config;
   }
 };
 
