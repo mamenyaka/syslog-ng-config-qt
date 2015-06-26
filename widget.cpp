@@ -128,11 +128,9 @@ void Widget::mouseReleaseEvent(QMouseEvent *)
   {
     return;
   }
-  else
-  {
-    selected_driver = nullptr;
-    selected_log = nullptr;
-  }
+
+  selected_driver = nullptr;
+  selected_log = nullptr;
 }
 
 void Widget::mouseMoveEvent(QMouseEvent* event)
@@ -159,34 +157,32 @@ void Widget::mouseMoveEvent(QMouseEvent* event)
 
 void Widget::mouseDoubleClickEvent(QMouseEvent *event)
 {
-  if (log_update)
+  if (!log_update)
   {
-    return;
+    select_nearest(event->pos());
   }
-
-  select_nearest(event->pos());
 
   if (selected_driver != nullptr)
   {
     emit update_driver(*selected_driver);
-
-    clear();
+    selected_driver = nullptr;
   }
   else if (selected_log != nullptr)
   {
-    emit update_statusbar("Click to select/unselect drivers, press Esc when finished");
-
-    log_update = true;
+    if ((log_update = !log_update))
+    {
+      emit update_statusbar("Click to select/unselect drivers, double click when finished");
+    }
+    else
+    {
+      emit clear_statusbar();
+      selected_log = nullptr;
+    }
   }
 }
 
 void Widget::keyPressEvent(QKeyEvent* event)
 {
-  if (event->key() == Qt::Key_Escape)
-  {
-    clear();
-  }
-
   if (log_update)
   {
     return;
@@ -197,14 +193,15 @@ void Widget::keyPressEvent(QKeyEvent* event)
     if (selected_driver != nullptr)
     {
       config.delete_driver(selected_driver);
+      selected_driver = nullptr;
+      update();
     }
     else if (selected_log != nullptr)
     {
       config.delete_log(selected_log);
+      selected_log = nullptr;
+      update();
     }
-
-    clear();
-    update();
   }
 }
 
@@ -223,14 +220,14 @@ void Widget::paintEvent(QPaintEvent *)
     {
       case 's':
       {
-        painter.setBrush(QColor(255, 128, 128));
+        painter.setBrush(QColor(255, 128, 128, 192));
         painter.drawEllipse(location.x() - 20, location.y() - 20, 40, 40);
         painter.drawText(location.x() - 20, location.y() - 25, QString::fromStdString(id));
         break;
       }
       case 'd':
       {
-        painter.setBrush(QColor(128, 128, 225));
+        painter.setBrush(QColor(128, 128, 225, 192));
         painter.drawRect(location.x() - 30, location.y() - 20, 60, 40);
         painter.drawText(location.x() - 30, location.y() - 25, QString::fromStdString(id));
         break;
@@ -240,7 +237,7 @@ void Widget::paintEvent(QPaintEvent *)
 
   for (const Log& log : config.get_logs())
   {
-    painter.setBrush(QColor(128, 62, 192));
+    painter.setBrush(QColor(128, 62, 192, 192));
 
     const QPoint& location = log.get_location();
 

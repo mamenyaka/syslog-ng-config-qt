@@ -74,7 +74,6 @@ void Dialog::create_form()
       case OptionType::string:
       {
         QLineEdit* lineEdit = new QLineEdit;
-
         vboxLayout->addWidget(lineEdit);
         break;
       }
@@ -82,19 +81,16 @@ void Dialog::create_form()
       {
         QSpinBox* spinBox = new QSpinBox;
         spinBox->setRange(-1, std::numeric_limits<int>::max());
-
         vboxLayout->addWidget(spinBox);
         break;
       }
       case OptionType::list:
       {
         QComboBox* comboBox = new QComboBox;
-
         for (const std::string& value : option.get_values())
         {
           comboBox->addItem(QString::fromStdString(value));
         }
-
         vboxLayout->addWidget(comboBox);
         break;
       }
@@ -105,7 +101,6 @@ void Dialog::create_form()
           QCheckBox* checkBox = new QCheckBox(QString::fromStdString(value));
           vboxLayout->addWidget(checkBox);
         }
-
         break;
       }
     }
@@ -136,7 +131,8 @@ void Dialog::set_form_values()
       case OptionType::number:
       {
         QSpinBox* spinBox = groupBox->findChild<QSpinBox*>();
-        current_value.empty() ? spinBox->setValue(-1) : spinBox->setValue(std::stoi(current_value));
+        const int value = current_value.empty() ? spinBox->minimum() : std::stoi(current_value);
+        spinBox->setValue(value);
         break;
       }
       case OptionType::list:
@@ -180,7 +176,8 @@ void Dialog::set_driver_options()
       case OptionType::number:
       {
         QSpinBox* spinBox = groupBox->findChild<QSpinBox*>();
-        option.set_current_value(std::to_string(spinBox->value()));
+        const std::string value = spinBox->value() == spinBox->minimum() ? "" : std::to_string(spinBox->value());
+        option.set_current_value(value);
         break;
       }
       case OptionType::list:

@@ -85,7 +85,7 @@ public:
     if (type == OptionType::number ||
       (type == OptionType::list && current_value.cend() == std::find_if_not(current_value.cbegin(), current_value.cend(), isdigit)))
     {
-      config += std::to_string(std::stoi(current_value));
+      config += current_value;
     }
     else
     {
