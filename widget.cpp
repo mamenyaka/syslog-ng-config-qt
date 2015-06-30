@@ -194,12 +194,14 @@ void Widget::keyPressEvent(QKeyEvent* event)
     {
       config.delete_driver(selected_driver);
       selected_driver = nullptr;
+      emit clear_statusbar();
       update();
     }
     else if (selected_log != nullptr)
     {
       config.delete_log(selected_log);
       selected_log = nullptr;
+      emit clear_statusbar();
       update();
     }
   }

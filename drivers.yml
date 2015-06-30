@@ -148,6 +148,6 @@ sql_destination:
     - values:
         type: set
         values: ["${R_YEAR}-${R_MONTH}-${R_DAY}, ${R_HOUR}:${R_MIN}:${R_SEC}", "${FACILITY}", "${LEVEL}", "${HOST}", "${PROGRAM}", "${PID}", "${MSGONLY}"]
-        default: "\"${R_YEAR}-${R_MONTH}-${R_DAY}, ${R_HOUR}:${R_MIN}:${R_SEC}\", \"${FACILITY}\", \"${LEVEL}\", \"${HOST}\", \"${PROGRAM}\", \"${PID}\", \"${MSGONLY}\""
+        default: "${R_YEAR}-${R_MONTH}-${R_DAY}, ${R_HOUR}:${R_MIN}:${R_SEC}, ${FACILITY}, ${LEVEL}, ${HOST}, ${PROGRAM}, ${PID}, ${MSGONLY}"
     - retries:
         type: number

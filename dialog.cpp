@@ -80,7 +80,8 @@ void Dialog::create_form()
       case OptionType::number:
       {
         QSpinBox* spinBox = new QSpinBox;
-        spinBox->setRange(-1, std::numeric_limits<int>::max());
+        const int min = option.get_default_value().empty() ? -1 : 0;
+        spinBox->setRange(min, std::numeric_limits<int>::max());
         vboxLayout->addWidget(spinBox);
         break;
       }
@@ -176,7 +177,7 @@ void Dialog::set_driver_options()
       case OptionType::number:
       {
         QSpinBox* spinBox = groupBox->findChild<QSpinBox*>();
-        const std::string value = spinBox->value() == spinBox->minimum() ? "" : std::to_string(spinBox->value());
+        const std::string value = spinBox->value() == -1 ? "" : std::to_string(spinBox->value());
         option.set_current_value(value);
         break;
       }
