@@ -82,6 +82,7 @@ const std::string Option::to_string() const
   return config;
 }
 
+
 DefaultDriver::DefaultDriver(const std::string& name, const std::string& type, const std::string& description) :
   name(name),
   type(type),
@@ -181,6 +182,7 @@ const std::string Driver::to_string() const
 
   return config;
 }
+
 
 Log::Log() :
   location(QPoint(50, 50))

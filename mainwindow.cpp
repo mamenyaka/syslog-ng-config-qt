@@ -6,8 +6,9 @@
 
 #include <QMessageBox>
 #include <QInputDialog>
+#include <QFileDialog>
 
-#include <iostream>
+#include <fstream>
 
 #define WARNING "Warning: All unsaved data will be lost! Are you sure?"
 
@@ -47,7 +48,7 @@ MainWindow::MainWindow(Config& config, QWidget* parent) :
     }
   });
   connect(ui->actionSave, &QAction::triggered, [=]() {
-    print_config();
+    save_config();
   });
   connect(ui->actionAbout, &QAction::triggered, [=]() {
     QMessageBox::aboutQt(this);
@@ -88,38 +89,50 @@ void MainWindow::driver_select_dialog(const std::string type)
 
   if (ok && !name.empty())
   {
-    const auto cit = std::find_if(config.get_default_drivers().cbegin(), config.get_default_drivers().cend(),
-                                  [&name, &type](const DefaultDriver& driver)->bool {
-                                    return driver.get_name() == name && driver.get_type() == type;
-                                  });
-
-    const auto crit = std::find_if(config.get_drivers().crbegin(), config.get_drivers().crend(),
-                                   [&name, &type](const Driver& driver)->bool {
-                                     return driver.get_name() == name && driver.get_type() == type;
-                                   });
-    const int id = crit != config.get_drivers().crend() ? crit->get_id() + 1 : 0;
-
-    Driver new_driver(*cit, id);
-
-    if (Dialog(new_driver, this).exec() == QDialog::Accepted)
-    {
-      widget->set_selected_driver(config.add_driver(new_driver));
-
-      ui->statusBar->showMessage(QString::fromStdString("Click to place new " + type));
-    }
+    create_new_driver(name, type);
   }
 }
 
-void MainWindow::print_config() const
+void MainWindow::create_new_driver(const std::string& name, const std::string& type)
 {
-  for (const Driver& driver : config.get_drivers())
-  {
-    std::cout << driver.to_string() << std::endl;
-  }
+  const auto cit = std::find_if(config.get_default_drivers().cbegin(), config.get_default_drivers().cend(),
+                                [&name, &type](const DefaultDriver& driver)->bool {
+                                  return driver.get_name() == name && driver.get_type() == type;
+                                });
 
-  for (const Log& log : config.get_logs())
+  const auto crit = std::find_if(config.get_drivers().crbegin(), config.get_drivers().crend(),
+                                 [&name, &type](const Driver& driver)->bool {
+                                   return driver.get_name() == name && driver.get_type() == type;
+                                 });
+  const int id = crit != config.get_drivers().crend() ? crit->get_id() + 1 : 0;
+
+  Driver new_driver(*cit, id);
+
+  if (Dialog(new_driver, this).exec() == QDialog::Accepted)
   {
-    std::cout << log.to_string() << std::endl;
+    widget->set_selected_driver(config.add_driver(new_driver));
+
+    ui->statusBar->showMessage(QString::fromStdString("Click to place new " + type));
+  }
+}
+
+void MainWindow::save_config()
+{
+  const std::string file_name = QFileDialog::getSaveFileName(this, tr("Save config"), QDir::homePath()).toStdString();
+
+  if (!file_name.empty())
+  {
+    std::ofstream out(file_name);
+
+    for (const Driver& driver : config.get_drivers())
+    {
+      out << driver.to_string() << std::endl;
+    }
+
+    for (const Log& log : config.get_logs())
+    {
+      out << log.to_string() << std::endl;
+    }
   }
 }
 
