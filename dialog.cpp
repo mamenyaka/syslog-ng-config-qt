@@ -145,8 +145,8 @@ void Dialog::set_form_values()
       case OptionType::set:
       {
         QList<QCheckBox*> checkBoxes = groupBox->findChildren<QCheckBox*>();
-
         auto checkBox_it = checkBoxes.begin();
+
         for (const std::string& value : option.get_values())
         {
           QCheckBox* checkBox = *checkBox_it++;
@@ -190,9 +190,9 @@ void Dialog::set_driver_options()
       case OptionType::set:
       {
         QList<QCheckBox*> checkBoxes = groupBox->findChildren<QCheckBox*>();
+        auto checkBox_it = checkBoxes.begin();
 
         std::string current_value;
-        auto checkBox_it = checkBoxes.begin();
         for (const std::string& value : option.get_values())
         {
           QCheckBox* checkBox = *checkBox_it++;

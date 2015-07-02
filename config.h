@@ -30,6 +30,7 @@ public:
   void set_current_value(const std::string& current_value);
 
   const std::string to_string() const;
+  static bool is_digit_only(const std::string& value);
 };
 
 class DefaultDriver

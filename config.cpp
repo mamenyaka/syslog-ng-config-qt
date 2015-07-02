@@ -68,7 +68,7 @@ const std::string Option::to_string() const
   std::string config = "\t\t" + name + "(";
 
   if (type == OptionType::number ||
-      (type == OptionType::list && current_value.cend() == std::find_if_not(current_value.cbegin(), current_value.cend(), isdigit)))
+      (type == OptionType::list && is_digit_only(current_value)))
   {
     config += current_value;
   }
@@ -80,6 +80,11 @@ const std::string Option::to_string() const
   config += ")\n";
 
   return config;
+}
+
+bool Option::is_digit_only(const std::string& value)
+{
+  return std::find_if_not(value.cbegin(), value.cend(), isdigit) == value.cend();
 }
 
 
