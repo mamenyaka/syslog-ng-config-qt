@@ -18,7 +18,7 @@ public:
 private:
   void create_form();
   void set_form_values();
-  void set_driver_options();
+  bool set_driver_options();
 };
 
 #endif  // DIALOG_H

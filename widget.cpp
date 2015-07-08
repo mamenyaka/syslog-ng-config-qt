@@ -7,8 +7,6 @@
 #include <QPainter>
 #include <QLine>
 
-//#include <iostream>
-
 Widget::Widget(Config& config, QWidget* parent) :
   QWidget(parent),
   config(config)
@@ -21,21 +19,21 @@ Widget::~Widget()
 
 void Widget::clear()
 {
-  emit clear_statusbar();
+  emit update_statusbar("");
 
   selected_driver = nullptr;
   selected_log = nullptr;
   log_update = false;
 }
 
-void Widget::set_selected_driver(Driver* driver)
+void Widget::add_driver(Driver* driver)
 {
   clear();
   selected_driver = driver;
   update();
 }
 
-void Widget::set_selected_log(Log* log)
+void Widget::add_log(Log* log)
 {
   clear();
   selected_log = log;
@@ -175,7 +173,7 @@ void Widget::mouseDoubleClickEvent(QMouseEvent *event)
     }
     else
     {
-      emit clear_statusbar();
+      emit update_statusbar("");
       selected_log = nullptr;
     }
   }
@@ -193,15 +191,13 @@ void Widget::keyPressEvent(QKeyEvent* event)
     if (selected_driver != nullptr)
     {
       config.delete_driver(selected_driver);
-      selected_driver = nullptr;
-      emit clear_statusbar();
+      emit update_statusbar("");
       update();
     }
     else if (selected_log != nullptr)
     {
       config.delete_log(selected_log);
-      selected_log = nullptr;
-      emit clear_statusbar();
+      emit update_statusbar("");
       update();
     }
   }
@@ -216,7 +212,7 @@ void Widget::paintEvent(QPaintEvent *)
   for (const Driver& driver : config.get_drivers())
   {
     const QPoint& location = driver.get_location();
-    const std::string id = driver.print_id();
+    const std::string id = driver.get_id();
 
     switch (driver.get_type().at(0))
     {

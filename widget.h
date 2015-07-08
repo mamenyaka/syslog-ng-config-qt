@@ -23,14 +23,13 @@ public:
   explicit Widget(Config& config, QWidget* parent = 0);
   ~Widget();
 
-  void set_selected_driver(Driver* driver);
-  void set_selected_log(Log* log);
+  void add_driver(Driver* driver);
+  void add_log(Log* log);
   void clear();
 
 signals:
   void update_driver(Driver& driver);
-  void update_statusbar(const std::string message);
-  void clear_statusbar();
+  void update_statusbar(const QString message);
 
 protected:
   void mouseDoubleClickEvent(QMouseEvent* event);

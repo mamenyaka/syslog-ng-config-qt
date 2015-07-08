@@ -58,17 +58,16 @@ void Option::set_current_value(const std::string& current_value)
   this->current_value = current_value;
 }
 
+bool Option::has_default_value() const
+{
+  return default_value != "";
+}
+
 const std::string Option::to_string() const
 {
-  if (current_value == default_value)
-  {
-    return "";
-  }
+  std::string config = name + "(";
 
-  std::string config = "\t\t" + name + "(";
-
-  if (type == OptionType::number ||
-      (type == OptionType::list && is_digit_only(current_value)))
+  if (type == OptionType::number)
   {
     config += current_value;
   }
@@ -77,14 +76,9 @@ const std::string Option::to_string() const
     config += "\"" + current_value + "\"";
   }
 
-  config += ")\n";
+  config += ")";
 
   return config;
-}
-
-bool Option::is_digit_only(const std::string& value)
-{
-  return std::find_if_not(value.cbegin(), value.cend(), isdigit) == value.cend();
 }
 
 
@@ -129,12 +123,7 @@ Driver::Driver(const DefaultDriver& default_driver, const int id) :
   restore_defaults();
 }
 
-int Driver::get_id() const
-{
-  return id;
-}
-
-const std::string Driver::print_id() const
+const std::string Driver::get_id() const
 {
   return std::string(1, type.at(0)) + "_" + name + std::to_string(id);
 }
@@ -154,7 +143,7 @@ std::vector<Option>& Driver::get_options()
   return options;
 }
 
-void Driver::set_id(const int id)
+void Driver::update_id(const int id)
 {
   this->id = id;
 }
@@ -176,14 +165,33 @@ void Driver::restore_defaults()
 
 const std::string Driver::to_string() const
 {
-  std::string config = type + " " + print_id() + " {\n";
+  std::string config = type + " " + get_id() + " {\n";
 
-  config += "\t" + name + "(\n";
+  config += "    " + name + "(";
+
   for (const Option& option : options)
   {
-    config += option.to_string();
+    if (name == option.get_name())
+    {
+      config += "\"" + option.get_current_value() + "\"";
+      break;
+    }
   }
-  config += "\t);\n};\n";
+
+  config += "\n";
+
+  for (const Option& option : options)
+  {
+    if (name == option.get_name() ||
+      option.get_current_value() == option.get_default_value())
+    {
+      continue;
+    }
+
+    config += "        " + option.to_string() + "\n";
+  }
+
+  config += "    );\n};\n";
 
   return config;
 }
@@ -211,9 +219,9 @@ void Log::set_location(const QPoint& location)
 bool Log::has_driver(Driver* const driver) const
 {
   return drivers.cend() != std::find_if(drivers.cbegin(), drivers.cend(),
-  [driver](const Driver* d)->bool {
-    return d == driver;
-  });
+                                        [driver](const Driver* d)->bool {
+                                          return d == driver;
+                                        });
 }
 
 void Log::add_driver(Driver* const driver)
@@ -231,7 +239,7 @@ const std::string Log::to_string() const
   std::string config = "log { ";
   for (Driver* const driver : drivers)
   {
-    config += driver->get_type() + "(" + driver->print_id() + "); ";
+    config += driver->get_type() + "(" + driver->get_id() + "); ";
   }
   config += "};\n";
 
@@ -245,6 +253,16 @@ Config::Config()
 const std::vector<DefaultDriver>& Config::get_default_drivers() const
 {
   return default_drivers;
+}
+
+const std::list< Driver >& Config::get_drivers() const
+{
+  return drivers;
+}
+
+const std::list< Log >& Config::get_logs() const
+{
+  return logs;
 }
 
 std::list<Driver>& Config::get_drivers()
@@ -262,20 +280,21 @@ void Config::add_default_driver(const DefaultDriver& driver)
   default_drivers.push_back(std::move(driver));
 }
 
-Driver* Config::add_driver(const Driver& driver)
+void Config::add_driver(const Driver& driver)
 {
   drivers.push_back(std::move(driver));
-  return &drivers.back();
 }
 
-Log* Config::add_log(const Log& log)
+void Config::add_log(const Log& log)
 {
   logs.push_back(std::move(log));
-  return &logs.back();
 }
 
-void Config::delete_driver(Driver* const driver)
+void Config::delete_driver(Driver* driver)
 {
+  const std::string name = driver->get_name();
+  const std::string type = driver->get_type();
+
   for (Log& log : logs)
   {
     if (log.has_driver(driver))
@@ -284,26 +303,29 @@ void Config::delete_driver(Driver* const driver)
     }
   }
 
-  for (Driver& d : drivers)
-  {
-    if (d.get_name() == driver->get_name() &&
-        d.get_type() == driver->get_type() &&
-        d.get_id() > driver->get_id())
-    {
-      d.set_id(d.get_id() - 1);
-    }
-  }
-
   drivers.remove_if([driver](const Driver& d)->bool {
     return &d == driver;
   });
+
+  driver = nullptr;
+
+  int count = 0;
+  for (Driver& driver : drivers)
+  {
+    if (driver.get_name() == name && driver.get_type() == type)
+    {
+      driver.update_id(count++);
+    }
+  }
 }
 
-void Config::delete_log(Log* const log)
+void Config::delete_log(Log* log)
 {
   logs.remove_if([log](const Log& l)->bool {
     return &l == log;
   });
+
+  log = nullptr;
 }
 
 void Config::erase_all()

@@ -12,6 +12,8 @@
 
 #define WARNING "Warning: All unsaved data will be lost! Are you sure?"
 
+std::ostream& operator<<(std::ostream& os, const Config& config);
+
 MainWindow::MainWindow(Config& config, QWidget* parent) :
   QMainWindow(parent),
   config(config)
@@ -24,14 +26,18 @@ MainWindow::MainWindow(Config& config, QWidget* parent) :
 
   installEventFilter(this);
 
-  connect(widget, &Widget::update_driver, [=](Driver& driver) {
+  connect(widget, &Widget::update_driver, [&](Driver& driver) {
     Dialog(driver, this).exec();
   });
-  connect(widget, &Widget::update_statusbar, [=](const std::string message) {
-    ui->statusBar->showMessage(QString::fromStdString(message));
-  });
-  connect(widget, &Widget::clear_statusbar, [=]() {
-    ui->statusBar->clearMessage();
+  connect(widget, &Widget::update_statusbar, [&](const QString message) {
+    if (!message.isEmpty())
+    {
+      ui->statusBar->showMessage(message);
+    }
+    else
+    {
+      ui->statusBar->clearMessage();
+    }
   });
 
   connect(ui->actionNew, &QAction::triggered, [&]() {
@@ -41,27 +47,30 @@ MainWindow::MainWindow(Config& config, QWidget* parent) :
       widget->clear();
     }
   });
-  connect(ui->actionExit, &QAction::triggered, [=]() {
+  connect(ui->actionExit, &QAction::triggered, [&]() {
     if (QMessageBox::question(this, "Exit", WARNING) == QMessageBox::Yes)
     {
       close();
     }
   });
-  connect(ui->actionSave, &QAction::triggered, [=]() {
-    save_config();
+  connect(ui->actionSave, &QAction::triggered, [&]() {
+    const std::string file_name = QFileDialog::getSaveFileName(this, tr("Save config"), QDir::homePath()).toStdString();
+    std::ofstream out(file_name);
+    out << config;
   });
-  connect(ui->actionAbout, &QAction::triggered, [=]() {
+  connect(ui->actionAbout, &QAction::triggered, [&]() {
     QMessageBox::aboutQt(this);
   });
 
-  connect(ui->actionSource, &QAction::triggered, [=]() {
+  connect(ui->actionSource, &QAction::triggered, [&]() {
     driver_select_dialog("source");
   });
-  connect(ui->actionDestination, &QAction::triggered, [=]() {
+  connect(ui->actionDestination, &QAction::triggered, [&]() {
     driver_select_dialog("destination");
   });
   connect(ui->actionLog, &QAction::triggered, [&]() {
-    widget->set_selected_log(config.add_log(Log()));
+    config.add_log(Log());
+    widget->add_log(&config.get_logs().back());
     ui->statusBar->showMessage("Click to place new log");
   });
 }
@@ -100,39 +109,18 @@ void MainWindow::create_new_driver(const std::string& name, const std::string& t
                                   return driver.get_name() == name && driver.get_type() == type;
                                 });
 
-  const auto crit = std::find_if(config.get_drivers().crbegin(), config.get_drivers().crend(),
-                                 [&name, &type](const Driver& driver)->bool {
-                                   return driver.get_name() == name && driver.get_type() == type;
-                                 });
-  const int id = crit != config.get_drivers().crend() ? crit->get_id() + 1 : 0;
+  const int id = std::count_if(config.get_drivers().cbegin(), config.get_drivers().cend(),
+                               [&name, &type](const Driver& driver)->bool {
+                                 return driver.get_name() == name && driver.get_type() == type;
+                              });
 
   Driver new_driver(*cit, id);
 
   if (Dialog(new_driver, this).exec() == QDialog::Accepted)
   {
-    widget->set_selected_driver(config.add_driver(new_driver));
-
+    config.add_driver(new_driver);
+    widget->add_driver(&config.get_drivers().back());
     ui->statusBar->showMessage(QString::fromStdString("Click to place new " + type));
-  }
-}
-
-void MainWindow::save_config()
-{
-  const std::string file_name = QFileDialog::getSaveFileName(this, tr("Save config"), QDir::homePath()).toStdString();
-
-  if (!file_name.empty())
-  {
-    std::ofstream out(file_name);
-
-    for (const Driver& driver : config.get_drivers())
-    {
-      out << driver.to_string() << std::endl;
-    }
-
-    for (const Log& log : config.get_logs())
-    {
-      out << log.to_string() << std::endl;
-    }
   }
 }
 
@@ -149,4 +137,19 @@ bool MainWindow::eventFilter(QObject *, QEvent* event)
   }
 
   return false;
+}
+
+std::ostream& operator<<(std::ostream& os, const Config& config)
+{
+  for (const Driver& driver : config.get_drivers())
+  {
+    os << driver.to_string() << std::endl;
+  }
+
+  for (const Log& log : config.get_logs())
+  {
+    os << log.to_string() << std::endl;
+  }
+
+  return os;
 }

@@ -19,7 +19,7 @@ file_source:
     - flags:
         type: set
         description: Specifies the log parsing options of the source.
-        values: [assume-utf8, empty-lines, expect-hostnames, kernel]
+        values: [assume-utf8, empty-lines, expect-hostname, kernel]
     - follow-freq:
         type: number
         description: Indicates that the source should be checked periodically.

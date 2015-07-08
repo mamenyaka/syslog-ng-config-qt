@@ -19,7 +19,7 @@ Dialog::Dialog(Driver& driver, QWidget* parent) :
   QDialog(parent),
   driver(driver)
 {
-  setWindowTitle(QString::fromStdString("Configure " + driver.print_id()));
+  setWindowTitle(QString::fromStdString("Configure " + driver.get_id()));
 
   QLabel* label = new QLabel;
   label->setText(QString::fromStdString(driver.get_description()));
@@ -39,8 +39,10 @@ Dialog::Dialog(Driver& driver, QWidget* parent) :
     QDialog::reject();
   });
   connect(buttonBox, &QDialogButtonBox::accepted, [&]() {
-    set_driver_options();
-    QDialog::accept();
+    if (set_driver_options())
+    {
+      QDialog::accept();
+    }
   });
   connect(buttonBox->button(QDialogButtonBox::RestoreDefaults), &QPushButton::pressed, [&]() {
     driver.restore_defaults();
@@ -64,7 +66,8 @@ void Dialog::create_form()
 {
   for (const Option& option : driver.get_default_driver().get_options())
   {
-    QGroupBox* groupBox = new QGroupBox(QString::fromStdString(option.get_name()));
+    const std::string name = option.has_default_value() ? option.get_name() : "* " + option.get_name();
+    QGroupBox* groupBox = new QGroupBox(QString::fromStdString(name));
     groupBox->setToolTip(QString::fromStdString(option.get_description()));
 
     QVBoxLayout* vboxLayout = new QVBoxLayout(groupBox);
@@ -158,7 +161,7 @@ void Dialog::set_form_values()
   }
 }
 
-void Dialog::set_driver_options()
+bool Dialog::set_driver_options()
 {
   QList<QGroupBox*> groupBoxes = findChildren<QGroupBox*>();
   auto groupBox_it = groupBoxes.begin();
@@ -166,25 +169,26 @@ void Dialog::set_driver_options()
   for (Option& option : driver.get_options())
   {
     QGroupBox* groupBox = *groupBox_it++;
+
+    std::string current_value;
     switch (option.get_type())
     {
       case OptionType::string:
       {
         QLineEdit* lineEdit = groupBox->findChild<QLineEdit*>();
-        option.set_current_value(lineEdit->text().toStdString());
+        current_value = lineEdit->text().toStdString();
         break;
       }
       case OptionType::number:
       {
         QSpinBox* spinBox = groupBox->findChild<QSpinBox*>();
-        const std::string value = spinBox->value() == -1 ? "" : std::to_string(spinBox->value());
-        option.set_current_value(value);
+        current_value = spinBox->value() == -1 ? "" : std::to_string(spinBox->value());
         break;
       }
       case OptionType::list:
       {
         QComboBox* comboBox = groupBox->findChild<QComboBox*>();
-        option.set_current_value(comboBox->currentText().toStdString());
+        current_value = comboBox->currentText().toStdString();
         break;
       }
       case OptionType::set:
@@ -192,7 +196,6 @@ void Dialog::set_driver_options()
         QList<QCheckBox*> checkBoxes = groupBox->findChildren<QCheckBox*>();
         auto checkBox_it = checkBoxes.begin();
 
-        std::string current_value;
         for (const std::string& value : option.get_values())
         {
           QCheckBox* checkBox = *checkBox_it++;
@@ -202,10 +205,18 @@ void Dialog::set_driver_options()
             current_value += checkBox->text().toStdString();
           }
         }
-
-        option.set_current_value(current_value);
         break;
       }
     }
+
+    if (!option.has_default_value() && current_value.empty())
+    {
+      groupBox->setFocus();
+      return false;
+    }
+
+    option.set_current_value(current_value);
   }
+
+  return true;
 }

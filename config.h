@@ -28,9 +28,9 @@ public:
 
   void add_value(const std::string& value);
   void set_current_value(const std::string& current_value);
+  bool has_default_value() const;
 
   const std::string to_string() const;
-  static bool is_digit_only(const std::string& value);
 };
 
 class DefaultDriver
@@ -59,16 +59,16 @@ class Driver : public DefaultDriver
 public:
   Driver(const DefaultDriver& default_driver, const int id);
 
-  int get_id() const;
-  const std::string print_id() const;
+  const std::string get_id() const;
   const QPoint& get_location() const;
   const DefaultDriver& get_default_driver() const;
+  const std::vector<Option>& get_options() const;
   std::vector<Option>& get_options();
 
-  void set_id(const int id);
+  void update_id(const int id);
   void set_location(const QPoint& location);
-
   void restore_defaults();
+
   const std::string to_string() const;
 };
 
@@ -102,15 +102,17 @@ public:
   Config();
 
   const std::vector<DefaultDriver>& get_default_drivers() const;
+  const std::list<Driver>& get_drivers() const;
+  const std::list<Log>& get_logs() const;
   std::list<Driver>& get_drivers();
   std::list<Log>& get_logs();
 
   void add_default_driver(const DefaultDriver& driver);
-  Driver* add_driver(const Driver& driver);
-  Log* add_log(const Log& log);
+  void add_driver(const Driver& driver);
+  void add_log(const Log& log);
 
-  void delete_driver(Driver* const driver);
-  void delete_log(Log* const log);
+  void delete_driver(Driver* driver);
+  void delete_log(Log* log);
   void erase_all();
 };
 
