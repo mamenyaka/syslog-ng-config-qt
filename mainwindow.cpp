@@ -12,8 +12,6 @@
 
 #define WARNING "Warning: All unsaved data will be lost! Are you sure?"
 
-std::ostream& operator<<(std::ostream& os, const Config& config);
-
 MainWindow::MainWindow(Config& config, QWidget* parent) :
   QMainWindow(parent),
   config(config)
@@ -81,7 +79,7 @@ MainWindow::~MainWindow()
   delete widget;
 }
 
-void MainWindow::driver_select_dialog(const std::string type)
+void MainWindow::driver_select_dialog(const std::string& type)
 {
   QStringList items;
   for (const DefaultDriver& driver : config.get_default_drivers())
@@ -137,19 +135,4 @@ bool MainWindow::eventFilter(QObject *, QEvent* event)
   }
 
   return false;
-}
-
-std::ostream& operator<<(std::ostream& os, const Config& config)
-{
-  for (const Driver& driver : config.get_drivers())
-  {
-    os << driver.to_string() << std::endl;
-  }
-
-  for (const Log& log : config.get_logs())
-  {
-    os << log.to_string() << std::endl;
-  }
-
-  return os;
 }

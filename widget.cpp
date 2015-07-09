@@ -142,12 +142,12 @@ void Widget::mouseMoveEvent(QMouseEvent* event)
   {
     if (selected_driver != nullptr)
     {
-      selected_driver->set_location(event->pos());
+      selected_driver->update_location(event->pos());
       update();
     }
     else if (selected_log != nullptr)
     {
-      selected_log->set_location(event->pos());
+      selected_log->update_location(event->pos());
       update();
     }
   }

@@ -1,5 +1,7 @@
 #include "config.h"
 
+#include <yaml-cpp/yaml.h>
+
 #include <map>
 #include <algorithm>
 
@@ -148,7 +150,7 @@ void Driver::update_id(const int id)
   this->id = id;
 }
 
-void Driver::set_location(const QPoint& location)
+void Driver::update_location(const QPoint& location)
 {
   this->location = location;
 }
@@ -211,7 +213,7 @@ const std::list<Driver*>& Log::get_drivers() const
   return drivers;
 }
 
-void Log::set_location(const QPoint& location)
+void Log::update_location(const QPoint& location)
 {
   this->location = location;
 }
@@ -247,25 +249,22 @@ const std::string Log::to_string() const
 }
 
 
-Config::Config()
-{}
+Config::Config(const std::string& file_name)
+{
+  parse_yaml(file_name);
+}
 
 const std::vector<DefaultDriver>& Config::get_default_drivers() const
 {
   return default_drivers;
 }
 
-const std::list< Driver >& Config::get_drivers() const
+std::list<Driver>& Config::get_drivers()
 {
   return drivers;
 }
 
-const std::list< Log >& Config::get_logs() const
-{
-  return logs;
-}
-
-std::list<Driver>& Config::get_drivers()
+const std::list<Driver>& Config::get_drivers() const
 {
   return drivers;
 }
@@ -275,9 +274,9 @@ std::list<Log>& Config::get_logs()
   return logs;
 }
 
-void Config::add_default_driver(const DefaultDriver& driver)
+const std::list<Log>& Config::get_logs() const
 {
-  default_drivers.push_back(std::move(driver));
+  return logs;
 }
 
 void Config::add_driver(const Driver& driver)
@@ -328,8 +327,66 @@ void Config::delete_log(Log* log)
   log = nullptr;
 }
 
+void Config::parse_yaml(const std::string& file_name)
+{
+  const YAML::Node root = YAML::LoadFile(file_name);
+  for (YAML::const_iterator driver_it = root.begin(); driver_it != root.end(); ++driver_it)
+  {
+    const YAML::Node& yaml_driver = driver_it->second;
+
+    const std::string name = yaml_driver["name"].as<std::string>();
+    const std::string type = yaml_driver["type"].as<std::string>();
+    const std::string description = yaml_driver["description"] ? yaml_driver["description"].as<std::string>() : "";
+    const YAML::Node& options = yaml_driver["options"];
+
+    DefaultDriver driver(name, type, description);
+
+    for (YAML::const_iterator option_it = options.begin(); option_it != options.end(); ++option_it)
+    {
+      YAML::const_iterator tmp = option_it->begin();
+      const YAML::Node& yaml_option = tmp->second;
+
+      const std::string name = tmp->first.as<std::string>();
+      const std::string type = yaml_option["type"].as<std::string>();
+      const std::string description = yaml_option["description"] ? yaml_option["description"].as<std::string>() : "";
+      const std::string default_value = yaml_option["default"] ? yaml_option["default"].as<std::string>() : "";
+
+      Option option(name, type, description, default_value);
+
+      if (type == "list" || type == "set")
+      {
+        const YAML::Node& values = yaml_option["values"];
+        for (YAML::const_iterator value_it = values.begin(); value_it != values.end(); ++value_it)
+        {
+          const std::string value = value_it->as<std::string>();
+          option.add_value(value);
+        }
+      }
+
+      driver.add_option(option);
+    }
+
+    default_drivers.push_back(std::move(driver));
+  }
+}
+
 void Config::erase_all()
 {
   logs.clear();
   drivers.clear();
+}
+
+std::ostream& operator<<(std::ostream& os, const Config& config)
+{
+  for (const Driver& driver : config.get_drivers())
+  {
+    os << driver.to_string() << std::endl;
+  }
+
+  for (const Log& log : config.get_logs())
+  {
+    os << log.to_string() << std::endl;
+  }
+
+  return os;
 }

@@ -25,7 +25,7 @@ protected:
   bool eventFilter(QObject *, QEvent* event);
 
 private:
-  void driver_select_dialog(const std::string type);
+  void driver_select_dialog(const std::string& type);
   void create_new_driver(const std::string& name, const std::string& type);
 };
 
