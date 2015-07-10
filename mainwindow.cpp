@@ -1,23 +1,26 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "widget.h"
-#include "config.h"
 #include "dialog.h"
 
 #include <QMessageBox>
 #include <QInputDialog>
 #include <QFileDialog>
+#include <QWebView>
+#include <QUrl>
+#include <QCloseEvent>
 
 #include <fstream>
 
 #define WARNING "Warning: All unsaved data will be lost! Are you sure?"
 
-MainWindow::MainWindow(Config& config, QWidget* parent) :
-  QMainWindow(parent),
-  config(config)
+MainWindow::MainWindow(QWidget* parent) :
+  QMainWindow(parent)
 {
   ui = new Ui::MainWindow,
   ui->setupUi(this);
+
+  webView = new QWebView;
 
   widget = new Widget(config);
   setCentralWidget(widget);
@@ -45,16 +48,18 @@ MainWindow::MainWindow(Config& config, QWidget* parent) :
       widget->clear();
     }
   });
-  connect(ui->actionExit, &QAction::triggered, [&]() {
-    if (QMessageBox::question(this, "Exit", WARNING) == QMessageBox::Yes)
-    {
-      close();
-    }
-  });
+  connect(ui->actionExit, &QAction::triggered, this, &MainWindow::close);
+
   connect(ui->actionSave, &QAction::triggered, [&]() {
     const std::string file_name = QFileDialog::getSaveFileName(this, tr("Save config"), QDir::homePath()).toStdString();
     std::ofstream out(file_name);
     out << config;
+  });
+
+  connect(ui->actionHelp, &QAction::triggered, [&]() {
+    webView->load(QUrl("https://www.balabit.com/sites/default/files/documents/"
+                       "syslog-ng-ose-latest-guides/en/syslog-ng-ose-guide-admin/html/syslog-ng.conf.5.html"));
+    webView->show();
   });
   connect(ui->actionAbout, &QAction::triggered, [&]() {
     QMessageBox::aboutQt(this);
@@ -76,6 +81,7 @@ MainWindow::MainWindow(Config& config, QWidget* parent) :
 MainWindow::~MainWindow()
 {
   delete ui;
+  delete webView;
   delete widget;
 }
 
@@ -135,4 +141,16 @@ bool MainWindow::eventFilter(QObject *, QEvent* event)
   }
 
   return false;
+}
+
+void MainWindow::closeEvent(QCloseEvent* event)
+{
+  if (QMessageBox::question(this, "Exit", WARNING) == QMessageBox::Yes)
+  {
+    webView->close();
+  }
+  else
+  {
+    event->ignore();
+  }
 }

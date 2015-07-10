@@ -50,6 +50,11 @@ const std::string& Option::get_current_value() const
   return current_value;
 }
 
+bool Option::is_required() const
+{
+  return required;
+}
+
 void Option::add_value(const std::string& value)
 {
   values.push_back(std::move(value));
@@ -60,9 +65,9 @@ void Option::set_current_value(const std::string& current_value)
   this->current_value = current_value;
 }
 
-bool Option::has_default_value() const
+void Option::set_required()
 {
-  return default_value != "";
+  required = true;
 }
 
 const std::string Option::to_string() const
@@ -213,17 +218,17 @@ const std::list<Driver*>& Log::get_drivers() const
   return drivers;
 }
 
-void Log::update_location(const QPoint& location)
-{
-  this->location = location;
-}
-
 bool Log::has_driver(Driver* const driver) const
 {
   return drivers.cend() != std::find_if(drivers.cbegin(), drivers.cend(),
                                         [driver](const Driver* d)->bool {
                                           return d == driver;
                                         });
+}
+
+void Log::update_location(const QPoint& location)
+{
+  this->location = location;
 }
 
 void Log::add_driver(Driver* const driver)
@@ -248,6 +253,11 @@ const std::string Log::to_string() const
   return config;
 }
 
+Config::Config()
+{
+  parse_yaml("drivers_src.yml");
+  parse_yaml("drivers_dst.yml");
+}
 
 Config::Config(const std::string& file_name)
 {
@@ -352,6 +362,11 @@ void Config::parse_yaml(const std::string& file_name)
       const std::string default_value = yaml_option["default"] ? yaml_option["default"].as<std::string>() : "";
 
       Option option(name, type, description, default_value);
+
+      if (yaml_option["required"] && yaml_option["required"].as<std::string>() == "yes")
+      {
+        option.set_required();
+      }
 
       if (type == "list" || type == "set")
       {

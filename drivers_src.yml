@@ -1,21 +1,33 @@
+internal_source:
+  name: internal
+  type: source
+  description: All messages generated internally by syslog-ng use this special source.
+  options:
+    - tags:
+        type: string
+        description: Label the messages received from the source with custom tags.
+
 file_source:
   name: file
   type: source
   description: Opens the specified file and reads messages.
   options:
     - default-facility:
-        type: string
+        type: list
         description: This parameter assigns a facility value to the messages received from the file source, if the message does not specify one.
+        values: [kern, user, mail, daemon, auth, syslog, lpr, news, uucp, cron, authpriv, ftp, ntp, security, console, solaris-cron]
         default: kern
     - default-priority:
-        type: string
+        type: list
         description: This parameter assigns an emergency level to the messages received from the file source, if the message does not specify one.
+        values: [emerg, alert, crit, err, warning, notice, info, debug]
     - file:
         type: string
         description: The file to read messages from, including the path.
+        required: yes
     - encoding:
         type: string
-        description: Specifies the characterset (encoding, for example UTF-8) of messages using the legacy BSD-syslog protocol.
+        description: Specifies the characterset of messages using the legacy BSD-syslog protocol.
     - flags:
         type: set
         description: Specifies the log parsing options of the source.
@@ -41,10 +53,33 @@ file_source:
         type: number
         description: Specifies the maximum length of incoming log messages.
         default: 8192
+    - multi-line-garbage:
+        type: string
+        description: Use this when processing multi-line messages that contain unneeded parts between the messages. Specify a string or regular expression that matches the beginning of the unneeded message parts.
+    - multi-line-mode:
+        type: list
+        description: Specify the mode when processing multi-line messages.
+        values: [indented, prefix-garbage, prefix-suffix]
+    - multi-line-prefix:
+        type: string
+        description: Specify a string or regular expression that matches the beginning of the log messages.
+    - optional:
+        type: list
+        description: Instruct syslog-ng to ignore the error if a specific source cannot be initialized.
+        values: [yes, no]
+    - pad-size:
+        type: number
+        description: Specifies input padding.
+        default: 0
+    - program-override:
+        type: string
+        description: Replaces the ${PROGRAM} part of the message with the parameter string.
+    - tags:
+        type: string
+        description: Label the messages received from the source with custom tags.
     - time-zone:
         type: string
         description: The default timezone for messages read from the source.
-        default: Europe/Budapest
 
 network_source:
   name: network
@@ -108,46 +143,3 @@ network_source:
         description: Specifies the protocol used to receive messages from the source.
         values: [udp, tcp, tls]
         default: tcp
-
-sql_destination:
-  name: sql
-  type: destination
-  description: Sends messages into an SQL database.
-  options:
-    - columns:
-        type: set
-        values: [date, facility, level, host, program, pid, message]
-        default: "date, facility, level, host, program, pid, message"
-    - database:
-        type: string
-        default: logs
-    - dbd-options:
-        type: string
-    - flags:
-        type: set
-        values: [dont-create-tables,explicit-commits]
-    - flush-lines:
-        type: number
-    - db-type:
-        type: list
-        values: [mssql,mysql,oracle,pgsql,sqlite3]
-    - host:
-        type: string
-    - port:
-        type: number
-    - username:
-        type: string
-    - password:
-        type: string
-    - table:
-        type: string
-    - indexes:
-        type: set
-        values: [date, facility, host, program]
-        default: "date, facility, host, program"
-    - values:
-        type: set
-        values: ["${R_YEAR}-${R_MONTH}-${R_DAY}, ${R_HOUR}:${R_MIN}:${R_SEC}", "${FACILITY}", "${LEVEL}", "${HOST}", "${PROGRAM}", "${PID}", "${MSGONLY}"]
-        default: "${R_YEAR}-${R_MONTH}-${R_DAY}, ${R_HOUR}:${R_MIN}:${R_SEC}, ${FACILITY}, ${LEVEL}, ${HOST}, ${PROGRAM}, ${PID}, ${MSGONLY}"
-    - retries:
-        type: number

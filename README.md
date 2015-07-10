@@ -22,4 +22,3 @@ make
 - update drivers and logs (double click to update)
 - move drivers (click&hold to move)
 - delete drivers (when moving, press Delete)
-- Save button prints configuration to stdout

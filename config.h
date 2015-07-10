@@ -15,6 +15,7 @@ class Option
   std::string name, description;
   std::vector<std::string> values;
   std::string default_value, current_value;
+  bool required = false;
 
 public:
   Option(const std::string& name, const std::string& type, const std::string& description, const std::string& default_value);
@@ -25,10 +26,11 @@ public:
   const std::vector<std::string>& get_values() const;
   const std::string& get_default_value() const;
   const std::string& get_current_value() const;
+  bool is_required() const;
 
   void add_value(const std::string& value);
   void set_current_value(const std::string& current_value);
-  bool has_default_value() const;
+  void set_required();
 
   const std::string to_string() const;
 };
@@ -82,9 +84,9 @@ public:
 
   const QPoint& get_location() const;
   const std::list<Driver*>& get_drivers() const;
+  bool has_driver(Driver* const driver) const;
 
   void update_location(const QPoint& location);
-  bool has_driver(Driver* const driver) const;
   void add_driver(Driver* const driver);
   void remove_driver(Driver* const driver);
 
@@ -98,6 +100,7 @@ class Config
   std::list<Log> logs;
 
 public:
+  Config();
   Config(const std::string& file_name);
 
   const std::vector<DefaultDriver>& get_default_drivers() const;

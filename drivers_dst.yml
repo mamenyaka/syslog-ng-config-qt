@@ -1,0 +1,42 @@
+sql_destination:
+  name: sql
+  type: destination
+  description: Sends messages into an SQL database.
+  options:
+    - columns:
+        type: set
+        values: [date, facility, level, host, program, pid, message]
+        default: "date, facility, level, host, program, pid, message"
+    - database:
+        type: string
+        default: logs
+    - dbd-options:
+        type: string
+    - flags:
+        type: set
+        values: [dont-create-tables,explicit-commits]
+    - flush-lines:
+        type: number
+    - db-type:
+        type: list
+        values: [mssql,mysql,oracle,pgsql,sqlite3]
+    - host:
+        type: string
+    - port:
+        type: number
+    - username:
+        type: string
+    - password:
+        type: string
+    - table:
+        type: string
+    - indexes:
+        type: set
+        values: [date, facility, host, program]
+        default: "date, facility, host, program"
+    - values:
+        type: set
+        values: ["${R_YEAR}-${R_MONTH}-${R_DAY}, ${R_HOUR}:${R_MIN}:${R_SEC}", "${FACILITY}", "${LEVEL}", "${HOST}", "${PROGRAM}", "${PID}", "${MSGONLY}"]
+        default: "${R_YEAR}-${R_MONTH}-${R_DAY}, ${R_HOUR}:${R_MIN}:${R_SEC}, ${FACILITY}, ${LEVEL}, ${HOST}, ${PROGRAM}, ${PID}, ${MSGONLY}"
+    - retries:
+        type: number

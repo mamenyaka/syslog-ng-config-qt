@@ -1,4 +1,4 @@
-QT += core gui widgets
+QT += core gui widgets webkitwidgets
 
 TARGET = syslog-ng-config-qt
 TEMPLATE = app

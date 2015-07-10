@@ -28,6 +28,7 @@
     <property name="title">
      <string>&amp;Help</string>
     </property>
+    <addaction name="actionHelp"/>
     <addaction name="actionAbout"/>
    </widget>
    <addaction name="menuFile"/>
@@ -80,6 +81,19 @@
    <property name="shortcut">
     <string>Ctrl+X</string>
    </property>
+  </action>
+  <action name="actionHelp">
+    <property name="icon">
+      <iconset theme="help">
+        <normaloff/>
+      </iconset>
+    </property>
+    <property name="text">
+      <string>&amp;Help</string>
+    </property>
+    <property name="shortcut">
+      <string>Ctrl+H</string>
+    </property>
   </action>
   <action name="actionAbout">
    <property name="icon">
