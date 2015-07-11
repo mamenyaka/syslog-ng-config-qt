@@ -31,7 +31,6 @@ Dialog::Dialog(Driver& driver, QWidget* parent) :
   QScrollArea* scrollArea = new QScrollArea;
   scrollArea->setWidget(widget);
   scrollArea->setWidgetResizable(true);
-  scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
   scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
   QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::RestoreDefaults);

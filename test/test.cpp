@@ -5,6 +5,7 @@
 #include <QtTest/QTest>
 
 #include <sstream>
+#include <iostream>
 
 QString log1 = ""
 "source s_file0 {\n"
@@ -14,9 +15,9 @@ QString log1 = ""
 "\n"
 "destination d_sql0 {\n"
 "    sql(\n"
-"        username(\"test\")\n"
 "        password(\"test\")\n"
 "        table(\"test\")\n"
+"        username(\"test\")\n"
 "    );\n"
 "};\n"
 "\n"
@@ -32,7 +33,7 @@ void Test::is_config_valid_test_data()
 
 void Test::is_config_valid_test()
 {
-  Config config("../drivers.yml");
+  Config config;
 
   const auto src_cit = std::find_if(config.get_default_drivers().cbegin(), config.get_default_drivers().cend(),
                                     [](const DefaultDriver& driver)->bool {
@@ -82,6 +83,9 @@ void Test::is_config_valid_test()
   ss << config;
 
   QFETCH(QString, conf);
+
+  std::cerr << ss.str() << std::endl << conf.toStdString() << std::endl;
+
   QCOMPARE(ss.str(), conf.toStdString());
 }
 

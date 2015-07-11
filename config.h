@@ -101,7 +101,6 @@ class Config
 
 public:
   Config();
-  Config(const std::string& file_name);
 
   const std::vector<DefaultDriver>& get_default_drivers() const;
   std::list<Driver>& get_drivers();

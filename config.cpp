@@ -259,11 +259,6 @@ Config::Config()
   parse_yaml("drivers_dst.yml");
 }
 
-Config::Config(const std::string& file_name)
-{
-  parse_yaml(file_name);
-}
-
 const std::vector<DefaultDriver>& Config::get_default_drivers() const
 {
   return default_drivers;
