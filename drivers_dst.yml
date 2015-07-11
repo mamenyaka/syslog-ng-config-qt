@@ -5,38 +5,79 @@ sql_destination:
   options:
     - columns:
         type: set
+        description: Name of the columns storing the data in "fieldname [dbtype]" format.
         values: [date, facility, level, host, program, pid, message]
         default: "date, facility, level, host, program, pid, message"
+        required: yes
     - database:
         type: string
+        description: Name of the database that stores the logs.
         default: logs
+        required: yes
     - dbd-options:
         type: string
+        description: Specify database options that are set whenever syslog-ng OSE connects to the database server.
     - flags:
         type: set
-        values: [dont-create-tables,explicit-commits]
+        description: Specifies the log parsing options of the source.
+        values: [dont-create-tables, explicit-commits]
     - flush-lines:
         type: number
-    - db-type:
-        type: list
-        values: [mssql,mysql,oracle,pgsql,sqlite3]
+        description: Specifies how many lines are flushed to a destination at a time.
+    - frac-digits:
+        type: number
+        description: The syslog-ng application can store fractions of a second in the timestamps according to the ISO8601 format.
+        default: 0
     - host:
         type: string
-    - port:
-        type: number
-    - username:
-        type: string
-    - password:
-        type: string
-    - table:
-        type: string
+        description: Hostname of the database server.
     - indexes:
         type: set
+        description: The list of columns that are indexed by the database to speed up searching. 
         values: [date, facility, host, program]
         default: "date, facility, host, program"
-    - values:
-        type: set
-        values: ["${R_YEAR}-${R_MONTH}-${R_DAY}, ${R_HOUR}:${R_MIN}:${R_SEC}", "${FACILITY}", "${LEVEL}", "${HOST}", "${PROGRAM}", "${PID}", "${MSGONLY}"]
-        default: "${R_YEAR}-${R_MONTH}-${R_DAY}, ${R_HOUR}:${R_MIN}:${R_SEC}, ${FACILITY}, ${LEVEL}, ${HOST}, ${PROGRAM}, ${PID}, ${MSGONLY}"
+    - local-time-zone:
+        type: string
+        description: Sets the timezone used when expanding filename and tablename templates.
+    - log-fifo-size:
+        type: number
+        description: The number of messages that the output queue can store.
+    - "null":
+        type: string
+        description: If the content of a column matches the string specified, the contents of the column will be replaced with an SQL NULL value.
+    - password:
+        type: string
+        description: Password of the database user.
+    - port:
+        type: number
+        description: The port number to connect to.
     - retries:
         type: number
+        description: The number of insertion attempts.
+        default: 3
+    - session-statements:
+        type: string
+        description: Specifies one or more SQL-like statement which is executed after syslog-ng OSE has successfully connected to the database.
+    - table:
+        type: string
+        description: Name of the database table to use.
+        default: messages
+        required: yes
+    - time-zone:
+        type: string
+        description: Convert timestamps to the timezone specified by this option.
+    - type:
+        type: list
+        description: Specifies the type of the database, that is, the DBI database driver to use. 
+        values: [mssql, mysql, oracle, pgsql, sqlite3]
+        required: yes
+    - username:
+        type: string
+        description: Name of the database user.
+    - values:
+        type: set
+        description: The parts of the message to store in the fields specified in the "columns" parameter.
+        values: ["${R_YEAR}-${R_MONTH}-${R_DAY}, ${R_HOUR}:${R_MIN}:${R_SEC}", "${FACILITY}", "${LEVEL}", "${HOST}", "${PROGRAM}", "${PID}", "${MSGONLY}"]
+        default: "${R_YEAR}-${R_MONTH}-${R_DAY}, ${R_HOUR}:${R_MIN}:${R_SEC}, ${FACILITY}, ${LEVEL}, ${HOST}, ${PROGRAM}, ${PID}, ${MSGONLY}"
+        required: yes
+

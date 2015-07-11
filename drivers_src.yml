@@ -118,6 +118,16 @@ network_source:
         description: Specifies whether connections to sources should be closed when syslog-ng is forced to reload its configuration.
         values: [yes, no]
         default: yes
+    - keep-hostname:
+        type: list
+        description: Enable or disable hostname rewriting.
+        values: [yes, no]
+        default: no
+    - keep-timestamp:
+        type: list
+        description: Specifies whether syslog-ng should accept the timestamp received from the sending application or client.
+        values: [yes, no]
+        default: yes
     - log-fetch-limit:
         type: number
         description: The maximum number of messages fetched from a source during a single poll loop.
@@ -130,16 +140,59 @@ network_source:
         type: number
         description: Specifies the maximum length of incoming log messages.
         default: 8192
+    - max-connections:
+        type: number
+        description: Specifies the maximum number of simultaneous connections.
+        default: 10
+    - pad-size:
+        type: number
+        description: Specifies input padding.
+        default: 0
     - port:
         type: number
         description: The port number to bind to.
         default: 601
+    - program-override:
+        type: string
+        description: Replaces the ${PROGRAM} part of the message with the parameter string.
+    - so-broadcast:
+        type: list
+        description: This option controls the "SO_BROADCAST" socket option required to make syslog-ng send messages to a broadcast address.
+        values: [yes, no]
+        default: no
+    - so-keepalive:
+        type: list
+        description: Enables keep-alive messages, keeping the socket open.
+        values: [yes, no]
+        default: no
+    - so-rcvbuf:
+        type: number
+        description: Specifies the size of the socket receive buffer in bytes.
+        default: 0
+    - so-sndbuf:
+        type: number
+        description: Specifies the size of the socket send buffer in bytes.
+        default: 0
+    - tags:
+        type: string
+        description: Label the messages received from the source with custom tags.
     - time-zone:
         type: string
         description: The default timezone for messages read from the source.
-        default: Europe/Budapest
     - transport:
         type: list
         description: Specifies the protocol used to receive messages from the source.
         values: [udp, tcp, tls]
         default: tcp
+#   - tls:
+    - use-dns:
+        type: list
+        description: Enable or disable DNS usage.
+        values: [yes, no, persist_only]
+        default: yes
+    - use-fqdn:
+        type: list
+        description: Add Fully Qualified Domain Name instead of short hostname.
+        values: [yes, no]
+        default: no
+
