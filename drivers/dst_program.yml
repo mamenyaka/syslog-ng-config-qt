@@ -1,0 +1,54 @@
+name: program
+type: destination
+description: Start an external application or script and send the log messages to its standard input.
+options:
+  - flags:
+      type: set
+      description: Influence the behavior of the destination driver.
+      values: [no-multi-line, syslog-protocol]
+  - flush-lines:
+      type: number
+      description: Specifies how many lines are flushed to a destination at a time.
+      default: 100
+  - frac-digits:
+      type: number
+      description: The syslog-ng application can store fractions of a second in the timestamps according to the ISO8601 format.
+      default: 0
+  - log-fifo-size:
+      type: number
+      description: The number of messages that the output queue can store.
+      default: 10000
+  - mark-mode:
+      type: list
+      description: Specify how to send the "MARK" signal.
+      values: [internal, dst-idle, host-idle, periodical, none, global]
+      default: internal
+  - program:
+      type: string
+      description: The program name to start.
+      required: yes
+  - suppress:
+      type: number
+      description: Suppress the repeated messages and send the message only once. The parameter of this option specifies the number of seconds syslog-ng waits for identical messages.
+      default: 0
+  - template:
+      type: string
+      description: Specifies a template defining the logformat to be used in the destination.
+  - template-escape:
+      type: list
+      description: Turns on escaping for the quote, double qoute, and backspace characters in templated output files.
+      values: [yes, no]
+      default: no
+  - throttle:
+      type: number
+      description: Sets the maximum number of messages sent to the destination per second.
+      default: 0
+  - time-zone:
+      type: string
+      description: Convert timestamps to the timezone specified by this option.
+  - ts-format:
+      type: list
+      description: Override the global timestamp format
+      values: [rfc3164, bsd, rfc3339, iso]
+      default: rfc3164
+

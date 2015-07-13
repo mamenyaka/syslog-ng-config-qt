@@ -1,0 +1,79 @@
+name: unix-dgram
+type: source
+description: Open an "AF_UNIX" socket and start listening on it for messages using BSD "SOCK_DGRAM" semantics.
+options:
+  - encoding:
+      type: string
+      description: Specifies the characterset of messages using the legacy BSD-syslog protocol.
+  - flags:
+      type: set
+      description: Specifies the log parsing options of the source.
+      values: [assume-utf8, empty-lines, expect-hostname, kernel, no-multi-line, no-parse, store-legacy-msghdr, syslog-protocol, validate-utf8]
+  - group:
+      type: string
+      description: Set the gid of the socket.
+      default: root
+  - host-override:
+      type: string
+      description: Replaces the ${HOST} part of the message with the parameter string.
+  - keep-timestamp:
+      type: list
+      description: Specifies whether syslog-ng should accept the timestamp received from the sending application or client.
+      values: [yes, no]
+      default: yes
+  - log-fetch-limit:
+      type: number
+      description: The maximum number of messages fetched from a source during a single poll loop.
+      default: 10
+  - log-iw-size:
+      type: number
+      description: The size of the initial window, this value is used during flow control.
+      default: 1000
+  - log-msg-size:
+      type: number
+      description: Specifies the maximum length of incoming log messages.
+      default: 8192
+  - optional:
+      type: list
+      description: Instruct syslog-ng to ignore the error if a specific source cannot be initialized.
+      values: [yes, no]
+  - owner:
+      type: string
+      description: Set the uid of the socket.
+      default: root
+  - pad-size:
+      type: number
+      description: Specifies input padding.
+      default: 0
+  - perm:
+      type: string
+      description: Set the permission mask.
+      default: 0666
+  - program-override:
+      type: string
+      description: Replaces the ${PROGRAM} part of the message with the parameter string.
+  - so-broadcast:
+      type: list
+      description: This option controls the "SO_BROADCAST" socket option required to make syslog-ng send messages to a broadcast address.
+      values: [yes, no]
+      default: no
+  - so-keepalive:
+      type: list
+      description: Enables keep-alive messages, keeping the socket open.
+      values: [yes, no]
+      default: no
+  - so-rcvbuf:
+      type: number
+      description: Specifies the size of the socket receive buffer in bytes.
+      default: 0
+  - tags:
+      type: string
+      description: Label the messages received from the source with custom tags.
+  - time-zone:
+      type: string
+      description: The default timezone for messages read from the source.
+  - unix-dgram:
+      type: string
+      description: The filename of the socket to create, including the path.
+      required: yes
+

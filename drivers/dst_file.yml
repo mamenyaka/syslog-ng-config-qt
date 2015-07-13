@@ -1,0 +1,95 @@
+name: file
+type: destination
+description: Output messages to the specified text file, or to a set of files.
+options:
+  - create-dirs:
+      type: list
+      description: Enable creating non-existing directories.
+      values: [yes, no]
+      default: no
+  - dir-group:
+      type: string
+      description: The group of the directories created by syslog-ng.
+      default: root
+  - dir-owner:
+      type: string
+      description: The owner of the directories created by syslog-ng.
+      default: root
+  - dir-perm:
+      type: string
+      description: The permission mask of directories created by syslog-ng.
+      default: 0700
+  - file:
+      type: string
+      description: The file to read messages from, including the path.
+      required: yes
+  - flags:
+      type: set
+      description: Influence the behavior of the destination driver.
+      values: [no-multi-line, syslog-protocol, threaded]
+  - flush-lines:
+      type: number
+      description: Specifies how many lines are flushed to a destination at a time.
+      default: 100
+  - frac-digits:
+      type: number
+      description: The syslog-ng application can store fractions of a second in the timestamps according to the ISO8601 format.
+      default: 0
+  - fsync:
+      type: list
+      description: Forces an "fsync()" call on the destination fd after each write.
+      values: [yes, no]
+      default: no
+  - group:
+      type: string
+      description: Set the group of the created file to the one specified.
+      default: root
+  - local-time-zone:
+      type: string
+      description: Sets the timezone used when expanding filename and tablename templates.
+  - log-fifo-size:
+      type: number
+      description: The number of messages that the output queue can store.
+      default: 10000
+  - mark-mode:
+      type: list
+      description: Specify how to send the "MARK" signal.
+      values: [internal, dst-idle, host-idle, periodical, none, global]
+      default: none
+  - overwrite-if-older:
+      type: number
+      description: If set to a value higher than 0, syslog-ng OSE checks when the file was last modified before starting to write into the file. If the file is older than the specified amount of time (in seconds), then syslog-ng removes the existing file and opens a new file with the same name.
+      default: 0
+  - owner:
+      type: string
+      description: Set the owner of the created file to the one specified.
+      default: root
+  - pad-size:
+      type: number
+      description: If set, syslog-ng OSE will pad output messages to the specified size (in bytes).
+      default: 0
+  - perm:
+      type: string
+      description: The permission mask of the file if it is created by syslog-ng.
+      default: 0600
+  - suppress:
+      type: number
+      description: Suppress the repeated messages and send the message only once. The parameter of this option specifies the number of seconds syslog-ng waits for identical messages.
+      default: 0
+  - template:
+      type: string
+      description: Specifies a template defining the logformat to be used in the destination.
+  - template-escape:
+      type: list
+      description: Turns on escaping for the quote, double qoute, and backspace characters in templated output files.
+      values: [yes, no]
+      default: no
+  - time-zone:
+      type: string
+      description: Convert timestamps to the timezone specified by this option.
+  - ts-format:
+      type: list
+      description: Override the global timestamp format
+      values: [rfc3164, bsd, rfc3339, iso]
+      default: rfc3164
+

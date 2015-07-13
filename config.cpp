@@ -1,5 +1,7 @@
 #include "config.h"
 
+#include <boost/filesystem.hpp>
+
 #include <yaml-cpp/yaml.h>
 
 #include <map>
@@ -14,7 +16,9 @@ Option::Option(const std::string& name, const std::string& type, const std::stri
     {"string", OptionType::string},
     {"number", OptionType::number},
     {"list", OptionType::list},
-    {"set", OptionType::set}
+    {"set", OptionType::set},
+    {"tls", OptionType::tls},
+    {"value-pairs", OptionType::value_pairs}
   };
 
   this->type = option_type_map[type];
@@ -65,9 +69,9 @@ void Option::set_current_value(const std::string& current_value)
   this->current_value = current_value;
 }
 
-void Option::set_required()
+void Option::set_required(const bool required)
 {
-  required = true;
+  this->required = required;
 }
 
 const std::string Option::to_string() const
@@ -110,9 +114,19 @@ const std::string& DefaultDriver::get_description() const
   return description;
 }
 
+const std::string& DefaultDriver::get_include() const
+{
+  return include;
+}
+
 const std::vector<Option>& DefaultDriver::get_options() const
 {
   return options;
+}
+
+void DefaultDriver::set_include(const std::string& include)
+{
+  this->include = include;
 }
 
 void DefaultDriver::add_option(const Option& option)
@@ -190,7 +204,7 @@ const std::string Driver::to_string() const
   for (const Option& option : options)
   {
     if (name == option.get_name() ||
-      option.get_current_value() == option.get_default_value())
+      (!option.is_required() && option.get_current_value() == option.get_default_value()))
     {
       continue;
     }
@@ -253,10 +267,19 @@ const std::string Log::to_string() const
   return config;
 }
 
-Config::Config()
+Config::Config(const std::string& dir_name)
 {
-  parse_yaml("drivers_src.yml");
-  parse_yaml("drivers_dst.yml");
+  boost::filesystem::path dir_path(dir_name);
+  boost::filesystem::directory_iterator end_it;
+  for (boost::filesystem::directory_iterator it(dir_path); it != end_it; ++it)
+  {
+    parse_yaml(it->path().string());
+  }
+
+  std::sort(default_drivers.begin(), default_drivers.end(),
+            [](const DefaultDriver& a, const DefaultDriver& b)->bool {
+              return a.get_name() < b.get_name();
+            });
 }
 
 const std::vector<DefaultDriver>& Config::get_default_drivers() const
@@ -334,50 +357,48 @@ void Config::delete_log(Log* log)
 
 void Config::parse_yaml(const std::string& file_name)
 {
-  const YAML::Node root = YAML::LoadFile(file_name);
-  for (YAML::const_iterator driver_it = root.begin(); driver_it != root.end(); ++driver_it)
+  const YAML::Node yaml_driver = YAML::LoadFile(file_name);
+
+  const std::string name = yaml_driver["name"].as<std::string>();
+  const std::string type = yaml_driver["type"].as<std::string>();
+  const std::string description = yaml_driver["description"].as<std::string>();
+
+  DefaultDriver driver(name, type, description);
+
+  if (yaml_driver["include"])
   {
-    const YAML::Node& yaml_driver = driver_it->second;
+    driver.set_include(yaml_driver["include"].as<std::string>());
+  }
 
-    const std::string name = yaml_driver["name"].as<std::string>();
-    const std::string type = yaml_driver["type"].as<std::string>();
-    const std::string description = yaml_driver["description"] ? yaml_driver["description"].as<std::string>() : "";
-    const YAML::Node& options = yaml_driver["options"];
+  const YAML::Node& options = yaml_driver["options"];
+  for (YAML::const_iterator option_it = options.begin(); option_it != options.end(); ++option_it)
+  {
+    YAML::const_iterator tmp = option_it->begin();
+    const YAML::Node& yaml_option = tmp->second;
 
-    DefaultDriver driver(name, type, description);
+    const std::string name = tmp->first.as<std::string>();
+    const std::string type = yaml_option["type"].as<std::string>();
+    const std::string description = yaml_option["description"].as<std::string>();
+    const std::string default_value = yaml_option["default"] ? yaml_option["default"].as<std::string>() : "";
 
-    for (YAML::const_iterator option_it = options.begin(); option_it != options.end(); ++option_it)
+    Option option(name, type, description, default_value);
+
+    if (yaml_option["required"])
     {
-      YAML::const_iterator tmp = option_it->begin();
-      const YAML::Node& yaml_option = tmp->second;
-
-      const std::string name = tmp->first.as<std::string>();
-      const std::string type = yaml_option["type"].as<std::string>();
-      const std::string description = yaml_option["description"] ? yaml_option["description"].as<std::string>() : "";
-      const std::string default_value = yaml_option["default"] ? yaml_option["default"].as<std::string>() : "";
-
-      Option option(name, type, description, default_value);
-
-      if (yaml_option["required"] && yaml_option["required"].as<std::string>() == "yes")
-      {
-        option.set_required();
-      }
-
-      if (type == "list" || type == "set")
-      {
-        const YAML::Node& values = yaml_option["values"];
-        for (YAML::const_iterator value_it = values.begin(); value_it != values.end(); ++value_it)
-        {
-          const std::string value = value_it->as<std::string>();
-          option.add_value(value);
-        }
-      }
-
-      driver.add_option(option);
+      option.set_required(yaml_option["required"].as<std::string>() == "yes");
     }
 
-    default_drivers.push_back(std::move(driver));
+    const YAML::Node& values = yaml_option["values"];
+    for (YAML::const_iterator value_it = values.begin(); value_it != values.end(); ++value_it)
+    {
+      const std::string value = value_it->as<std::string>();
+      option.add_value(value);
+    }
+
+    driver.add_option(option);
   }
+
+  default_drivers.push_back(std::move(driver));
 }
 
 void Config::erase_all()

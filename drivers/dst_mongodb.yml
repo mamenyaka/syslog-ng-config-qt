@@ -1,0 +1,59 @@
+name: mongodb
+type: destination
+description: Sends messages to a MongoDB database.
+options:
+  - collection:
+      type: string
+      description: The name of the MongoDB collection where the log messages are stored.
+      default: messages
+  - database:
+      type: string
+      description: The name of the MongoDB database where the log messages are stored.
+      default: syslog
+  - frac-digits:
+      type: number
+      description: The syslog-ng application can store fractions of a second in the timestamps according to the ISO8601 format.
+      default: 0
+  - local-time-zone:
+      type: string
+      description: Sets the timezone used when expanding filename and tablename templates.
+  - log-fifo-size:
+      type: number
+      description: The number of messages that the output queue can store.
+      default: 10000
+  - on-error:
+      type: list
+      description: Controls what happens when type-casting fails and syslog-ng OSE cannot convert some data to the specified type.
+      values: [drop-message, drop-property, fallback-to-string, silently-drop-message, silently-drop-property, silently-fallback-to-string]
+      default: drop-message
+  - password:
+      type: string
+      description: Password of the database user.
+  - path:
+      type: string
+      description: If the option is set, syslog-ng OSE will connect to the database using the specified UNIX domain socket.
+  - retries:
+      type: number
+      description: The number of attempts to send a message.
+      default: 3
+  - safe-mode:
+      type: list
+      description: If enabled, syslog-ng OSE performs an extra check after each insert to verify that the insert succeeded.
+      values: [yes, no]
+      default: yes
+  - servers:
+      type: string
+      description: Specifies the hostname or IP address and the port number of the database server. To send the messages to a MongoDB replicaset, specify the addresses of the database servers as a comma-separated list.
+      default: 127.0.0.1:27017
+  - throttle:
+      type: number
+      description: Sets the maximum number of messages sent to the destination per second.
+      default: 0
+  - username:
+      type: string
+      description: Name of the database user.
+  - value-pairs:
+      type: value-pairs
+      description: Create structured name-value pairs from the data and metadata of the log message.
+      default: scope(selected-macros nv-pairs)
+

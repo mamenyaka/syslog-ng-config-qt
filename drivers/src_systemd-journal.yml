@@ -1,0 +1,29 @@
+name: systemd-journal
+type: source
+description: Read the structured name-value format of the journald system service.
+options:
+  - default-facility:
+      type: list
+      description: This parameter assigns a facility value to the messages received from the file source, if the message does not specify one.
+      values: [kern, user, mail, daemon, auth, syslog, lpr, news, uucp, cron, authpriv, ftp, ntp, security, console, solaris-cron, local0, local1, local2, local3, local4, local5, local6, local7]
+      default: local0
+  - default-level:
+      type: list
+      description: This parameter assigns an emergency level to the messages received from the file source, if the message does not specify one.
+      values: [emerg, alert, crit, err, warning, notice, info, debug]
+      default: notice
+  - log-fetch-limit:
+      type: number
+      description: The maximum number of messages fetched from a source during a single poll loop.
+      default: 10
+  - max-field-size:
+      type: number
+      description: The maximum length of a field's value.
+      default: 65536
+  - prefix:
+      type: string
+      description: If this option is set, every non-built-in mapped names get a prefix.
+  - time-zone:
+      type: string
+      description: The default timezone for messages read from the source.
+

@@ -1,0 +1,4 @@
+name: system
+type: source
+description: Automatically collect the system-specific log messages of the host on a number of platforms.
+

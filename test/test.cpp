@@ -33,7 +33,7 @@ void Test::is_config_valid_test_data()
 
 void Test::is_config_valid_test()
 {
-  Config config;
+  Config config("../drivers");
 
   const auto src_cit = std::find_if(config.get_default_drivers().cbegin(), config.get_default_drivers().cend(),
                                     [](const DefaultDriver& driver)->bool {

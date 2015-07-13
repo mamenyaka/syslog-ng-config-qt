@@ -1,0 +1,47 @@
+name: program
+type: source
+description: Opens a named pipe with the specified name and listens for messages.
+options:
+  - flags:
+      type: set
+      description: Specifies the log parsing options of the source.
+      values: [assume-utf8, empty-lines, expect-hostname, kernel, no-multi-line, no-parse, store-legacy-msghdr, syslog-protocol, validate-utf8]
+  - keep-timestamp:
+      type: list
+      description: Specifies whether syslog-ng should accept the timestamp received from the sending application or client.
+      values: [yes, no]
+      default: yes
+  - log-fetch-limit:
+      type: number
+      description: The maximum number of messages fetched from a source during a single poll loop.
+      default: 10
+  - log-iw-size:
+      type: number
+      description: The size of the initial window, this value is used during flow control.
+      default: 1000
+  - log-msg-size:
+      type: number
+      description: Specifies the maximum length of incoming log messages.
+      default: 8192
+  - optional:
+      type: list
+      description: Instruct syslog-ng to ignore the error if a specific source cannot be initialized.
+      values: [yes, no]
+  - pad-size:
+      type: number
+      description: Specifies input padding.
+      default: 0
+  - program:
+      type: string
+      description: The name of the application to start and read messages from.
+      required: yes
+  - program-override:
+      type: string
+      description: Replaces the ${PROGRAM} part of the message with the parameter string.
+  - tags:
+      type: string
+      description: Label the messages received from the source with custom tags.
+  - time-zone:
+      type: string
+      description: The default timezone for messages read from the source.
+

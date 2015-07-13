@@ -97,7 +97,7 @@ void MainWindow::driver_select_dialog(const std::string& type)
   }
 
   bool ok;
-  const std::string name = QInputDialog::getItem(this, QString::fromStdString("Create new " + type), tr("Select subtype"),
+  const std::string name = QInputDialog::getItem(this, QString::fromStdString("Create new " + type), tr("Select driver"),
                                                  items, 0, false, &ok).toStdString();
 
   if (ok && !name.empty())

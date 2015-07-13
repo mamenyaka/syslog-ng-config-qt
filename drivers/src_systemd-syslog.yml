@@ -1,0 +1,4 @@
+name: systemd-syslog
+type: source
+description: Read the log messages of systemd using the "/run/systemd/journal/syslog" socket.
+

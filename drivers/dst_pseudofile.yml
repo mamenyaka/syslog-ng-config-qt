@@ -1,0 +1,12 @@
+name: pseudofile
+type: destination
+description: Send messages to special files in the /proc, /dev or /sys directories.
+options:
+  - pseudofile:
+      type: string
+      description: The file to write messages to, including the path.
+      required: yes
+  - template:
+      type: string
+      description: Specifies a template defining the logformat to be used in the destination.
+

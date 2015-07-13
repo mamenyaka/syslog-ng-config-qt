@@ -1,0 +1,27 @@
+name: redis
+type: destination
+description: Send messages as name-value pairs to a Redis key-value store.
+options:
+  - command:
+      type: string
+      description: The Redis command to execute, for example, LPUSH, INCR, or HINCRBY.
+      required: yes
+  - host:
+      type: string
+      description: The destination host address where messages should be sent.
+      default: 127.0.0.1
+      required: yes
+  - port:
+      type: number
+      description: The port number to connect to.
+      default: 6379
+      required: yes
+  - retries:
+      type: number
+      description: The number of times syslog-ng OSE attempts to send a message to this destination.
+      default: 3
+  - throttle:
+      type: number
+      description: Sets the maximum number of messages sent to the destination per second.
+      default: 0
+

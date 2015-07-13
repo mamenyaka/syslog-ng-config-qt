@@ -1,0 +1,8 @@
+name: internal
+type: source
+description: All messages generated internally by syslog-ng use this special source.
+options:
+  - tags:
+      type: string
+      description: Label the messages received from the source with custom tags.
+

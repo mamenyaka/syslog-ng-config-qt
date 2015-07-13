@@ -1,0 +1,14 @@
+name: pacct
+type: source
+description: Collect process accounting logs on Linux systems.
+include: scl.conf
+options:
+  - file:
+      type: string
+      description: The file where the process accounting logs are stored.
+      default: /var/log/account/pacct
+  - follow-freq:
+      type: number
+      description: Indicates that the source should be checked periodically.
+      default: 1
+

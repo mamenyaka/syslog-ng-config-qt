@@ -1,0 +1,54 @@
+name: smtp
+type: destination
+description: Send e-mail messages using SMTP, without needing external applications. 
+options:
+  - body:
+      type: string
+      description: The BODY field of the e-mail.
+      required: yes
+  - bcc:
+      type: string
+      description: The BCC recipient of the e-mail.
+  - cc:
+      type: string
+      description: The CC recipient of the e-mail.
+  - from:
+      type: string
+      description: The sender of the e-mail.
+      required: yes
+  - header:
+      type: string
+      description: Adds an extra header to the e-mail with the specified name and content.
+  - host:
+      type: string
+      description: Hostname or IP address of the SMTP server.
+      required: yes
+  - log-fifo-size:
+      type: number
+      description: The number of messages that the output queue can store.
+      default: 10000
+  - port:
+      type: number
+      description: The port number of the SMTP server.
+      default: 25
+      required: yes
+  - reply-to:
+      type: string
+      description: Replies of the recipient will be sent to this address.
+  - retries:
+      type: number
+      description: The number of insertion attempts.
+      default: 3
+  - subject:
+      type: string
+      description: The SUBJECT field of the e-mail.
+      required: yes
+  - throttle:
+      type: number
+      description: Sets the maximum number of messages sent to the destination per second.
+      default: 0
+  - to:
+      type: string
+      description: The recipient of the e-mail.
+      required: yes
+

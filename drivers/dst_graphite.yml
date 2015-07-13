@@ -1,0 +1,17 @@
+name: graphite
+type: destination
+description: Send metrics to a Graphite server to store numeric time-series data.
+options:
+  - host:
+      type: string
+      description: The hostname or IP address of the Graphite server.
+      default: localhost
+  - port:
+      type: number
+      description: The port number of the Graphite server.
+      default: 2003
+  - payload:
+      type: string
+      description: Select which value pairs to forward to Graphite.
+      required: yes
+

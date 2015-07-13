@@ -1,0 +1,63 @@
+name: riemann
+type: destination
+description: Send your data to a Riemann monitoring system.
+options:
+  - attributes:
+      type: value-pairs
+      description: Add extra metadata to the Riemann event, that can be displayed on the Riemann dashboard.
+  - description:
+      type: string
+      description: The value to add as the description field of the Riemann event.
+  - flush-lines:
+      type: number
+      description: Specifies how many lines are flushed to a destination at a time.
+      default: 1
+  - host:
+      type: string
+      description: The value to add as the host field of the Riemann event.
+      default: ${HOST}
+  - log-fifo-size:
+      type: number
+      description: The number of messages that the output queue can store.
+      default: 10000
+  - metric:
+      type: string
+      description: The numeric value to add as the metric field of the Riemann event.
+      required: yes
+  - port:
+      type: number
+      description: The port number of the Riemann server.
+      default: 5555
+      required: yes
+  - retries:
+      type: number
+      description: The number of insertion attempts.
+      default: 3
+  - server:
+      type: string
+      description: The hostname or IP address of the Riemann server.
+      default: 127.0.0.1
+      required: yes
+  - service:
+      type: string
+      description: The value to add as the service field of the Riemann event.
+      default: ${PROGRAM}
+  - state:
+      type: string
+      description: The value to add as the state field of the Riemann event.
+  - tags:
+      type: string
+      description: The list of tags to add as the tags field of the Riemann event.
+  - throttle:
+      type: number
+      description: Sets the maximum number of messages sent to the destination per second.
+      default: 0
+  - ttl:
+      type: string
+      description: The value to add as the ttl field of the Riemann event.
+  - type:
+      type: list
+      description: The type of the network connection to the Riemann server.
+      values: [udp, tcp]
+      default: tcp
+

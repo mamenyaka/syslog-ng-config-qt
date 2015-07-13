@@ -1,0 +1,61 @@
+name: amqp
+type: destination
+description: Publishes messages using the Advanced Message Queuing Protocol.
+options:
+  - body:
+      type: string
+      description: The body of the AMQP message.
+  - exchange:
+      type: string
+      description: The name of the AMQP exchange where syslog-ng OSE sends the message.
+      default: syslog
+  - exchange-declare:
+      type: list
+      description: Use this option to automatically create exchanges.
+      values: [yes, no]
+      default: no
+  - exchange-type:
+      type: list
+      description: The type of the AMQP exchange.
+      values: [direct, fanout, topic, header]
+      default: header
+  - host:
+      type: string
+      description: The hostname or IP address of the AMQP server.
+      default: 127.0.0.1
+      required: yes
+  - password:
+      type: string
+      description: The password used to authenticate on the AMQP server.
+  - persistent:
+      type: list
+      description: If this option is enabled, the AMQP server or broker will store the messages on its hard disk.
+      values: [yes, no]
+      default: yes
+  - port:
+      type: number
+      description: The port number of the AMQP server.
+      default: 5672
+  - retries:
+      type: number
+      description: The number of attempts to send a message.
+      default: 3
+  - routing-key:
+      type: string
+      description: Specifies a routing key for the exchange.
+  - throttle:
+      type: number
+      description: Sets the maximum number of messages sent to the destination per second.
+      default: 0
+  - username:
+      type: string
+      description: The username used to authenticate on the AMQP server.
+  - value-pairs:
+      type: value-pairs
+      description: Create structured name-value pairs from the data and metadata of the log message.
+      default: scope(selected-macros nv-pairs)
+  - vhost:
+      type: string
+      description: The name of the AMQP virtual host to send the messages to.
+      default: /
+

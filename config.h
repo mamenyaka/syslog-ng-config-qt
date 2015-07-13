@@ -7,7 +7,7 @@
 #include <vector>
 #include <list>
 
-enum class OptionType { string, number, list, set };
+enum class OptionType { string, number, list, set, tls, value_pairs };
 
 class Option
 {
@@ -30,7 +30,7 @@ public:
 
   void add_value(const std::string& value);
   void set_current_value(const std::string& current_value);
-  void set_required();
+  void set_required(const bool required);
 
   const std::string to_string() const;
 };
@@ -39,6 +39,7 @@ class DefaultDriver
 {
 protected:
   std::string name, type, description;
+  std::string include;
   std::vector<Option> options;
 
 public:
@@ -47,8 +48,10 @@ public:
   const std::string& get_name() const;
   const std::string& get_type() const;
   const std::string& get_description() const;
+  const std::string& get_include() const;
   const std::vector<Option>& get_options() const;
 
+  void set_include(const std::string& include);
   void add_option(const Option& option);
 };
 
@@ -100,7 +103,7 @@ class Config
   std::list<Log> logs;
 
 public:
-  Config();
+  Config(const std::string& dir_name = "drivers");
 
   const std::vector<DefaultDriver>& get_default_drivers() const;
   std::list<Driver>& get_drivers();

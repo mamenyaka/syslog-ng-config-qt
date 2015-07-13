@@ -1,0 +1,127 @@
+name: syslog
+type: destination
+description: Send messages to a remote host using the IETF RFC5424 syslog protocol.
+options:
+  - flags:
+      type: set
+      description: Influence the behavior of the destination driver.
+      values: [no-multi-line, syslog-protocol]
+  - flush-lines:
+      type: number
+      description: Specifies how many lines are flushed to a destination at a time.
+      default: 100
+  - frac-digits:
+      type: number
+      description: The syslog-ng application can store fractions of a second in the timestamps according to the ISO8601 format.
+      default: 0
+  - ip-tos:
+      type: number
+      description: Specifies the Type-of-Service value of outgoing packets.
+      default: 0
+  - ip-ttl:
+      type: number
+      description: Specifies the Time-To-Live value of outgoing packets.
+      default: 0
+  - keep-alive:
+      type: list
+      description: Specifies whether connections to destinations should be closed when syslog-ng is reloaded.
+      values: [yes, no]
+      default: yes
+  - localip:
+      type: string
+      description: The IP address to bind to before connecting to target.
+      default: 0.0.0.0
+  - localport:
+      type: number
+      description: The port number to bind to. Messages are sent from this port.
+      default: 0
+  - log-fifo-size:
+      type: number
+      description: The number of messages that the output queue can store.
+      default: 10000
+  - mark-freq:
+      type: number
+      description: The number of seconds between two "MARK" messages.
+      default: 1200
+  - mark-mode:
+      type: list
+      description: Specify how to send the "MARK" signal.
+      values: [dst-idle, host-idle, periodical, none, global]
+      default: global
+  - syslog:
+      type: string
+      description: The destination host address where messages should be sent.
+      required: yes
+  - port:
+      type: number
+      description: The port number to connect to.
+      default: 601
+  - so-broadcast:
+      type: list
+      description: This option controls the "SO_BROADCAST" socket option required to make syslog-ng send messages to a broadcast address.
+      values: [yes, no]
+      default: no
+  - so-keepalive:
+      type: list
+      description: Enables keep-alive messages, keeping the socket open.
+      values: [yes, no]
+      default: no
+  - so-rcvbuf:
+      type: number
+      description: Specifies the size of the socket receive buffer in bytes.
+      default: 0
+  - so-sndbuf:
+      type: number
+      description: Specifies the size of the socket send buffer in bytes.
+      default: 0
+  - spoof-source:
+      type: list
+      description: Enables source address spoofing.
+      values: [yes, no]
+      default: no
+  - suppress:
+      type: number
+      description: Suppress the repeated messages and send the message only once. The parameter of this option specifies the number of seconds syslog-ng waits for identical messages.
+      default: 0
+  - tcp-keepalive-intvl:
+      type: number
+      description: Specifies the interval (number of seconds) between subsequential keepalive probes, regardless of the traffic exchanged in the connection.
+      default: 0
+  - tcp-keepalive-probes:
+      type: number
+      description: Specifies the number of unacknowledged probes to send before considering the connection dead.
+      default: 0
+  - tcp-keepalive-time:
+      type: number
+      description: Specifies the interval (in seconds) between the last data packet sent and the first keepalive probe.
+      default: 0
+  - template:
+      type: string
+      description: Specifies a template defining the logformat to be used in the destination.
+  - template-escape:
+      type: list
+      description: Turns on escaping for the quote, double qoute, and backspace characters in templated output files.
+      values: [yes, no]
+      default: no
+  - throttle:
+      type: number
+      description: Sets the maximum number of messages sent to the destination per second.
+      default: 0
+  - time-zone:
+      type: string
+      description: Convert timestamps to the timezone specified by this option.
+  - tls:
+      type: tls
+      description: This option sets various options related to TLS encryption.
+  - transport:
+      type: list
+      description: Specifies the protocol used to send messages to the destination server.
+      values: [udp, tcp, tls]
+      default: tcp
+      required: yes
+  - ts-format:
+      type: list
+      description: Override the global timestamp format
+      values: [rfc3164, bsd, rfc3339, iso]
+      default: rfc3164
+

@@ -1,0 +1,9 @@
+name: usertty
+type: destination
+description: Write messages to the terminal of a logged-in user.
+options:
+  - usertty:
+      type: string
+      description: Specifying a username who should receive a copy of matching messages. Use the asterisk * to specify every user currently logged in to the system.
+      required: yes
+

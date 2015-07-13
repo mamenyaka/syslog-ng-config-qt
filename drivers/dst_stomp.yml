@@ -1,0 +1,51 @@
+name: stomp
+type: destination
+description: Publishe messages using the Simple (or Streaming) Text Oriented Message Protocol.
+options:
+  - ack:
+      type: string
+      description: Request the STOMP server to acknowledge the receipt of the messages.
+      default: no
+  - body:
+      type: string
+      description: The body of the STOMP message.
+  - destination:
+      type: string
+      description: The name of the destination on the STOMP server.
+      default: /topic/syslog
+  - host:
+      type: string
+      description: The hostname or IP address of the STOMP server.
+      default: 127.0.0.1
+      required: yes
+  - password:
+      type: string
+      description: The password used to authenticate on the STOMP server.
+  - persistent:
+      type: list
+      description: If this option is enabled, the STOMP server or broker will store the messages on its hard disk.
+      values: [yes, no]
+      default: yes
+  - port:
+      type: number
+      description: The port number of the STOMP server.
+      default: 61613
+  - retries:
+      type: number
+      description: The number of insertion attempts.
+      default: 3
+  - routing-key:
+      type: string
+      description: Specifies a routing key for the exchange.
+  - throttle:
+      type: number
+      description: Sets the maximum number of messages sent to the destination per second.
+      default: 0
+  - username:
+      type: string
+      description: The username used to authenticate on the STOMP server.
+  - value-pairs:
+      type: value-pairs
+      description: Create structured name-value pairs from the data and metadata of the log message.
+      default: scope(selected-macros nv-pairs)
+
