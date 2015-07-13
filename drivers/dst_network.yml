@@ -123,7 +123,7 @@ options:
       default: tcp
   - ts-format:
       type: list
-      description: Override the global timestamp format
+      description: Override the global timestamp format.
       values: [rfc3164, bsd, rfc3339, iso]
       default: rfc3164
 

@@ -1,0 +1,181 @@
+name: options
+type: global
+description: Configure global options.
+options:
+  - bad-hostname:
+      type: string
+      description: A regexp containing hostnames which should not be handled as hostnames.
+      default: no
+  - chain-hostname:
+      type: list
+      description: Enable or disable the chained hostname format.
+      values: [yes, no]
+      default: no
+  - check-hostname:
+      type: list
+      description: Enable or disable checking whether the hostname contains valid characters.
+      values: [yes, no]
+      default: no
+  - create-dirs:
+      type: list
+      description: Enable or disable directory creation for destination files.
+      values: [yes, no]
+      default: no
+  - custom-domain:
+      type: string
+      description: Use this option to specify a custom domain name that is appended after the short hostname to receive the FQDN.
+  - dir-group:
+      type: string
+      description: The default group for newly created directories.
+      default: root
+  - dir-owner:
+      type: string
+      description: The default owner of newly created directories.
+      default: root
+  - dir-perm:
+      type: string
+      description: The permission mask of directories created by syslog-ng.
+      default: 0700
+  - dns-cache:
+      type: list
+      description: Enable or disable DNS cache usage.
+      values: [yes, no]
+      default: yes
+  - dns-cache-expire:
+      type: number
+      description: Number of seconds while a successful lookup is cached.
+      default: 3600
+  - dns-cache-expire-failed:
+      type: number
+      description: Number of seconds while a failed lookup is cached.
+      default: 60
+  - dns-cache-hosts:
+      type: string
+      description: Name of a file in "/etc/hosts" format that contains static IP->hostname mappings.
+  - dns-cache-size:
+      type: number
+      description: Number of hostnames in the DNS cache.
+      default: 1007
+  - file-template:
+      type: string
+      description: Specifies a template that file-like destinations use by default.
+  - flush-lines:
+      type: number
+      description: Specifies how many lines are flushed to a destination at a time.
+      default: 100
+  - flush-timeout:
+      type: number
+      description: Specifies the time syslog-ng waits for lines to accumulate in its output buffer.
+      default: 10000
+  - frac-digits:
+      type: number
+      description: The syslog-ng application can store fractions of a second in the timestamps according to the ISO8601 format.
+      default: 0
+  - group:
+      type: string
+      description: The default group of output files.
+      default: root
+  - keep-hostname:
+      type: list
+      description: Enable or disable hostname rewriting.
+      values: [yes, no]
+      default: no
+  - keep-timestamp:
+      type: list
+      description: Specifies whether syslog-ng should accept the timestamp received from the sending application or client.
+      values: [yes, no]
+      default: yes
+  - log-fifo-size:
+      type: number
+      description: The number of messages that the output queue can store.
+      default: 10000
+  - log-msg-size:
+      type: number
+      description: Maximum length of a message in bytes.
+      default: 8192
+  - mark-freq:
+      type: number
+      description: The number of seconds between two "MARK" messages.
+      default: 1200
+  - mark-mode:
+      type: list
+      description: Specify how to send the "MARK" signal.
+      values: [internal, dst-idle, host-idle, periodical, none, global]
+  - normalize-hostnames:
+      type: list
+      description: If enabled, syslog-ng OSE converts the hostnames to lowercase.
+      values: [yes, no]
+      default: no
+  - on-error:
+      type: list
+      description: Control what happens when type-casting fails and syslog-ng OSE cannot convert some data to the specified type.
+      values: [drop-message, drop-property, fallback-to-string, silently-drop-message, silently-drop-property, silently-fallback-to-string]
+      default: drop-message
+  - owner:
+      type: string
+      description: The default owner of output files.
+      default: root
+  - perm:
+      type: string
+      description: The default permission for output files.
+      default: 0600
+  - proto-template:
+      type: string
+      description: Specifies a template that protocol-like destinations use by default.
+      default: 0600
+  - recv-time-zone:
+      type: string
+      description: Specifies the time zone associated with the incoming messages.
+  - send-time-zone:
+      type: string
+      description: Specifies the time zone associated with the messages sent by syslog-ng.
+  - stats-freq:
+      type: number
+      description: The period between two "STATS" messages in seconds.
+      default: 600
+  - stats-level:
+      type: list
+      description: Specifies the detail of statistics syslog-ng collects about the processed messages.
+      values: [0, 1, 2, 3]
+      default: 0
+  - stats-lifetime:
+      type: number
+      description: Controls how often dynamic counters are expired.
+      default: 10
+  - threaded:
+      type: list
+      description: Enable syslog-ng OSE to run in multithreaded mode and use multiple CPUs.
+      values: [yes, no]
+      default: yes
+  - time-reap:
+      type: number
+      description: The time to wait in seconds before an idle destination file is closed.
+      default: 60
+  - time-reopen:
+      type: number
+      description: The time to wait in seconds before a dead connection is reestablished.
+      default: 60
+  - time-zone:
+      type: string
+      description: Convert timestamps to the timezone specified by this option.
+  - ts-format:
+      type: list
+      description: Specifies the timestamp format used when syslog-ng itself formats a timestamp and nothing else specifies a format.
+      values: [rfc3164, bsd, rfc3339, iso]
+      default: rfc3164
+  - use-dns:
+      type: list
+      description: Enable or disable DNS usage.
+      values: [yes, no, persist_only]
+      default: yes
+  - use-fqdn:
+      type: list
+      description: Add Fully Qualified Domain Name instead of short hostname.
+      values: [yes, no]
+      default: no
+  - use-rcptid:
+      type: list
+      description: When set to yes, syslog-ng OSE automatically assigns a unique reception ID to every received message.
+      values: [yes, no]
+      default: no
+
