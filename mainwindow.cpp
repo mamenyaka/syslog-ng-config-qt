@@ -76,6 +76,9 @@ MainWindow::MainWindow(QWidget* parent) :
     widget->add_log(&config.get_logs().back());
     ui->statusBar->showMessage("Click to place new log");
   });
+  connect(ui->actionGlobalOptions, &QAction::triggered, [&]() {
+    Dialog(config.get_global_options(), this).exec();
+  });
 }
 
 MainWindow::~MainWindow()
@@ -108,17 +111,13 @@ void MainWindow::driver_select_dialog(const std::string& type)
 
 void MainWindow::create_new_driver(const std::string& name, const std::string& type)
 {
-  const auto cit = std::find_if(config.get_default_drivers().cbegin(), config.get_default_drivers().cend(),
-                                [&name, &type](const DefaultDriver& driver)->bool {
-                                  return driver.get_name() == name && driver.get_type() == type;
-                                });
-
+  const DefaultDriver& default_driver = config.get_default_driver(name, type);
   const int id = std::count_if(config.get_drivers().cbegin(), config.get_drivers().cend(),
                                [&name, &type](const Driver& driver)->bool {
                                  return driver.get_name() == name && driver.get_type() == type;
                               });
 
-  Driver new_driver(*cit, id);
+  Driver new_driver(default_driver, id);
 
   if (Dialog(new_driver, this).exec() == QDialog::Accepted)
   {

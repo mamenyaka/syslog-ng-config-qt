@@ -42,6 +42,7 @@
    <addaction name="actionSource"/>
    <addaction name="actionDestination"/>
    <addaction name="actionLog"/>
+   <addaction name="actionGlobalOptions"/>
   </widget>
   <action name="actionNew">
    <property name="icon">
@@ -128,6 +129,14 @@
    <property name="toolTip">
     <string>New log</string>
    </property>
+  </action>
+  <action name="actionGlobalOptions">
+    <property name="text">
+      <string>Global Options</string>
+    </property>
+    <property name="toolTip">
+      <string>Configure global options</string>
+    </property>
   </action>
  </widget>
  <resources/>

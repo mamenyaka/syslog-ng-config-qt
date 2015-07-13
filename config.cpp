@@ -7,7 +7,7 @@
 #include <map>
 #include <algorithm>
 
-Option::Option(const std::string& name, const std::string& type, const std::string& description, const std::string& default_value) :
+DefaultOption::DefaultOption(const std::string& name, const std::string& type, const std::string& description, const std::string& default_value) :
   name(name),
   description(description),
   default_value(default_value)
@@ -24,72 +24,44 @@ Option::Option(const std::string& name, const std::string& type, const std::stri
   this->type = option_type_map[type];
 }
 
-OptionType Option::get_type() const
+OptionType DefaultOption::get_type() const
 {
   return type;
 }
 
-const std::string& Option::get_name() const
+const std::string& DefaultOption::get_name() const
 {
   return name;
 }
 
-const std::string& Option::get_description() const
+const std::string& DefaultOption::get_description() const
 {
   return description;
 }
 
-const std::vector<std::string>& Option::get_values() const
+const std::vector<std::string>& DefaultOption::get_values() const
 {
   return values;
 }
 
-const std::string& Option::get_default_value() const
+const std::string& DefaultOption::get_default_value() const
 {
   return default_value;
 }
 
-const std::string& Option::get_current_value() const
-{
-  return current_value;
-}
-
-bool Option::is_required() const
+bool DefaultOption::is_required() const
 {
   return required;
 }
 
-void Option::add_value(const std::string& value)
+void DefaultOption::add_value(const std::string& value)
 {
   values.push_back(std::move(value));
 }
 
-void Option::set_current_value(const std::string& current_value)
-{
-  this->current_value = current_value;
-}
-
-void Option::set_required(const bool required)
+void DefaultOption::set_required(const bool required)
 {
   this->required = required;
-}
-
-const std::string Option::to_string() const
-{
-  std::string config = name + "(";
-
-  if (type == OptionType::number)
-  {
-    config += current_value;
-  }
-  else
-  {
-    config += "\"" + current_value + "\"";
-  }
-
-  config += ")";
-
-  return config;
 }
 
 
@@ -119,9 +91,9 @@ const std::string& DefaultDriver::get_include() const
   return include;
 }
 
-const std::vector<Option>& DefaultDriver::get_options() const
+const std::vector<DefaultOption>& DefaultDriver::get_default_options() const
 {
-  return options;
+  return default_options;
 }
 
 void DefaultDriver::set_include(const std::string& include)
@@ -129,24 +101,61 @@ void DefaultDriver::set_include(const std::string& include)
   this->include = include;
 }
 
-void DefaultDriver::add_option(const Option& option)
+void DefaultDriver::add_option(const DefaultOption& option)
 {
-  options.push_back(std::move(option));
+  default_options.push_back(std::move(option));
+}
+
+
+Option::Option(const DefaultOption& default_option) :
+  DefaultOption(default_option)
+{
+  current_value = default_option.get_default_value();
+}
+
+const std::string& Option::get_current_value() const
+{
+  return current_value;
+}
+
+void Option::set_current_value(const std::string& current_value)
+{
+  this->current_value = current_value;
+}
+
+const std::string Option::to_string() const
+{
+  std::string config = get_name() + "(";
+
+  if (get_type() == OptionType::number)
+  {
+    config += current_value;
+  }
+  else
+  {
+    config += "\"" + current_value + "\"";
+  }
+
+  config += ")";
+
+  return config;
 }
 
 
 Driver::Driver(const DefaultDriver& default_driver, const int id) :
   DefaultDriver(default_driver),
   id(id),
-  location(QPoint(50, 50)),
-  default_driver(default_driver)
+  location(QPoint(50, 50))
 {
-  restore_defaults();
+  for (const DefaultOption& default_option : default_driver.get_default_options())
+  {
+    options.push_back(Option(default_option));
+  }
 }
 
 const std::string Driver::get_id() const
 {
-  return std::string(1, type.at(0)) + "_" + name + std::to_string(id);
+  return std::string(1, get_type().at(0)) + "_" + get_name() + std::to_string(id);
 }
 
 const QPoint& Driver::get_location() const
@@ -154,12 +163,12 @@ const QPoint& Driver::get_location() const
   return location;
 }
 
-const DefaultDriver& Driver::get_default_driver() const
+std::vector<Option>& Driver::get_options()
 {
-  return default_driver;
+  return options;
 }
 
-std::vector<Option>& Driver::get_options()
+const std::vector<Option>& Driver::get_options() const
 {
   return options;
 }
@@ -176,23 +185,21 @@ void Driver::update_location(const QPoint& location)
 
 void Driver::restore_defaults()
 {
-  auto options_it = options.begin();
-  for (const Option& default_option : default_driver.get_options())
+  for (Option& option : options)
   {
-    Option& option = *options_it++;
-    option.set_current_value(default_option.get_default_value());
+    option.set_current_value(option.get_default_value());
   }
 }
 
 const std::string Driver::to_string() const
 {
-  std::string config = type + " " + get_id() + " {\n";
+  std::string config = get_type() + " " + get_id() + " {\n";
 
-  config += "    " + name + "(";
+  config += "    " + get_name() + "(";
 
   for (const Option& option : options)
   {
-    if (name == option.get_name())
+    if (get_name() == option.get_name())
     {
       config += "\"" + option.get_current_value() + "\"";
       break;
@@ -203,7 +210,7 @@ const std::string Driver::to_string() const
 
   for (const Option& option : options)
   {
-    if (name == option.get_name() ||
+    if (get_name() == option.get_name() ||
       (!option.is_required() && option.get_current_value() == option.get_default_value()))
     {
       continue;
@@ -217,6 +224,10 @@ const std::string Driver::to_string() const
   return config;
 }
 
+
+GlobalOptions::GlobalOptions(const DefaultDriver& default_driver) :
+  Driver(default_driver, 0)
+{}
 
 Log::Log() :
   location(QPoint(50, 50))
@@ -276,15 +287,31 @@ Config::Config(const std::string& dir_name)
     parse_yaml(it->path().string());
   }
 
+  const DefaultDriver& default_driver = get_default_driver("options", "global");
+  global_options = new GlobalOptions(default_driver);
+
   std::sort(default_drivers.begin(), default_drivers.end(),
             [](const DefaultDriver& a, const DefaultDriver& b)->bool {
               return a.get_name() < b.get_name();
             });
 }
 
+Config::~Config()
+{
+  delete global_options;
+}
+
 const std::vector<DefaultDriver>& Config::get_default_drivers() const
 {
   return default_drivers;
+}
+
+const DefaultDriver& Config::get_default_driver(const std::string& name, const std::string& type) const
+{
+  return *std::find_if(default_drivers.cbegin(), default_drivers.cend(),
+                       [&name, &type](const DefaultDriver& driver)->bool {
+                         return driver.get_name() == name && driver.get_type() == type;
+                      });
 }
 
 std::list<Driver>& Config::get_drivers()
@@ -305,6 +332,11 @@ std::list<Log>& Config::get_logs()
 const std::list<Log>& Config::get_logs() const
 {
   return logs;
+}
+
+GlobalOptions& Config::get_global_options()
+{
+  return *global_options;
 }
 
 void Config::add_driver(const Driver& driver)
@@ -381,7 +413,7 @@ void Config::parse_yaml(const std::string& file_name)
     const std::string description = yaml_option["description"].as<std::string>();
     const std::string default_value = yaml_option["default"] ? yaml_option["default"].as<std::string>() : "";
 
-    Option option(name, type, description, default_value);
+    DefaultOption option(name, type, description, default_value);
 
     if (yaml_option["required"])
     {
@@ -405,6 +437,7 @@ void Config::erase_all()
 {
   logs.clear();
   drivers.clear();
+  global_options->restore_defaults();
 }
 
 std::ostream& operator<<(std::ostream& os, const Config& config)

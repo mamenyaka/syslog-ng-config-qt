@@ -13,15 +13,13 @@ QString log1 = ""
 "    );\n"
 "};\n"
 "\n"
-"destination d_sql0 {\n"
-"    sql(\n"
-"        password(\"test\")\n"
-"        table(\"test\")\n"
-"        username(\"test\")\n"
+"destination d_network0 {\n"
+"    network(\"test\"\n"
+"        port(12345)\n"
 "    );\n"
 "};\n"
 "\n"
-"log { source(s_file0); destination(d_sql0); };\n"
+"log { source(s_file0); destination(d_network0); };\n"
 "\n";
 
 void Test::is_config_valid_test_data()
@@ -35,11 +33,8 @@ void Test::is_config_valid_test()
 {
   Config config("../drivers");
 
-  const auto src_cit = std::find_if(config.get_default_drivers().cbegin(), config.get_default_drivers().cend(),
-                                    [](const DefaultDriver& driver)->bool {
-                                      return driver.get_name() == "file" && driver.get_type() == "source";
-                                    });
-  Driver src(*src_cit, 0);
+  const DefaultDriver& dsrc = config.get_default_driver("file", "source");
+  Driver src(dsrc, 0);
   for (Option& option : src.get_options())
   {
     if (option.get_name() == "file")
@@ -48,26 +43,18 @@ void Test::is_config_valid_test()
     }
   }
 
-  const auto dst_cit = std::find_if(config.get_default_drivers().cbegin(), config.get_default_drivers().cend(),
-                                    [](const DefaultDriver& driver)->bool {
-                                      return driver.get_name() == "sql" && driver.get_type() == "destination";
-                                    });
-  Driver dst(*dst_cit, 0);
+  const DefaultDriver& ddst = config.get_default_driver("network", "destination");
+  Driver dst(ddst, 0);
   for (Option& option : dst.get_options())
   {
-    if (option.get_name() == "username")
+    if (option.get_name() == "network")
     {
       option.set_current_value("test");
     }
 
-    if (option.get_name() == "password")
+    if (option.get_name() == "port")
     {
-      option.set_current_value("test");
-    }
-
-    if (option.get_name() == "table")
-    {
-      option.set_current_value("test");
+      option.set_current_value("12345");
     }
   }
 

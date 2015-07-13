@@ -63,7 +63,7 @@ Dialog::~Dialog()
 
 void Dialog::create_form()
 {
-  for (const Option& option : driver.get_default_driver().get_options())
+  for (const Option& option : driver.get_options())
   {
     const std::string name = option.is_required() ? "* " + option.get_name() : option.get_name();
     QGroupBox* groupBox = new QGroupBox(QString::fromStdString(name));
