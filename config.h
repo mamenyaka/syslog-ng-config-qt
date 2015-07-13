@@ -18,7 +18,10 @@ class DefaultOption
   bool required = false;
 
 public:
-  DefaultOption(const std::string& name, const std::string& type, const std::string& description, const std::string& default_value);
+  DefaultOption(const std::string& name,
+                const std::string& type,
+                const std::string& description,
+                const std::string& default_value);
 
   OptionType get_type() const;
   const std::string& get_name() const;
@@ -38,7 +41,9 @@ class DefaultDriver
   std::vector<DefaultOption> default_options;
 
 public:
-  DefaultDriver(const std::string& name, const std::string& type, const std::string& description);
+  DefaultDriver(const std::string& name,
+                const std::string& type,
+                const std::string& description);
 
   const std::string& get_name() const;
   const std::string& get_type() const;
@@ -74,7 +79,9 @@ class Driver : public DefaultDriver
   QPoint location;
 
 public:
-  Driver(const DefaultDriver& default_driver, const int id);
+  Driver(const DefaultDriver& default_driver,
+         const int id,
+         QPoint location = QPoint(50, 50));
 
   std::vector<Option>& get_options();
   const std::vector<Option>& get_options() const;

@@ -7,7 +7,10 @@
 #include <map>
 #include <algorithm>
 
-DefaultOption::DefaultOption(const std::string& name, const std::string& type, const std::string& description, const std::string& default_value) :
+DefaultOption::DefaultOption(const std::string& name,
+                             const std::string& type,
+                             const std::string& description,
+                             const std::string& default_value) :
   name(name),
   description(description),
   default_value(default_value)
@@ -65,7 +68,9 @@ void DefaultOption::set_required(const bool required)
 }
 
 
-DefaultDriver::DefaultDriver(const std::string& name, const std::string& type, const std::string& description) :
+DefaultDriver::DefaultDriver(const std::string& name,
+                             const std::string& type,
+                             const std::string& description) :
   name(name),
   type(type),
   description(description)
@@ -142,10 +147,12 @@ const std::string Option::to_string() const
 }
 
 
-Driver::Driver(const DefaultDriver& default_driver, const int id) :
+Driver::Driver(const DefaultDriver& default_driver,
+               const int id,
+               QPoint location) :
   DefaultDriver(default_driver),
   id(id),
-  location(QPoint(50, 50))
+  location(location)
 {
   for (const DefaultOption& default_option : default_driver.get_default_options())
   {
