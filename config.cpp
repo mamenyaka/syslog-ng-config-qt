@@ -203,8 +203,14 @@ void Driver::restore_defaults()
 
 const std::string Driver::to_string() const
 {
-  std::string config = get_type() + " " + get_id() + " {\n";
+  std::string config;
 
+  if (!get_include().empty())
+  {
+    config += "@include \"" + get_include() + "\"\n\n";
+  }
+
+  config += get_type() + " " + get_id() + " {\n";
   config += "    " + get_name() + "(";
 
   for (const Option& option : options)
