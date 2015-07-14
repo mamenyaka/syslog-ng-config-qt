@@ -20,8 +20,7 @@ class DefaultOption
 public:
   DefaultOption(const std::string& name,
                 const std::string& type,
-                const std::string& description,
-                const std::string& default_value);
+                const std::string& description);
 
   OptionType get_type() const;
   const std::string& get_name() const;
@@ -31,6 +30,7 @@ public:
   bool is_required() const;
 
   void add_value(const std::string& value);
+  void set_default_value(const std::string& default_value);
   void set_required(const bool required);
 };
 
@@ -81,7 +81,7 @@ class Driver : public DefaultDriver
 public:
   Driver(const DefaultDriver& default_driver,
          const int id,
-         QPoint location = QPoint(50, 50));
+         const QPoint& location = QPoint(50, 50));
 
   std::vector<Option>& get_options();
   const std::vector<Option>& get_options() const;
@@ -110,6 +110,8 @@ public:
 
   void update_id(const int id) = delete;
   void update_location(const QPoint& location) = delete;
+
+  const std::string to_string() const;
 };
 
 class Log
@@ -149,6 +151,7 @@ public:
   std::list<Log>& get_logs();
   const std::list<Log>& get_logs() const;
   GlobalOptions& get_global_options();
+  const GlobalOptions& get_global_options() const;
 
   void add_driver(const Driver& driver);
   void add_log(const Log& log);

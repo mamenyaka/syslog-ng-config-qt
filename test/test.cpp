@@ -8,6 +8,11 @@
 #include <iostream>
 
 QString log1 = ""
+"options {\n"
+"    log-fifo-size(1000);\n"
+"    use-dns(no);\n"
+"};\n"
+"\n"
 "source s_file0 {\n"
 "    file(\"test\"\n"
 "    );\n"
@@ -32,6 +37,19 @@ void Test::is_config_valid_test_data()
 void Test::is_config_valid_test()
 {
   Config config("../drivers");
+
+  GlobalOptions& global_options = config.get_global_options();
+  for (Option& option : global_options.get_options())
+  {
+    if (option.get_name() == "use-dns")
+    {
+      option.set_current_value("no");
+    }
+    if (option.get_name() == "log-fifo-size")
+    {
+      option.set_current_value("1000");
+    }
+  }
 
   const DefaultDriver& dsrc = config.get_default_driver("file", "source");
   Driver src(dsrc, 0);

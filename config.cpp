@@ -9,11 +9,9 @@
 
 DefaultOption::DefaultOption(const std::string& name,
                              const std::string& type,
-                             const std::string& description,
-                             const std::string& default_value) :
+                             const std::string& description) :
   name(name),
-  description(description),
-  default_value(default_value)
+  description(description)
 {
   std::map<std::string, OptionType> option_type_map {
     {"string", OptionType::string},
@@ -60,6 +58,11 @@ bool DefaultOption::is_required() const
 void DefaultOption::add_value(const std::string& value)
 {
   values.push_back(std::move(value));
+}
+
+void DefaultOption::set_default_value(const std::string& default_value)
+{
+  this->default_value = default_value;
 }
 
 void DefaultOption::set_required(const bool required)
@@ -132,7 +135,7 @@ const std::string Option::to_string() const
 {
   std::string config = get_name() + "(";
 
-  if (get_type() == OptionType::number)
+  if (get_type() == OptionType::number || get_type() == OptionType::list)
   {
     config += current_value;
   }
@@ -149,7 +152,7 @@ const std::string Option::to_string() const
 
 Driver::Driver(const DefaultDriver& default_driver,
                const int id,
-               QPoint location) :
+               const QPoint& location) :
   DefaultDriver(default_driver),
   id(id),
   location(location)
@@ -236,6 +239,26 @@ GlobalOptions::GlobalOptions(const DefaultDriver& default_driver) :
   Driver(default_driver, 0)
 {}
 
+const std::string GlobalOptions::to_string() const
+{
+  std::string config = get_name() + " {\n";
+
+  for (const Option& option : get_options())
+  {
+    if (option.get_current_value() == option.get_default_value())
+    {
+      continue;
+    }
+
+    config += "    " + option.to_string() + ";\n";
+  }
+
+  config += "};\n";
+
+  return config;
+}
+
+
 Log::Log() :
   location(QPoint(50, 50))
 {}
@@ -284,6 +307,7 @@ const std::string Log::to_string() const
 
   return config;
 }
+
 
 Config::Config(const std::string& dir_name)
 {
@@ -342,6 +366,11 @@ const std::list<Log>& Config::get_logs() const
 }
 
 GlobalOptions& Config::get_global_options()
+{
+  return *global_options;
+}
+
+const GlobalOptions& Config::get_global_options() const
 {
   return *global_options;
 }
@@ -418,20 +447,24 @@ void Config::parse_yaml(const std::string& file_name)
     const std::string name = tmp->first.as<std::string>();
     const std::string type = yaml_option["type"].as<std::string>();
     const std::string description = yaml_option["description"].as<std::string>();
-    const std::string default_value = yaml_option["default"] ? yaml_option["default"].as<std::string>() : "";
 
-    DefaultOption option(name, type, description, default_value);
-
-    if (yaml_option["required"])
-    {
-      option.set_required(yaml_option["required"].as<std::string>() == "yes");
-    }
+    DefaultOption option(name, type, description);
 
     const YAML::Node& values = yaml_option["values"];
     for (YAML::const_iterator value_it = values.begin(); value_it != values.end(); ++value_it)
     {
       const std::string value = value_it->as<std::string>();
       option.add_value(value);
+    }
+
+    if (yaml_option["default"])
+    {
+      option.set_default_value(yaml_option["default"].as<std::string>());
+    }
+
+    if (yaml_option["required"])
+    {
+      option.set_required(yaml_option["required"].as<bool>());
     }
 
     driver.add_option(option);
@@ -449,6 +482,8 @@ void Config::erase_all()
 
 std::ostream& operator<<(std::ostream& os, const Config& config)
 {
+  os << config.get_global_options().to_string() << std::endl;
+
   for (const Driver& driver : config.get_drivers())
   {
     os << driver.to_string() << std::endl;
