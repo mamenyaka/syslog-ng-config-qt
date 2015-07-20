@@ -9,4 +9,4 @@ SOURCES += main.cpp mainwindow.cpp widget.cpp dialog.cpp config.cpp
 
 HEADERS += mainwindow.h widget.h dialog.h config.h
 
-FORMS += mainwindow.ui
+FORMS += mainwindow.ui dialog.ui

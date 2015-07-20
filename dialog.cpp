@@ -1,71 +1,57 @@
 #include "dialog.h"
+#include "ui_dialog.h"
 #include "config.h"
 
-#include <QLabel>
-#include <QScrollArea>
-#include <QDialogButtonBox>
-#include <QPushButton>
-#include <QVBoxLayout>
-#include <QFormLayout>
+#include <QGroupBox>
 #include <QLineEdit>
 #include <QSpinBox>
 #include <QComboBox>
-#include <QGroupBox>
 #include <QCheckBox>
 
 #include <limits>
 
 Dialog::Dialog(Driver& driver, QWidget* parent) :
   QDialog(parent),
-  driver(driver)
+  driver(driver),
+  ui(new Ui::Dialog)
 {
-  setWindowTitle(QString::fromStdString("Configure " + driver.get_id()));
+  ui->setupUi(this);
 
-  QLabel* label = new QLabel;
-  label->setText(QString::fromStdString(driver.get_description()));
-  label->setWordWrap(true);
+  ui->label->setText(QString::fromStdString(driver.get_description()));
 
-  QWidget* widget = new QWidget;
-  QFormLayout* formLayout = new QFormLayout(widget);
-
-  QScrollArea* scrollArea = new QScrollArea;
-  scrollArea->setWidget(widget);
-  scrollArea->setWidgetResizable(true);
-  scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
-  QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::RestoreDefaults);
-  connect(buttonBox, &QDialogButtonBox::rejected, [&]() {
-    QDialog::reject();
-  });
-  connect(buttonBox, &QDialogButtonBox::accepted, [&]() {
-    if (set_driver_options())
-    {
-      QDialog::accept();
-    }
-  });
-  connect(buttonBox->button(QDialogButtonBox::RestoreDefaults), &QPushButton::pressed, [&]() {
-    driver.restore_defaults();
-    set_form_values();
-  });
-
-  QVBoxLayout* mainLayout = new QVBoxLayout(this);
-  mainLayout->setSizeConstraint(QLayout::SetFixedSize);
-  mainLayout->addWidget(label);
-  mainLayout->addWidget(scrollArea);
-  mainLayout->addWidget(buttonBox);
-
+  setupConnections();
   create_form();
   set_form_values();
 }
 
 Dialog::~Dialog()
-{}
+{
+  delete ui;
+}
+
+void Dialog::setupConnections()
+{
+  connect(ui->buttonBox, &QDialogButtonBox::accepted, [&]() {
+    if (set_driver_options())
+    {
+      QDialog::accept();
+    }
+  });
+
+  connect(ui->buttonBox, &QDialogButtonBox::clicked, [&](QAbstractButton* button) {
+    if (ui->buttonBox->standardButton(button) == QDialogButtonBox::RestoreDefaults)
+    {
+      driver.restore_defaults();
+      set_form_values();
+    }
+  });
+}
 
 void Dialog::create_form()
 {
   for (const Option& option : driver.get_options())
   {
-    const std::string name = option.is_required() ? "* " + option.get_name() : option.get_name();
+    const std::string name = (option.is_required() ? "* " : "") + option.get_name();
     QGroupBox* groupBox = new QGroupBox(QString::fromStdString(name));
     groupBox->setToolTip(QString::fromStdString(option.get_description()));
 
@@ -147,11 +133,9 @@ void Dialog::set_form_values()
       case OptionType::set:
       {
         QList<QCheckBox*> checkBoxes = groupBox->findChildren<QCheckBox*>();
-        auto checkBox_it = checkBoxes.begin();
-
-        for (const std::string& value : option.get_values())
+        for (QCheckBox* checkBox : checkBoxes)
         {
-          QCheckBox* checkBox = *checkBox_it++;
+          std::string value = checkBox->text().toStdString();
           current_value.find(value) == std::string::npos ? checkBox->setChecked(false) : checkBox->setChecked(true);
         }
         break;
@@ -193,15 +177,12 @@ bool Dialog::set_driver_options()
       case OptionType::set:
       {
         QList<QCheckBox*> checkBoxes = groupBox->findChildren<QCheckBox*>();
-        auto checkBox_it = checkBoxes.begin();
-
-        for (const std::string& value : option.get_values())
+        for (QCheckBox* checkBox : checkBoxes)
         {
-          QCheckBox* checkBox = *checkBox_it++;
           if (checkBox->isChecked())
           {
-            current_value += current_value.empty() ? "" : ", ";
-            current_value += checkBox->text().toStdString();
+            std::string value = checkBox->text().toStdString();
+            current_value += (current_value.empty() ? "" : ", ") + value;
           }
         }
         break;
@@ -210,6 +191,7 @@ bool Dialog::set_driver_options()
 
     if (option.is_required() && current_value.empty())
     {
+      ui->scrollArea->ensureWidgetVisible(groupBox);
       groupBox->setFocus();
       return false;
     }

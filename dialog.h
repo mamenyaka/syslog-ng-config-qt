@@ -4,6 +4,9 @@
 #include <QDialog>
 
 class Driver;
+namespace Ui {
+  class Dialog;
+}
 
 class Dialog : public QDialog
 {
@@ -11,11 +14,16 @@ class Dialog : public QDialog
 
   Driver& driver;
 
+  Ui::Dialog* ui;
+
 public:
-  explicit Dialog(Driver& driver, QWidget* parent = 0);
+  explicit Dialog(Driver& driver,
+                  QWidget* parent = 0);
   ~Dialog();
 
 private:
+  void setupConnections();
+
   void create_form();
   void set_form_values();
   bool set_driver_options();
