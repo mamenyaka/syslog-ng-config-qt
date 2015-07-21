@@ -21,8 +21,7 @@ Scene::Scene(Config& config,
   deleteLabel = new QLabel(this);
   deleteLabel->setPixmap(QIcon::fromTheme("edit-delete-symbolic").pixmap(40, 40));
   deleteLabel->move(20, 20);
-
-  clear();
+  deleteLabel->hide();
 }
 
 void Scene::add_driver(Driver& driver, const QPoint& pos)
@@ -154,7 +153,7 @@ void Scene::mouseMoveEvent(QMouseEvent* event)
     }
   }
 
-  if (geometry().contains(event->pos()))
+  if (event->x() > 0 && event->y() > 0)
   {
     move_driver(event->pos());
   }
