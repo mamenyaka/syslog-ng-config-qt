@@ -23,6 +23,7 @@ make
 - read provided yaml files to create form with options for drivers
 - create drivers (drag&drop)
 - update drivers (double click)
+- copy drivers (hold down CTRL)
 - create logs (Edit->New log)
 - update logs (drag&drop drivers)
 - update global options (Edit->Global options)

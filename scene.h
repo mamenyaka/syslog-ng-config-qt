@@ -15,7 +15,8 @@ class Scene : public QWidget
   Q_OBJECT
 
   Config& config;
-  DriverIcon* selected_icon;
+  DriverIcon* selected_icon = nullptr;
+  bool copy_icon = false;
 
   QLabel* deleteLabel;
 
@@ -33,10 +34,15 @@ public:
   void reset();
 
 protected:
-  void mouseDoubleClickEvent(QMouseEvent *);
-  void mousePressEvent(QMouseEvent *);
+  void mousePressEvent(QMouseEvent* event);
   void mouseReleaseEvent(QMouseEvent* event);
   void mouseMoveEvent(QMouseEvent* event);
+  void mouseDoubleClickEvent(QMouseEvent *);
+
+  void keyPressEvent(QKeyEvent* event);
+  void keyReleaseEvent(QKeyEvent* event);
+
+  void leaveEvent(QEvent *);
 
   void dragEnterEvent(QDragEnterEvent* event);
   void dropEvent(QDropEvent* event);
@@ -46,6 +52,7 @@ protected:
 private:
   DriverIcon* select_nearest_driver() const;
   LogIcon* select_nearest_log(const QPoint& pos) const;
+  unsigned int get_driver_count(const std::string& id_name) const;
 };
 
 #endif  // SCENE_H

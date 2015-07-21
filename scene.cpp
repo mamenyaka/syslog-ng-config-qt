@@ -59,13 +59,20 @@ void Scene::move_driver(const QPoint& pos)
 void Scene::delete_driver()
 {
   Driver& driver = selected_icon->get_driver();
-  config.delete_driver(driver);
+  const std::string id_name = driver.get_id_name();
+
+  if (get_driver_count(id_name) == 1)
+  {
+    config.delete_driver(driver);
+  }
+
   delete selected_icon;
 }
 
 void Scene::clear()
 {
   selected_icon = nullptr;
+
   deleteLabel->hide();
   updateGeometry();
 }
@@ -87,13 +94,21 @@ void Scene::reset()
   clear();
 }
 
-void Scene::mousePressEvent(QMouseEvent *)
+void Scene::mousePressEvent(QMouseEvent* event)
 {
   selected_icon = select_nearest_driver();
 
-  if (selected_icon)
+  if (!selected_icon)
   {
-    deleteLabel->show();
+    return;
+  }
+
+  deleteLabel->show();
+
+  if (copy_icon)
+  {
+    add_driver(selected_icon->get_driver(), event->pos());
+    selected_icon = dynamic_cast<DriverIcon*>(children().last());
   }
 }
 
@@ -157,6 +172,28 @@ void Scene::mouseDoubleClickEvent(QMouseEvent *)
   Dialog(icon->get_driver(), this).exec();
 }
 
+void Scene::keyPressEvent(QKeyEvent* event)
+{
+  if (event->key() == Qt::Key_Control)
+  {
+    copy_icon = true;
+  }
+}
+
+void Scene::keyReleaseEvent(QKeyEvent* event)
+{
+  if (event->key() == Qt::Key_Control)
+  {
+    copy_icon = false;
+  }
+}
+
+void Scene::leaveEvent(QEvent*)
+{
+  clear();
+  copy_icon = false;
+}
+
 void Scene::dragEnterEvent(QDragEnterEvent* event)
 {
   if (event->source() == window() &&
@@ -218,4 +255,15 @@ LogIcon* Scene::select_nearest_log(const QPoint& pos) const
   }
 
   return nullptr;
+}
+
+unsigned int Scene::get_driver_count(const std::string& id_name) const
+{
+  QList<DriverIcon*> icons = findChildren<DriverIcon*>();
+
+  return std::count_if(icons.begin(), icons.end(),
+                       [&id_name](DriverIcon* icon)->bool {
+                         Driver& driver = icon->get_driver();
+                         return driver.get_id_name() == id_name;
+                       });
 }

@@ -16,6 +16,8 @@ MainWindow::MainWindow(QWidget* parent) :
   scene(new Scene(config)),
   ui(new Ui::MainWindow)
 {
+  installEventFilter(this);
+
   ui->setupUi(this);
 
   ui->srcWidget->setupDrivers(DriverType::source, config.get_default_drivers());
@@ -41,6 +43,17 @@ void MainWindow::closeEvent(QCloseEvent* event)
   {
     event->ignore();
   }
+}
+
+bool MainWindow::eventFilter(QObject*, QEvent* event)
+{
+  if (event->type() == QEvent::KeyPress ||
+    event->type() == QEvent::KeyRelease)
+  {
+    QApplication::sendEvent(scene, event);
+  }
+
+  return false;
 }
 
 void MainWindow::setupConnections()
