@@ -4,7 +4,6 @@ A standalone graphical tool for creating syslog-ng configuration files
 # Prerequisites
 - Qt5
 - yaml-cpp
-- boost
 
 # Bulding
 ```
@@ -19,8 +18,9 @@ make
 
 # Current features
 - read provided yaml files to create form with options for drivers
-- create drivers and logs (buttons SRC, DST, LOG)
-- update drivers and logs (double click to update)
-- update global options
-- move drivers (click&hold to move)
-- delete drivers (when moving, press Delete)
+- create drivers (drag&drop)
+- update drivers (double click)
+- create logs (Edit->New log)
+- update logs (drag&drop drivers)
+- update global options (Edit->Global options)
+- delete drivers (move to delete icon)

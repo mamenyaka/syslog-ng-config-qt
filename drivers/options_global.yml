@@ -1,5 +1,5 @@
-name: options
-type: global
+name: global
+type: options
 description: Configure global options.
 options:
   - bad-hostname:

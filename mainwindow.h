@@ -5,32 +5,29 @@
 
 #include <QMainWindow>
 
+class Scene;
 namespace Ui {
-class MainWindow;
+  class MainWindow;
 }
-class QWebView;
-class Widget;
 
 class MainWindow : public QMainWindow
 {
   Q_OBJECT
 
-  Ui::MainWindow* ui;
-  QWebView* webView;
-  Widget* widget;
   Config config;
+  Scene* scene;
+
+  Ui::MainWindow* ui;
 
 public:
   explicit MainWindow(QWidget* parent = 0);
   ~MainWindow();
 
 protected:
-  bool eventFilter(QObject *, QEvent* event);
   void closeEvent(QCloseEvent* event);
 
 private:
-  void driver_select_dialog(const std::string& type);
-  void create_new_driver(const std::string& name, const std::string& type);
+  void setupConnections();
 };
 
 #endif // MAINWINDOW_H

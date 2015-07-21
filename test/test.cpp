@@ -51,8 +51,8 @@ void Test::is_config_valid_test()
     }
   }
 
-  const DefaultDriver& dsrc = config.get_default_driver("file", "source");
-  Driver src(dsrc, 0);
+  const Driver& dsrc = config.get_default_driver("file", DriverType::source);
+  Driver src(dsrc);
   for (Option& option : src.get_options())
   {
     if (option.get_name() == "file")
@@ -61,8 +61,8 @@ void Test::is_config_valid_test()
     }
   }
 
-  const DefaultDriver& ddst = config.get_default_driver("network", "destination");
-  Driver dst(ddst, 0);
+  const Driver& ddst = config.get_default_driver("network", DriverType::destination);
+  Driver dst(ddst);
   for (Option& option : dst.get_options())
   {
     if (option.get_name() == "network")
@@ -77,8 +77,8 @@ void Test::is_config_valid_test()
   }
 
   Log log;
-  log.add_driver(&src);
-  log.add_driver(&dst);
+  log.add_driver(src);
+  log.add_driver(dst);
 
   config.add_driver(src);
   config.add_driver(dst);

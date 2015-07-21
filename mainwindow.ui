@@ -6,13 +6,83 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>600</width>
+    <height>500</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>syslog-ng Config</string>
+   <string>syslog-ng config</string>
   </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QHBoxLayout" name="mainLayout">
+    <item>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="fixedWidth">
+       <number>140</number>
+      </property>
+      <widget class="QWidget" name="srcTab">
+       <attribute name="title">
+        <string>SRC</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="srcMainLayout">
+        <item>
+         <widget class="QScrollArea" name="srcScrollArea">
+          <property name="horizontalScrollBarPolicy">
+           <enum>Qt::ScrollBarAlwaysOff</enum>
+          </property>
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="Drivers" name="srcWidget">
+           <layout class="QVBoxLayout" name="srcLayout"/>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="dstTab">
+       <attribute name="title">
+        <string>DST</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="dstMainLayout">
+        <item>
+         <widget class="QScrollArea" name="dstScrollArea">
+          <property name="horizontalScrollBarPolicy">
+           <enum>Qt::ScrollBarAlwaysOff</enum>
+          </property>
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="Drivers" name="dstWidget">
+           <layout class="QVBoxLayout" name="dstLayout"/>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+    <item>
+     <widget class="QWidget" name="sceneWidget" native="true">
+      <property name="minimumSize">
+       <size>
+        <width>500</width>
+        <height>500</height>
+       </size>
+      </property>
+      <layout class="QVBoxLayout" name="sceneMainLayout">
+       <item>
+        <widget class="QScrollArea" name="sceneScrollArea">
+         <property name="widgetResizable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
   <widget class="QMenuBar" name="menuBar">
    <widget class="QMenu" name="menuFile">
     <property name="title">
@@ -24,31 +94,29 @@
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>&amp;Edit</string>
+    </property>
+    <addaction name="actionOptions"/>
+    <addaction name="separator"/>
+    <addaction name="actionLog"/>
+   </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>&amp;Help</string>
     </property>
-    <addaction name="actionHelp"/>
     <addaction name="actionAbout"/>
    </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
    <addaction name="menuHelp"/>
   </widget>
-  <widget class="QStatusBar" name="statusBar"/>
-  <widget class="QToolBar" name="toolBar">
-   <property name="movable">
-    <bool>false</bool>
-   </property>
-   <addaction name="actionSource"/>
-   <addaction name="actionDestination"/>
-   <addaction name="actionLog"/>
-   <addaction name="actionGlobalOptions"/>
-  </widget>
+  <!--<widget class="QStatusBar" name="statusBar"/>-->
+  <!--<widget class="QToolBar" name="toolBar"/>-->
   <action name="actionNew">
    <property name="icon">
-    <iconset theme="document-new">
-     <normaloff/>
-    </iconset>
+    <iconset theme="document-new"/>
    </property>
    <property name="text">
     <string>&amp;New</string>
@@ -58,23 +126,19 @@
    </property>
   </action>
   <action name="actionSave">
-    <property name="icon">
-      <iconset theme="document-save">
-        <normaloff/>
-      </iconset>
-    </property>
-    <property name="text">
-      <string>&amp;Save</string>
-    </property>
-    <property name="shortcut">
-      <string>Ctrl+S</string>
-    </property>
+   <property name="icon">
+    <iconset theme="document-save"/>
+   </property>
+   <property name="text">
+    <string>&amp;Save</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
   </action>
   <action name="actionExit">
    <property name="icon">
-    <iconset theme="application-exit">
-     <normaloff/>
-    </iconset>
+    <iconset theme="application-exit"/>
    </property>
    <property name="text">
     <string>E&amp;xit</string>
@@ -83,61 +147,36 @@
     <string>Ctrl+X</string>
    </property>
   </action>
-  <action name="actionHelp">
-    <property name="icon">
-      <iconset theme="help">
-        <normaloff/>
-      </iconset>
-    </property>
-    <property name="text">
-      <string>&amp;Help</string>
-    </property>
-    <property name="shortcut">
-      <string>Ctrl+H</string>
-    </property>
+  <action name="actionLog">
+   <property name="text">
+    <string>New &amp;log</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+L</string>
+   </property>
+  </action>
+  <action name="actionOptions">
+   <property name="text">
+    <string>Global options</string>
+   </property>
   </action>
   <action name="actionAbout">
    <property name="icon">
-    <iconset theme="help-about">
-     <normaloff/>
-    </iconset>
+    <iconset theme="help-about"/>
    </property>
    <property name="text">
     <string>About</string>
    </property>
   </action>
-  <action name="actionSource">
-   <property name="text">
-    <string>SRC</string>
-   </property>
-   <property name="toolTip">
-    <string>New source</string>
-   </property>
-  </action>
-  <action name="actionDestination">
-   <property name="text">
-    <string>DST</string>
-   </property>
-   <property name="toolTip">
-    <string>New destination</string>
-   </property>
-  </action>
-  <action name="actionLog">
-   <property name="text">
-    <string>LOG</string>
-   </property>
-   <property name="toolTip">
-    <string>New log</string>
-   </property>
-  </action>
-  <action name="actionGlobalOptions">
-    <property name="text">
-      <string>Global Options</string>
-    </property>
-    <property name="toolTip">
-      <string>Configure global options</string>
-    </property>
-  </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Drivers</class>
+   <extends>QWidget</extends>
+   <header>drivers.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
+ <connections/>
 </ui>

@@ -1,9 +1,9 @@
 QT += widgets testlib
 TARGET = test
 TEMPLATE = app
-CONFIG += c++11
-LIBS += -lyaml-cpp -lboost_system -lboost_filesystem
+CONFIG += c++14
+LIBS += -lyaml-cpp
 
 SOURCES += test.cpp ../config.cpp
 
-HEADERS += test.h ../config.h
+HEADERS += test.h
