@@ -143,7 +143,7 @@ const std::vector<Option>& Driver::get_options() const
   return options;
 }
 
-unsigned int Driver::get_id() const
+int Driver::get_id() const
 {
   return id;
 }
@@ -158,7 +158,7 @@ void Driver::add_option(const Option& option)
   options.push_back(std::move(option));
 }
 
-void Driver::update_id(unsigned int id)
+void Driver::update_id(int id)
 {
   this->id = id;
 }
@@ -174,9 +174,9 @@ void Driver::restore_defaults()
 const std::string Driver::get_type_name() const
 {
   return std::find_if(driver_type_map.cbegin(), driver_type_map.cend(),
-                                              [&](const auto& pair)->bool {
-                                                return pair.second == type;
-                                              })->first;
+                      [&](const auto& pair)->bool {
+                        return pair.second == type;
+                      })->first;
 }
 
 const std::string Driver::get_id_name() const
@@ -251,25 +251,20 @@ const std::string GlobalOptions::to_string() const
 Log::Log()
 {}
 
-const std::list<const Driver*>& Log::get_drivers() const
+void Log::add_driver(std::shared_ptr<const Driver>& driver)
 {
-  return drivers;
+  drivers.push_back(std::move(driver));
 }
 
-void Log::add_driver(const Driver& driver)
+void Log::remove_driver(const std::shared_ptr<const Driver>& driver)
 {
-  drivers.push_back(&driver);
-}
-
-void Log::remove_driver(const Driver& driver)
-{
-  drivers.remove(&driver);
+  drivers.remove(driver);
 }
 
 const std::string Log::to_string() const
 {
   std::string config = "log { ";
-  for (const Driver* driver : drivers)
+  for (const std::shared_ptr<const Driver>& driver : drivers)
   {
     config += driver->get_type_name() + "(" + driver->get_id_name() + "); ";
   }
@@ -285,9 +280,20 @@ Config::Config(const std::string& dir_name)
   while (it.hasNext())
   {
     it.next();
-    if (it.fileInfo().isFile())
+    if (!it.fileInfo().isFile())
     {
-      parse_yaml(it.filePath().toStdString());
+      continue;
+    }
+
+    Driver driver = parse_yaml(it.filePath().toStdString());
+
+    if (driver.get_type() == DriverType::options)
+    {
+      global_options = std::make_unique<GlobalOptions>(driver);
+    }
+    else
+    {
+      default_drivers.push_back(std::move(driver));
     }
   }
 
@@ -295,14 +301,6 @@ Config::Config(const std::string& dir_name)
             [](const Driver& a, const Driver& b)->bool {
               return a.get_name() < b.get_name();
             });
-
-  const Driver& default_driver = get_default_driver("global", DriverType::options);
-  global_options = new GlobalOptions(default_driver);
-}
-
-Config::~Config()
-{
-  delete global_options;
 }
 
 const std::vector<Driver>& Config::get_default_drivers() const
@@ -310,74 +308,41 @@ const std::vector<Driver>& Config::get_default_drivers() const
   return default_drivers;
 }
 
-const std::list<Driver>& Config::get_drivers() const
-{
-  return drivers;
-}
-
-const std::list<Log>& Config::get_logs() const
-{
-  return logs;
-}
-
 GlobalOptions& Config::get_global_options()
 {
   return *global_options;
 }
 
-const GlobalOptions& Config::get_global_options() const
+std::shared_ptr<Driver> Config::add_driver(const Driver& new_driver)
 {
-  return *global_options;
-}
-
-Driver& Config::add_driver(const Driver& new_driver)
-{
-  const unsigned int id = get_driver_count(new_driver.get_name(), new_driver.get_type());
+  const int id = get_driver_count(new_driver.get_name(), new_driver.get_type());
 
   drivers.push_back(std::move(new_driver));
 
   Driver& driver = drivers.back();
   driver.update_id(id);
 
-  return driver;
+  return std::shared_ptr<Driver>(&driver, [&](const Driver* driver) { delete_driver(driver); });
 }
 
-Log& Config::add_log(const Log& new_log)
+std::unique_ptr< Log, std::function<void(const Log *)> > Config::add_log(const Log& new_log)
 {
   logs.push_back(std::move(new_log));
 
   Log& log = logs.back();
 
-  return log;
+  return std::unique_ptr< Log, std::function<void(const Log *)> >(&log, [&](const Log* log) { delete_log(log); });
 }
 
-void Config::delete_driver(const Driver& driver)
+const Driver& Config::get_default_driver(const std::string& name, DriverType type) const
 {
-  const std::string name = driver.get_name();
-  DriverType type = driver.get_type();
-
-  drivers.remove_if([&driver](const Driver& d)->bool {
-    return &d == &driver;
-  });
-
-  unsigned int id = 0;
-  for (Driver& driver : drivers)
-  {
-    if (driver.get_name() == name && driver.get_type() == type)
-    {
-      driver.update_id(id++);
-    }
-  }
+  return *std::find_if(default_drivers.cbegin(), default_drivers.cend(),
+                       [&name, type](const Driver& driver)->bool {
+                         return driver.get_name() == name && driver.get_type() == type;
+                       });
 }
 
-void Config::delete_log(const Log& log)
-{
-  logs.remove_if([&log](const Log& l)->bool {
-    return &l == &log;
-  });
-}
-
-void Config::parse_yaml(const std::string& file_name)
+Driver Config::parse_yaml(const std::string& file_name)
 {
   const YAML::Node yaml_driver = YAML::LoadFile(file_name);
 
@@ -424,25 +389,28 @@ void Config::parse_yaml(const std::string& file_name)
     driver.add_option(option);
   }
 
-  default_drivers.push_back(std::move(driver));
+  return driver;
 }
 
-void Config::erase_all()
+const std::string Config::to_string() const
 {
-  drivers.clear();
-  logs.clear();
-  global_options->restore_defaults();
+  std::string config;
+  config += global_options->to_string() + "\n";
+
+  for (const Driver& driver : drivers)
+  {
+    config += driver.to_string() + "\n";
+  }
+
+  for (const Log& log : logs)
+  {
+    config += log.to_string() + "\n";
+  }
+
+  return config;
 }
 
-const Driver& Config::get_default_driver(const std::string& name, DriverType type) const
-{
-  return *std::find_if(default_drivers.cbegin(), default_drivers.cend(),
-                       [&name, type](const Driver& driver)->bool {
-                         return driver.get_name() == name && driver.get_type() == type;
-                       });
-}
-
-unsigned int Config::get_driver_count(const std::string& name, DriverType type) const
+int Config::get_driver_count(const std::string& name, DriverType type) const
 {
   return std::count_if(drivers.cbegin(), drivers.cend(),
                        [&name, type](const Driver& driver)->bool {
@@ -450,19 +418,35 @@ unsigned int Config::get_driver_count(const std::string& name, DriverType type) 
                       });
 }
 
+void Config::delete_driver(const Driver* old_driver)
+{
+  const std::string name = old_driver->get_name();
+  DriverType type = old_driver->get_type();
+
+  drivers.remove_if([old_driver](const Driver& driver)->bool {
+    return &driver == old_driver;
+  });
+
+  int id = 0;
+  for (Driver& driver : drivers)
+  {
+    if (driver.get_name() == name && driver.get_type() == type)
+    {
+      driver.update_id(id++);
+    }
+  }
+}
+
+void Config::delete_log(const Log* old_log)
+{
+  logs.remove_if([old_log](const Log& log)->bool {
+    return &log == old_log;
+  });
+}
+
 std::ostream& operator<<(std::ostream& os, const Config& config)
 {
-  os << config.get_global_options().to_string() << std::endl;
-
-  for (const Driver& driver : config.get_drivers())
-  {
-    os << driver.to_string() << std::endl;
-  }
-
-  for (const Log& log : config.get_logs())
-  {
-    os << log.to_string() << std::endl;
-  }
+  os << config.to_string();
 
   return os;
 }

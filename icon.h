@@ -4,6 +4,9 @@
 #include <QWidget>
 #include <QPixmap>
 
+#include <memory>
+#include <functional>
+
 class Driver;
 class Log;
 class QVBoxLayout;
@@ -12,14 +15,15 @@ class DriverIcon : public QWidget
 {
   Q_OBJECT
 
-  Driver& driver;
+  std::shared_ptr<Driver> driver;
   QPixmap pixmap;
 
 public:
-  explicit DriverIcon(Driver& driver,
+  explicit DriverIcon(std::shared_ptr<Driver>& driver,
                       QWidget* parent = 0);
 
   Driver& get_driver();
+  std::shared_ptr<Driver>& get_driver_ptr();
   const QPixmap& get_pixmap() const;
 
 private:
@@ -30,14 +34,12 @@ class LogIcon : public QWidget
 {
   Q_OBJECT
 
-  Log& log;
+  std::unique_ptr< Log, std::function<void(const Log *)> > log;
   QVBoxLayout* frameLayout;
 
 public:
-  explicit LogIcon(Log& log,
+  explicit LogIcon(std::unique_ptr< Log, std::function<void(const Log *)> >& log,
                    QWidget* parent = 0);
-
-  Log& get_log();
 
   void add_driver(DriverIcon& icon);
   void remove_driver(DriverIcon& icon);

@@ -3,6 +3,8 @@
 
 #include <QWidget>
 
+#include <memory>
+
 class Config;
 class DriverIcon;
 class LogIcon;
@@ -24,11 +26,10 @@ public:
   explicit Scene(Config& config,
                  QWidget* parent = 0);
 
-  void add_driver(Driver& driver, const QPoint& pos);
-  void add_log(Log& log);
+  void add_driver(std::shared_ptr<Driver>& new_driver, const QPoint& pos);
+  void add_log(std::unique_ptr< Log, std::function<void(const Log *)> >& new_log);
 
   void move_driver(const QPoint& pos);
-  void delete_driver();
 
   void clear();
   void reset();
@@ -52,7 +53,6 @@ protected:
 private:
   DriverIcon* select_nearest_driver() const;
   LogIcon* select_nearest_log(const QPoint& pos) const;
-  unsigned int get_driver_count(const std::string& id_name) const;
 };
 
 #endif  // SCENE_H

@@ -24,9 +24,9 @@ Scene::Scene(Config& config,
   deleteLabel->hide();
 }
 
-void Scene::add_driver(Driver& driver, const QPoint& pos)
+void Scene::add_driver(std::shared_ptr<Driver>& new_driver, const QPoint& pos)
 {
-  DriverIcon* icon = new DriverIcon(driver, this);
+  DriverIcon* icon = new DriverIcon(new_driver, this);
   icon->move(pos.x() - icon->width()/2, pos.y() - icon->height()/2);
   icon->raise();
   icon->show();
@@ -34,10 +34,10 @@ void Scene::add_driver(Driver& driver, const QPoint& pos)
   updateGeometry();
 }
 
-void Scene::add_log(Log& log)
+void Scene::add_log(std::unique_ptr< Log, std::function<void(const Log *)> >& new_log)
 {
-  LogIcon* icon = new LogIcon(log, this);
-  const unsigned int x = 100 + (findChildren<LogIcon*>().size() - 1)*(icon->width() + 50);
+  LogIcon* icon = new LogIcon(new_log, this);
+  const int x = 100 + (findChildren<LogIcon*>().size() - 1)*(icon->width() + 50);
   icon->move(x, 10);
   icon->lower();
   icon->show();
@@ -53,19 +53,6 @@ void Scene::move_driver(const QPoint& pos)
 
   update();
   updateGeometry();
-}
-
-void Scene::delete_driver()
-{
-  Driver& driver = selected_icon->get_driver();
-  const std::string id_name = driver.get_id_name();
-
-  if (get_driver_count(id_name) == 1)
-  {
-    config.delete_driver(driver);
-  }
-
-  delete selected_icon;
 }
 
 void Scene::clear()
@@ -88,7 +75,7 @@ void Scene::reset()
     delete icon;
   }
 
-  config.erase_all();
+  config.get_global_options().restore_defaults();
 
   clear();
 }
@@ -106,7 +93,8 @@ void Scene::mousePressEvent(QMouseEvent* event)
 
   if (copy_icon)
   {
-    add_driver(selected_icon->get_driver(), event->pos());
+    std::shared_ptr<Driver> driver = selected_icon->get_driver_ptr();
+    add_driver(driver, event->pos());
     selected_icon = dynamic_cast<DriverIcon*>(children().last());
   }
 }
@@ -129,7 +117,7 @@ void Scene::mouseReleaseEvent(QMouseEvent* event)
 
   if (deleteLabel->geometry().intersects(geom))
   {
-    delete_driver();
+    delete selected_icon;
   }
 
   clear();
@@ -220,7 +208,7 @@ void Scene::dropEvent(QDropEvent* event)
 
   if (Dialog(new_driver, this).exec() == QDialog::Accepted)
   {
-    Driver& driver = config.add_driver(new_driver);
+    std::shared_ptr<Driver> driver = config.add_driver(new_driver);
     add_driver(driver, event->pos());
   }
 }
@@ -254,15 +242,4 @@ LogIcon* Scene::select_nearest_log(const QPoint& pos) const
   }
 
   return nullptr;
-}
-
-unsigned int Scene::get_driver_count(const std::string& id_name) const
-{
-  QList<DriverIcon*> icons = findChildren<DriverIcon*>();
-
-  return std::count_if(icons.begin(), icons.end(),
-                       [&id_name](DriverIcon* icon)->bool {
-                         Driver& driver = icon->get_driver();
-                         return driver.get_id_name() == id_name;
-                       });
 }

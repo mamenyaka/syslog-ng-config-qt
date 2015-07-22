@@ -13,11 +13,12 @@ Drivers::Drivers(QWidget* parent) :
 
 void Drivers::setupDrivers(DriverType type, const std::vector<Driver>& default_drivers)
 {
-  for (const Driver& driver : default_drivers)
+  for (const Driver& default_driver : default_drivers)
   {
-    if (driver.get_type() == type)
+    if (default_driver.get_type() == type)
     {
-      DriverIcon* icon = new DriverIcon(const_cast<Driver&>(driver));
+      std::shared_ptr<Driver> driver(const_cast<Driver*>(&default_driver), [](const Driver *) {});
+      DriverIcon* icon = new DriverIcon(driver);
       layout()->addWidget(icon);
     }
   }

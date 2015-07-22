@@ -11,15 +11,15 @@
 
 #define ICON_SIZE 80
 
-DriverIcon::DriverIcon(Driver& driver,
+DriverIcon::DriverIcon(std::shared_ptr<Driver>& driver,
                        QWidget* parent) :
   QWidget(parent),
-  driver(driver)
+  driver(std::move(driver))
 {
   setFixedSize(ICON_SIZE, ICON_SIZE);
   setAutoFillBackground(true);
 
-  QLabel* label = new QLabel(QString::fromStdString(driver.get_name()), this);
+  QLabel* label = new QLabel(QString::fromStdString(this->driver->get_name()), this);
   label->setAlignment(Qt::AlignCenter);
   label->setWordWrap(true);
 
@@ -35,6 +35,11 @@ DriverIcon::DriverIcon(Driver& driver,
 }
 
 Driver& DriverIcon::get_driver()
+{
+  return *driver;
+}
+
+std::shared_ptr<Driver>& DriverIcon::get_driver_ptr()
 {
   return driver;
 }
@@ -55,7 +60,7 @@ void DriverIcon::setupIcon()
 
   QRect rect(1, 1, width() - 2, height() - 2);
 
-  switch (driver.get_type())
+  switch (driver->get_type())
   {
     case DriverType::source:
     {
@@ -75,10 +80,10 @@ void DriverIcon::setupIcon()
 }
 
 
-LogIcon::LogIcon(Log& log,
+LogIcon::LogIcon(std::unique_ptr< Log, std::function<void(const Log *)> >& log,
                  QWidget* parent) :
   QWidget(parent),
-  log(log)
+  log(std::move(log))
 {
   installEventFilter(this);
 
@@ -98,14 +103,10 @@ LogIcon::LogIcon(Log& log,
   mainLayout->addWidget(frame);
 }
 
-Log& LogIcon::get_log()
-{
-  return log;
-}
-
 void LogIcon::add_driver(DriverIcon& icon)
 {
-  log.add_driver(icon.get_driver());
+  std::shared_ptr<const Driver> driver = icon.get_driver_ptr();
+  log->add_driver(driver);
   frameLayout->addWidget(&icon);
 
   icon.show();
@@ -114,7 +115,8 @@ void LogIcon::add_driver(DriverIcon& icon)
 
 void LogIcon::remove_driver(DriverIcon& icon)
 {
-  log.remove_driver(icon.get_driver());
+  std::shared_ptr<Driver>& driver = icon.get_driver_ptr();
+  log->remove_driver(driver);
   frameLayout->removeWidget(&icon);
 
   frameLayout->activate();
