@@ -49,6 +49,20 @@ const QPixmap& DriverIcon::get_pixmap() const
   return pixmap;
 }
 
+void DriverIcon::paintEvent(QPaintEvent *)
+{
+  QPainter painter(this);
+
+  if (driver->get_id() > -1)
+  {
+    painter.setRenderHints(QPainter::TextAntialiasing);
+    painter.setPen(QPen(Qt::black));
+    painter.drawText(0, height() - 20, width(), 20, Qt::AlignHCenter, QString::number(driver->get_id()));
+  }
+
+  painter.end();
+}
+
 void DriverIcon::setupIcon()
 {
   pixmap = QPixmap(size());

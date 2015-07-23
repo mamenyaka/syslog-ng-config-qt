@@ -26,6 +26,9 @@ public:
   std::shared_ptr<Driver>& get_driver_ptr();
   const QPixmap& get_pixmap() const;
 
+protected:
+  void paintEvent(QPaintEvent *);
+
 private:
   void setupIcon();
 };

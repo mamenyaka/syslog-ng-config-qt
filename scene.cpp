@@ -61,6 +61,7 @@ void Scene::clear()
 
   deleteLabel->hide();
   updateGeometry();
+  update();
 }
 
 void Scene::reset()
