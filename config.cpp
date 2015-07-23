@@ -205,7 +205,10 @@ const std::string Driver::to_string() const
     if (name == option.get_name())
     {
       config += "\"" + option.get_current_value() + "\"";
-      break;
+      if (type == DriverType::rewrite)
+      {
+        config += ", ";
+      }
     }
   }
 
@@ -219,7 +222,12 @@ const std::string Driver::to_string() const
       continue;
     }
 
-    config += "        " + option.to_string() + "\n";
+    config += "        " + option.to_string();
+    if (type == DriverType::rewrite)
+    {
+      config += ",";
+    }
+    config += "\n";
   }
 
   config += "    );\n};\n";

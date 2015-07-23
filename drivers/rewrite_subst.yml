@@ -1,0 +1,26 @@
+name: subst
+type: rewrite
+description: Define message templates, and reference them from every object that can use a template.
+options:
+  - subst:
+      type: string
+      description: The string or regular expression to find.
+      required: yes
+  - subst:
+      type: string
+      description: The string or macro to replace the original text.
+      required: yes
+  - value:
+      type: string
+      description: The field of the message that the rewrite rule should process.
+      required: yes
+  - type:
+      type: list
+      description: The type of regular expression to use.
+      values: [posix, pcre, string, glob]
+      default: pcre
+  - flags:
+      type: set
+      description: The flags of the regular expressions.
+      values: [global, ignore-case, store-matches, utf8, prefix, substring]
+

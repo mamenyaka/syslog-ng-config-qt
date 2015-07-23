@@ -1,0 +1,9 @@
+name: clear-tag
+type: rewrite
+description: Delete a tag.
+options:
+  - clear-tag:
+      type: string
+      description: The tag to delete.
+      required: yes
+

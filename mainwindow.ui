@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>600</width>
+    <width>650</width>
     <height>500</height>
    </rect>
   </property>
@@ -17,12 +17,15 @@
    <layout class="QHBoxLayout" name="mainLayout">
     <item>
      <widget class="QTabWidget" name="tabWidget">
+      <property name="tabPosition">
+       <enum>QTabWidget::West</enum>
+      </property>
       <property name="fixedWidth">
-       <number>140</number>
+       <number>165</number>
       </property>
       <widget class="QWidget" name="srcTab">
        <attribute name="title">
-        <string>SRC</string>
+        <string>Source</string>
        </attribute>
        <layout class="QVBoxLayout" name="srcMainLayout">
         <item>
@@ -42,7 +45,7 @@
       </widget>
       <widget class="QWidget" name="dstTab">
        <attribute name="title">
-        <string>DST</string>
+        <string>Destination</string>
        </attribute>
        <layout class="QVBoxLayout" name="dstMainLayout">
         <item>
@@ -60,21 +63,41 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="filtTab">
+      <widget class="QWidget" name="filTab">
        <attribute name="title">
-        <string>FILT</string>
+        <string>Filter</string>
        </attribute>
-       <layout class="QVBoxLayout" name="filtMainLayout">
+       <layout class="QVBoxLayout" name="filMainLayout">
         <item>
-         <widget class="QScrollArea" name="srcScrollArea">
+         <widget class="QScrollArea" name="filScrollArea">
           <property name="horizontalScrollBarPolicy">
            <enum>Qt::ScrollBarAlwaysOff</enum>
           </property>
           <property name="widgetResizable">
            <bool>true</bool>
           </property>
-          <widget class="Drivers" name="filtWidget">
-           <layout class="QVBoxLayout" name="filtLayout"/>
+          <widget class="Drivers" name="filWidget">
+           <layout class="QVBoxLayout" name="filLayout"/>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="rewTab">
+       <attribute name="title">
+        <string>Rewrite</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="rewMainLayout">
+        <item>
+         <widget class="QScrollArea" name="rewScrollArea">
+          <property name="horizontalScrollBarPolicy">
+           <enum>Qt::ScrollBarAlwaysOff</enum>
+          </property>
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="Drivers" name="rewWidget">
+           <layout class="QVBoxLayout" name="rewLayout"/>
           </widget>
          </widget>
         </item>

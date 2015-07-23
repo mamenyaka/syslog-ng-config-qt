@@ -70,7 +70,7 @@ void DriverIcon::setupIcon()
 
   QPainter painter(&pixmap);
   painter.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
-  painter.setPen(QPen(Qt::black));
+  painter.setPen(Qt::black);
 
   QRect rect(1, 1, width() - 2, height() - 2);
 
@@ -90,6 +90,7 @@ void DriverIcon::setupIcon()
     }
     case DriverType::template_:
     {
+      painter.setPen(QColor(255, 128, 255, 192));
       painter.drawEllipse(rect);
       break;
     }
@@ -101,6 +102,25 @@ void DriverIcon::setupIcon()
       path.moveTo(width()/2, 1);
       path.lineTo(width() - 1, height()/2);
       path.lineTo(width()/2, height() - 1);
+      path.lineTo(1, height()/2);
+      path.closeSubpath();
+
+      painter.drawPath(path);
+      painter.fillPath(path, painter.brush());
+      break;
+    }
+    case DriverType::rewrite:
+    {
+      painter.setBrush(QColor(128, 255, 255, 192));
+
+      double h = (1 - cos(3.14/6.0))*height()/2.0;
+
+      QPainterPath path;
+      path.moveTo(1 + width()*1.0/4.0, 1 + h);
+      path.lineTo(1 + width()*3.0/4.0, 1 + h);
+      path.lineTo(width() - 1, height()/2);
+      path.lineTo(1 + width()*3.0/4.0, height() - 1 - h);
+      path.lineTo(1 + width()*1.0/4.0, height() - 1 - h);
       path.lineTo(1, height()/2);
       path.closeSubpath();
 

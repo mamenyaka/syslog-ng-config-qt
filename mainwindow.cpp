@@ -22,7 +22,8 @@ MainWindow::MainWindow(QWidget* parent) :
 
   ui->srcWidget->setupDrivers(DriverType::source, config.get_default_drivers());
   ui->dstWidget->setupDrivers(DriverType::destination, config.get_default_drivers());
-  ui->filtWidget->setupDrivers(DriverType::filter, config.get_default_drivers());
+  ui->filWidget->setupDrivers(DriverType::filter, config.get_default_drivers());
+  ui->rewWidget->setupDrivers(DriverType::rewrite, config.get_default_drivers());
 
   ui->sceneScrollArea->setWidget(scene);
 

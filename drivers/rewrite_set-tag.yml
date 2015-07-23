@@ -1,0 +1,9 @@
+name: set-tag
+type: rewrite
+description: Add a tag.
+options:
+  - set-tag:
+      type: string
+      description: The tag to add.
+      required: yes
+

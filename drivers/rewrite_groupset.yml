@@ -1,0 +1,12 @@
+name: groupset
+type: rewrite
+description: Set the value of multiple message fields at once.
+options:
+  - groupset:
+      type: string
+      description: The new value of the modified fields.
+      required: yes
+  - values:
+      type: string
+      description: The fields of the message to modify.
+      required: yes
