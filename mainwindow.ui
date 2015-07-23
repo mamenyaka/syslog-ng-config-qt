@@ -121,6 +121,7 @@
     <addaction name="actionOptions"/>
     <addaction name="separator"/>
     <addaction name="actionLog"/>
+    <addaction name="actionTemplate"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -173,6 +174,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+L</string>
+   </property>
+  </action>
+  <action name="actionTemplate">
+   <property name="text">
+    <string>New &amp;template</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+T</string>
    </property>
   </action>
   <action name="actionOptions">

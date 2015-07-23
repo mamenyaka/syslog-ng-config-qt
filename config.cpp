@@ -102,8 +102,11 @@ const std::string Option::to_string() const
 std::map<std::string, DriverType> driver_type_map {
   {"source", DriverType::source},
   {"destination", DriverType::destination},
+  {"options", DriverType::options},
   {"filter", DriverType::filter},
-  {"options", DriverType::options}
+  {"template", DriverType::template_},
+  {"rewrite", DriverType::rewrite},
+  {"parser", DriverType::parser}
 };
 
 Driver::Driver(const std::string& name,

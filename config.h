@@ -40,7 +40,7 @@ public:
   const std::string to_string() const;
 };
 
-enum class DriverType : int { source, destination, filter, options };
+enum class DriverType : int { source, destination, options, filter, template_, rewrite, parser };
 
 class Driver
 {
@@ -110,7 +110,6 @@ class Config
 {
   std::vector<Driver> default_drivers;
   std::list<Driver> drivers;
-  std::list<Driver> filters;
   std::list<Log> logs;
   std::unique_ptr<GlobalOptions> global_options;
 

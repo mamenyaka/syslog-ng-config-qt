@@ -34,11 +34,10 @@ void Scene::add_driver(std::shared_ptr<Driver>& new_driver, const QPoint& pos)
   updateGeometry();
 }
 
-void Scene::add_log(LogUPtr& new_log)
+void Scene::add_log(LogUPtr& new_log, const QPoint& pos)
 {
   LogIcon* icon = new LogIcon(new_log, this);
-  const int x = 100 + (findChildren<LogIcon*>().size() - 1)*(icon->width() + 50);
-  icon->move(x, 10);
+  icon->move(pos.x() - icon->width()/2, pos.y() - icon->height()/2);
   icon->lower();
   icon->show();
 
@@ -47,9 +46,19 @@ void Scene::add_log(LogUPtr& new_log)
 
 void Scene::move_driver(const QPoint& pos)
 {
-  const int x = pos.x() - selected_icon->width()/2;
-  const int y = pos.y() - selected_icon->height()/2;
-  selected_icon->move(x, y);
+  const int x = pos.x() - selected_driver_icon->width()/2;
+  const int y = pos.y() - selected_driver_icon->height()/2;
+  selected_driver_icon->move(x, y);
+
+  update();
+  updateGeometry();
+}
+
+void Scene::move_log(const QPoint& pos)
+{
+  const int x = pos.x() - selected_log_icon->width()/2;
+  const int y = pos.y() - selected_log_icon->height()/2;
+  selected_log_icon->move(x, y);
 
   update();
   updateGeometry();
@@ -57,7 +66,8 @@ void Scene::move_driver(const QPoint& pos)
 
 void Scene::clear()
 {
-  selected_icon = nullptr;
+  selected_driver_icon = nullptr;
+  selected_log_icon = nullptr;
 
   deleteLabel->hide();
   updateGeometry();
@@ -83,42 +93,46 @@ void Scene::reset()
 
 void Scene::mousePressEvent(QMouseEvent* event)
 {
-  selected_icon = select_nearest_driver();
+  selected_driver_icon = select_nearest_driver();
+  selected_log_icon = select_nearest_log(event->pos());
 
-  if (!selected_icon)
-  {
-    return;
-  }
-
+  deleteLabel->lower();
   deleteLabel->show();
 
-  if (copy_icon)
+  if (selected_driver_icon && copy_icon)
   {
-    std::shared_ptr<Driver> driver = selected_icon->get_driver_ptr();
+    std::shared_ptr<Driver> driver = selected_driver_icon->get_driver_ptr();
     add_driver(driver, event->pos());
-    selected_icon = dynamic_cast<DriverIcon*>(children().last());
+    selected_driver_icon = dynamic_cast<DriverIcon*>(children().last());
   }
 }
 
 void Scene::mouseReleaseEvent(QMouseEvent* event)
 {
-  if (!selected_icon || selected_icon->parentWidget() != this)
+  if (selected_driver_icon &&
+    selected_driver_icon->parentWidget() == this)
   {
-    clear();
-    return;
+    const QRect geom = selected_driver_icon->geometry();
+    LogIcon* icon = select_nearest_log(event->pos());
+
+    if (icon && icon->geometry().intersects(geom))
+    {
+      icon->add_driver(*selected_driver_icon);
+    }
+
+    if (deleteLabel->geometry().intersects(geom))
+    {
+      delete selected_driver_icon;
+    }
   }
-
-  const QRect geom = selected_icon->geometry();
-  LogIcon* icon = select_nearest_log(event->pos());
-
-  if (icon && icon->geometry().intersects(geom))
+  else if (selected_log_icon)
   {
-    icon->add_driver(*selected_icon);
-  }
+    const QRect geom = selected_log_icon->geometry();
 
-  if (deleteLabel->geometry().intersects(geom))
-  {
-    delete selected_icon;
+    if (deleteLabel->geometry().intersects(geom))
+    {
+      delete selected_log_icon;
+    }
   }
 
   clear();
@@ -126,25 +140,30 @@ void Scene::mouseReleaseEvent(QMouseEvent* event)
 
 void Scene::mouseMoveEvent(QMouseEvent* event)
 {
-  if (!selected_icon)
+  if (selected_driver_icon)
   {
-    return;
-  }
-
-  if (selected_icon->parentWidget() != this)
-  {
-    LogIcon* icon = dynamic_cast<LogIcon*>(selected_icon->parentWidget()->parentWidget());
-    if (icon)
+    if (selected_driver_icon->parentWidget() != this)
     {
-      icon->remove_driver(*selected_icon);
-      selected_icon->setParent(this);
-      selected_icon->show();
+      LogIcon* icon = dynamic_cast<LogIcon*>(selected_driver_icon->parentWidget()->parentWidget());
+      if (icon)
+      {
+        icon->remove_driver(*selected_driver_icon);
+        selected_driver_icon->setParent(this);
+        selected_driver_icon->show();
+      }
+    }
+
+    if (event->x() > 0 && event->y() > 0)
+    {
+      move_driver(event->pos());
     }
   }
-
-  if (event->x() > 0 && event->y() > 0)
+  else if (selected_log_icon)
   {
-    move_driver(event->pos());
+    if (event->x() > 0 && event->y() > 0)
+    {
+      move_log(event->pos());
+    }
   }
 }
 
@@ -176,7 +195,7 @@ void Scene::keyReleaseEvent(QKeyEvent* event)
   }
 }
 
-void Scene::leaveEvent(QEvent*)
+void Scene::leaveEvent(QEvent *)
 {
   clear();
   copy_icon = false;

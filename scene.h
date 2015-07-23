@@ -19,7 +19,8 @@ class Scene : public QWidget
   Q_OBJECT
 
   Config& config;
-  DriverIcon* selected_icon = nullptr;
+  DriverIcon* selected_driver_icon = nullptr;
+  LogIcon* selected_log_icon = nullptr;
   bool copy_icon = false;
 
   QLabel* deleteLabel;
@@ -29,9 +30,10 @@ public:
                  QWidget* parent = 0);
 
   void add_driver(std::shared_ptr<Driver>& new_driver, const QPoint& pos);
-  void add_log(LogUPtr& new_log);
+  void add_log(LogUPtr& new_log, const QPoint& pos);
 
   void move_driver(const QPoint& pos);
+  void move_log(const QPoint& pos);
 
   void clear();
   void reset();

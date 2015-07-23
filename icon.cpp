@@ -88,6 +88,11 @@ void DriverIcon::setupIcon()
       painter.drawRect(rect);
       break;
     }
+    case DriverType::template_:
+    {
+      painter.drawEllipse(rect);
+      break;
+    }
     case DriverType::filter:
     {
       painter.setBrush(QColor(128, 255, 128, 192));

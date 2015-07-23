@@ -20,11 +20,9 @@ make
 ```
 
 # Current features
-- read provided yaml files to create form with options for drivers
-- create drivers (drag&drop)
-- update drivers (double click)
-- copy drivers (hold down CTRL)
-- create logs (Edit->New log)
-- update logs (drag&drop drivers)
-- update global options (Edit->Global options)
-- delete drivers (move to delete icon)
+- read provided yaml files to create form with options for source driversm, destination drivers, global options, templates, filters
+- create source driversm, destination drivers, filters (drag&drop), log paths (Edit->New log), templates (Edit->New template)
+- copy source driversm, destination drivers, templates, filters (hold down CTRL)
+- update source driversm, destination drivers, templates, filters (double click), log paths (drag&drop drivers), global options (Edit->Global options)
+- delete source driversm, destination drivers, log paths, templates, filters (move to delete icon)
+

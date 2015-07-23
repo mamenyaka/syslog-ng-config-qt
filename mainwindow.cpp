@@ -76,14 +76,25 @@ void MainWindow::setupConnections()
   connect(ui->actionExit, &QAction::triggered, this, &MainWindow::close);
 
 
+  connect(ui->actionOptions, &QAction::triggered, [&]() {
+    Dialog(config.get_global_options()).exec();
+  });
+
   connect(ui->actionLog, &QAction::triggered, [&]() {
     Log new_log;
     Config::LogUPtr log = config.add_log(new_log);
-    scene->add_log(log);
+    scene->add_log(log, QPoint(100, 100));
   });
 
-  connect(ui->actionOptions, &QAction::triggered, [&]() {
-    Dialog(config.get_global_options()).exec();
+  connect(ui->actionTemplate, &QAction::triggered, [&]() {
+    const Driver& default_template = config.get_default_driver("template", DriverType::template_);
+    Driver new_template(default_template);
+
+    if (Dialog(new_template, this).exec() == QDialog::Accepted)
+    {
+      std::shared_ptr<Driver> template_ = config.add_driver(new_template);
+      scene->add_driver(template_, QPoint(100, 100));
+    }
   });
 
 

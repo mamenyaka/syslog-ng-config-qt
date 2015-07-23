@@ -1,0 +1,13 @@
+name: template
+type: template
+description: Define message templates, and reference them from every object that can use a template.
+options:
+  - template:
+      type: string
+      description: The template.
+      required: yes
+  - template-escape:
+      type: list
+      description: Enabling template escaping causes syslog-ng to escape the quote, double qoute, and backslash characters from the messages.
+      values: [yes, no]
+      default: no
