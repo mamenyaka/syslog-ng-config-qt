@@ -1,0 +1,12 @@
+name: in-list
+type: filter
+description: Matches the value of the specified field to a list stored in a file, allowing you to do whitelisting.
+options:
+  - in-list:
+      type: string
+      description: Path to the *.list file
+      required: yes
+  - value:
+      type: string
+      description: Field to filter.
+      required: yes

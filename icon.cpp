@@ -88,13 +88,28 @@ void DriverIcon::setupIcon()
       painter.drawRect(rect);
       break;
     }
+    case DriverType::filter:
+    {
+      painter.setBrush(QColor(128, 255, 128, 192));
+
+      QPainterPath path;
+      path.moveTo(width()/2, 1);
+      path.lineTo(width() - 1, height()/2);
+      path.lineTo(width()/2, height() - 1);
+      path.lineTo(1, height()/2);
+      path.closeSubpath();
+
+      painter.drawPath(path);
+      painter.fillPath(path, painter.brush());
+      break;
+    }
   }
 
   painter.end();
 }
 
 
-LogIcon::LogIcon(std::unique_ptr< Log, std::function<void(const Log *)> >& log,
+LogIcon::LogIcon(LogUPtr& log,
                  QWidget* parent) :
   QWidget(parent),
   log(std::move(log))
@@ -110,7 +125,7 @@ LogIcon::LogIcon(std::unique_ptr< Log, std::function<void(const Log *)> >& log,
   frame->setFrameStyle(QFrame::Box | QFrame::Plain);
   frame->setMinimumSize(ICON_SIZE, ICON_SIZE);
 
-  frameLayout = new QVBoxLayout(frame);
+  QVBoxLayout* frameLayout = new QVBoxLayout(frame);
 
   QHBoxLayout* mainLayout = new QHBoxLayout(this);
   mainLayout->addWidget(label);
@@ -121,6 +136,8 @@ void LogIcon::add_driver(DriverIcon& icon)
 {
   std::shared_ptr<const Driver> driver = icon.get_driver_ptr();
   log->add_driver(driver);
+
+  QVBoxLayout* frameLayout = findChild<QVBoxLayout*>();
   frameLayout->addWidget(&icon);
 
   icon.show();
@@ -131,6 +148,8 @@ void LogIcon::remove_driver(DriverIcon& icon)
 {
   std::shared_ptr<Driver>& driver = icon.get_driver_ptr();
   log->remove_driver(driver);
+
+  QVBoxLayout* frameLayout = findChild<QVBoxLayout*>();
   frameLayout->removeWidget(&icon);
 
   frameLayout->activate();

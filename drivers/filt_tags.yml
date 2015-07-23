@@ -1,0 +1,8 @@
+name: tags
+type: filter
+description: Select messages labeled with the specified tag.
+options:
+  - tags:
+      type: string
+      description: The tag.
+      required: yes

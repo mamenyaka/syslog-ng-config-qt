@@ -22,6 +22,8 @@ MainWindow::MainWindow(QWidget* parent) :
 
   ui->srcWidget->setupDrivers(DriverType::source, config.get_default_drivers());
   ui->dstWidget->setupDrivers(DriverType::destination, config.get_default_drivers());
+  ui->filtWidget->setupDrivers(DriverType::filter, config.get_default_drivers());
+
   ui->sceneScrollArea->setWidget(scene);
 
   setupConnections();
@@ -76,7 +78,7 @@ void MainWindow::setupConnections()
 
   connect(ui->actionLog, &QAction::triggered, [&]() {
     Log new_log;
-    std::unique_ptr< Log, std::function<void(const Log *)> > log = config.add_log(new_log);
+    Config::LogUPtr log = config.add_log(new_log);
     scene->add_log(log);
   });
 

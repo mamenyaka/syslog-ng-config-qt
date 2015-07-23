@@ -1,0 +1,8 @@
+name: host
+type: filter
+description: Match messages by using a regular expression against the hostname field of log messages.
+options:
+  - host:
+      type: string
+      description: The regexp to use.
+      required: yes

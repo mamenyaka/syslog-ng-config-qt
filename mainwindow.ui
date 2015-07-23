@@ -60,6 +60,26 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="filtTab">
+       <attribute name="title">
+        <string>FILT</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="filtMainLayout">
+        <item>
+         <widget class="QScrollArea" name="srcScrollArea">
+          <property name="horizontalScrollBarPolicy">
+           <enum>Qt::ScrollBarAlwaysOff</enum>
+          </property>
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="Drivers" name="filtWidget">
+           <layout class="QVBoxLayout" name="filtLayout"/>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
     <item>

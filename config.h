@@ -40,7 +40,7 @@ public:
   const std::string to_string() const;
 };
 
-enum class DriverType : int { source, destination, options };
+enum class DriverType : int { source, destination, filter, options };
 
 class Driver
 {
@@ -100,8 +100,6 @@ class Log
 public:
   Log();
 
-  const std::list< std::shared_ptr<const Driver> >& get_drivers() const;
-
   void add_driver(std::shared_ptr<const Driver>& driver);
   void remove_driver(const std::shared_ptr<const Driver>& driver);
 
@@ -112,6 +110,7 @@ class Config
 {
   std::vector<Driver> default_drivers;
   std::list<Driver> drivers;
+  std::list<Driver> filters;
   std::list<Log> logs;
   std::unique_ptr<GlobalOptions> global_options;
 
@@ -122,7 +121,9 @@ public:
   GlobalOptions& get_global_options();
 
   std::shared_ptr<Driver> add_driver(const Driver& new_driver);
-  std::unique_ptr< Log, std::function<void(const Log *)> > add_log(const Log& new_log);
+
+  typedef std::unique_ptr< Log, std::function<void(const Log *)> > LogUPtr;
+  LogUPtr add_log(const Log& new_log);
 
   const Driver& get_default_driver(const std::string& name, DriverType type) const;
 

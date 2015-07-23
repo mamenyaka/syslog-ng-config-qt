@@ -34,7 +34,7 @@ void Scene::add_driver(std::shared_ptr<Driver>& new_driver, const QPoint& pos)
   updateGeometry();
 }
 
-void Scene::add_log(std::unique_ptr< Log, std::function<void(const Log *)> >& new_log)
+void Scene::add_log(LogUPtr& new_log)
 {
   LogIcon* icon = new LogIcon(new_log, this);
   const int x = 100 + (findChildren<LogIcon*>().size() - 1)*(icon->width() + 50);

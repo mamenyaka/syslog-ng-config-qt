@@ -1,0 +1,8 @@
+name: netmask
+type: filter
+description: Select only messages sent by a host whose IP address belongs to the specified IPv4 subnet.
+options:
+  - netmask:
+      type: string
+      description: The dot-decimal or the CIDR notation of the netmask.
+      required: yes

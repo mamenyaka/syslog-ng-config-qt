@@ -1,0 +1,9 @@
+name: level
+type: filter
+description: Select messages corresponding to a single importance level, or a level-range.
+options:
+  - level:
+      type: set
+      description: The accepted levels.
+      values: [emerg, alert, crit, err, warning, notice, info, debug]
+      required: yes

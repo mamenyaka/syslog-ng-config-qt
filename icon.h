@@ -5,11 +5,11 @@
 #include <QPixmap>
 
 #include <memory>
-#include <functional>
 
 class Driver;
 class Log;
-class QVBoxLayout;
+
+typedef std::unique_ptr< Log, std::function<void(const Log *)> > LogUPtr;
 
 class DriverIcon : public QWidget
 {
@@ -37,11 +37,10 @@ class LogIcon : public QWidget
 {
   Q_OBJECT
 
-  std::unique_ptr< Log, std::function<void(const Log *)> > log;
-  QVBoxLayout* frameLayout;
+  LogUPtr log;
 
 public:
-  explicit LogIcon(std::unique_ptr< Log, std::function<void(const Log *)> >& log,
+  explicit LogIcon(LogUPtr& log,
                    QWidget* parent = 0);
 
   void add_driver(DriverIcon& icon);

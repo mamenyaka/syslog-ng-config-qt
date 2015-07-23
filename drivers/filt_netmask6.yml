@@ -1,0 +1,8 @@
+name: netmask6
+type: filter
+description: Select only messages sent by a host whose IP address belongs to the specified IPv6 subnet.
+options:
+  - netmask6:
+      type: string
+      description: The regular or the compressed format of the netmask.
+      required: yes

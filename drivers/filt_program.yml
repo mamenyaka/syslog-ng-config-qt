@@ -1,0 +1,8 @@
+name: program
+type: filter
+description: Match messages by using a regular expression against the program name field of log messages.
+options:
+  - program:
+      type: string
+      description: The regexp.
+      required: yes

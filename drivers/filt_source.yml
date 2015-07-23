@@ -1,0 +1,8 @@
+name: source
+type: filter
+description: Select messages of a source statement.
+options:
+  - source:
+      type: string
+      description: The source id.
+      required: yes

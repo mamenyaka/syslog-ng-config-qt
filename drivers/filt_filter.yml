@@ -1,0 +1,8 @@
+name: filter
+type: filter
+description: Call another filter rule and evaluate its value.
+options:
+  - filter:
+      type: string
+      description: Filter name to call.
+      required: yes

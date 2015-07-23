@@ -1,0 +1,8 @@
+name: match
+type: filter
+description: Match a regular expression to the headers and the message itself.
+options:
+  - match:
+      type: string
+      description: The regexp.
+      required: yes

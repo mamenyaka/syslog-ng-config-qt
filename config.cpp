@@ -102,6 +102,7 @@ const std::string Option::to_string() const
 std::map<std::string, DriverType> driver_type_map {
   {"source", DriverType::source},
   {"destination", DriverType::destination},
+  {"filter", DriverType::filter},
   {"options", DriverType::options}
 };
 
@@ -325,13 +326,13 @@ std::shared_ptr<Driver> Config::add_driver(const Driver& new_driver)
   return std::shared_ptr<Driver>(&driver, [&](const Driver* driver) { delete_driver(driver); });
 }
 
-std::unique_ptr< Log, std::function<void(const Log *)> > Config::add_log(const Log& new_log)
+Config::LogUPtr Config::add_log(const Log& new_log)
 {
   logs.push_back(std::move(new_log));
 
   Log& log = logs.back();
 
-  return std::unique_ptr< Log, std::function<void(const Log *)> >(&log, [&](const Log* log) { delete_log(log); });
+  return LogUPtr(&log, [&](const Log* log) { delete_log(log); });
 }
 
 const Driver& Config::get_default_driver(const std::string& name, DriverType type) const

@@ -1,0 +1,8 @@
+name: message
+type: filter
+description: Match a regular expression to the text of the log message, excluding the headers.
+options:
+  - message:
+      type: string
+      description: The regexp.
+      required: yes
