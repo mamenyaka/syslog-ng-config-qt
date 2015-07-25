@@ -6,3 +6,4 @@ options:
       type: string
       description: The dot-decimal or the CIDR notation of the netmask.
       required: yes
+

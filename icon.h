@@ -43,6 +43,8 @@ public:
   explicit LogIcon(LogUPtr& log,
                    QWidget* parent = 0);
 
+  Log& get_log();
+
   void add_driver(DriverIcon& icon);
   void remove_driver(DriverIcon& icon);
 

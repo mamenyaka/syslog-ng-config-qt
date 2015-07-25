@@ -23,81 +23,101 @@
       <property name="fixedWidth">
        <number>165</number>
       </property>
-      <widget class="QWidget" name="srcTab">
+      <widget class="QWidget" name="sourceTab">
        <attribute name="title">
         <string>Source</string>
        </attribute>
-       <layout class="QVBoxLayout" name="srcMainLayout">
+       <layout class="QVBoxLayout" name="sourceMainLayout">
         <item>
-         <widget class="QScrollArea" name="srcScrollArea">
+         <widget class="QScrollArea" name="sourceScrollArea">
           <property name="horizontalScrollBarPolicy">
            <enum>Qt::ScrollBarAlwaysOff</enum>
           </property>
           <property name="widgetResizable">
            <bool>true</bool>
           </property>
-          <widget class="Drivers" name="srcWidget">
-           <layout class="QVBoxLayout" name="srcLayout"/>
+          <widget class="Drivers" name="sourceWidget">
+           <layout class="QVBoxLayout" name="sourceLayout"/>
           </widget>
          </widget>
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="dstTab">
+      <widget class="QWidget" name="destinationTab">
        <attribute name="title">
         <string>Destination</string>
        </attribute>
-       <layout class="QVBoxLayout" name="dstMainLayout">
+       <layout class="QVBoxLayout" name="destinationMainLayout">
         <item>
-         <widget class="QScrollArea" name="dstScrollArea">
+         <widget class="QScrollArea" name="destinationScrollArea">
           <property name="horizontalScrollBarPolicy">
            <enum>Qt::ScrollBarAlwaysOff</enum>
           </property>
           <property name="widgetResizable">
            <bool>true</bool>
           </property>
-          <widget class="Drivers" name="dstWidget">
-           <layout class="QVBoxLayout" name="dstLayout"/>
+          <widget class="Drivers" name="destinationWidget">
+           <layout class="QVBoxLayout" name="destinationLayout"/>
           </widget>
          </widget>
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="filTab">
+      <widget class="QWidget" name="filterTab">
        <attribute name="title">
         <string>Filter</string>
        </attribute>
-       <layout class="QVBoxLayout" name="filMainLayout">
+       <layout class="QVBoxLayout" name="filterMainLayout">
         <item>
-         <widget class="QScrollArea" name="filScrollArea">
+         <widget class="QScrollArea" name="filterScrollArea">
           <property name="horizontalScrollBarPolicy">
            <enum>Qt::ScrollBarAlwaysOff</enum>
           </property>
           <property name="widgetResizable">
            <bool>true</bool>
           </property>
-          <widget class="Drivers" name="filWidget">
-           <layout class="QVBoxLayout" name="filLayout"/>
+          <widget class="Drivers" name="filterWidget">
+           <layout class="QVBoxLayout" name="filterLayout"/>
           </widget>
          </widget>
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="rewTab">
+      <widget class="QWidget" name="rewriteTab">
        <attribute name="title">
         <string>Rewrite</string>
        </attribute>
-       <layout class="QVBoxLayout" name="rewMainLayout">
+       <layout class="QVBoxLayout" name="rewriteMainLayout">
         <item>
-         <widget class="QScrollArea" name="rewScrollArea">
+         <widget class="QScrollArea" name="rewriteScrollArea">
           <property name="horizontalScrollBarPolicy">
            <enum>Qt::ScrollBarAlwaysOff</enum>
           </property>
           <property name="widgetResizable">
            <bool>true</bool>
           </property>
-          <widget class="Drivers" name="rewWidget">
-           <layout class="QVBoxLayout" name="rewLayout"/>
+          <widget class="Drivers" name="rewriteWidget">
+           <layout class="QVBoxLayout" name="rewriteLayout"/>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="parserTab">
+       <attribute name="title">
+        <string>Parser</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="parserMainLayout">
+        <item>
+         <widget class="QScrollArea" name="parserScrollArea">
+          <property name="horizontalScrollBarPolicy">
+           <enum>Qt::ScrollBarAlwaysOff</enum>
+          </property>
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="Drivers" name="parserWidget">
+           <layout class="QVBoxLayout" name="parserLayout"/>
           </widget>
          </widget>
         </item>

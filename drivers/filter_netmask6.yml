@@ -6,3 +6,4 @@ options:
       type: string
       description: The regular or the compressed format of the netmask.
       required: yes
+

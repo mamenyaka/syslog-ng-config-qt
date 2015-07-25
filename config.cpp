@@ -102,6 +102,7 @@ const std::string Option::to_string() const
 std::map<std::string, DriverType> driver_type_map {
   {"source", DriverType::source},
   {"destination", DriverType::destination},
+  {"log", DriverType::log},
   {"options", DriverType::options},
   {"filter", DriverType::filter},
   {"template", DriverType::template_},
@@ -236,13 +237,28 @@ const std::string Driver::to_string() const
 }
 
 
-GlobalOptions::GlobalOptions(const Driver& default_driver) :
-  Driver(default_driver)
+Log::Log(const Driver& driver) :
+  Driver(driver)
 {}
 
-const std::string GlobalOptions::to_string() const
+void Log::add_driver(std::shared_ptr<const Driver> driver)
 {
-  std::string config = "options {\n";
+  drivers.push_back(std::move(driver));
+}
+
+void Log::remove_driver(const std::shared_ptr<const Driver>& driver)
+{
+  drivers.remove(driver);
+}
+
+const std::string Log::to_string() const
+{
+  std::string config = get_type_name() + " {\n";
+
+  for (const std::shared_ptr<const Driver>& driver : drivers)
+  {
+    config += "    " + driver->get_type_name() + "(" + driver->get_id_name() + ");\n";
+  }
 
   for (const Option& option : get_options())
   {
@@ -260,26 +276,24 @@ const std::string GlobalOptions::to_string() const
 }
 
 
-Log::Log()
+GlobalOptions::GlobalOptions(const Driver& default_driver) :
+  Driver(default_driver)
 {}
 
-void Log::add_driver(std::shared_ptr<const Driver>& driver)
+const std::string GlobalOptions::to_string() const
 {
-  drivers.push_back(std::move(driver));
-}
+  std::string config = get_type_name() + " {\n";
 
-void Log::remove_driver(const std::shared_ptr<const Driver>& driver)
-{
-  drivers.remove(driver);
-}
-
-const std::string Log::to_string() const
-{
-  std::string config = "log { ";
-  for (const std::shared_ptr<const Driver>& driver : drivers)
+  for (const Option& option : get_options())
   {
-    config += driver->get_type_name() + "(" + driver->get_id_name() + "); ";
+    if (option.get_current_value() == option.get_default_value())
+    {
+      continue;
+    }
+
+    config += "    " + option.to_string() + ";\n";
   }
+
   config += "};\n";
 
   return config;

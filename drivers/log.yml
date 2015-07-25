@@ -1,0 +1,9 @@
+name: log
+type: log
+description: Determines what happens with the incoming log messages.
+options:
+  - flags:
+      type: list
+      description: The flags used.
+      values: [catchall, fallback, final, flow-control]
+

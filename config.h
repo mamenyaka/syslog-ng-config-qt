@@ -40,7 +40,7 @@ public:
   const std::string to_string() const;
 };
 
-enum class DriverType : int { source, destination, options, filter, template_, rewrite, parser };
+enum class DriverType : int { source, destination, log, options, filter, template_, rewrite, parser };
 
 class Driver
 {
@@ -75,6 +75,28 @@ public:
   const std::string to_string() const;
 };
 
+class Log : public Driver
+{
+  std::list< std::shared_ptr<const Driver> > drivers;
+
+public:
+  Log(const Driver& driver);
+
+  void add_driver(std::shared_ptr<const Driver> driver);
+  void remove_driver(const std::shared_ptr<const Driver>& driver);
+
+  const std::string to_string() const;
+
+  const std::string& get_include() const = delete;
+  int get_id() const = delete;
+
+  void set_include(const std::string& include) = delete;
+  void add_option(const Option& option) = delete;
+  void update_id(int id) = delete;
+
+  const std::string get_id_name() const = delete;
+};
+
 class GlobalOptions : public Driver
 {
 public:
@@ -89,21 +111,7 @@ public:
   void add_option(const Option& option) = delete;
   void update_id(int id) = delete;
 
-  const std::string get_type_name() const = delete;
   const std::string get_id_name() const = delete;
-};
-
-class Log
-{
-  std::list< std::shared_ptr<const Driver> > drivers;
-
-public:
-  Log();
-
-  void add_driver(std::shared_ptr<const Driver>& driver);
-  void remove_driver(const std::shared_ptr<const Driver>& driver);
-
-  const std::string to_string() const;
 };
 
 class Config

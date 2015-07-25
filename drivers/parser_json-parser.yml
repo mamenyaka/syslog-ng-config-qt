@@ -1,0 +1,17 @@
+name: json-parser
+type: parser
+description: Use a JSON parser to separate parts of log messages at delimiter characters to columns.
+options:
+  - extract-prefix:
+      type: string
+      description: Extract only the specified subtree from the JSON message.
+  - marker:
+      type: string
+      description: Use a marker in case of mixed log messages, to identify JSON encoded messages for the parser.
+  - prefix:
+      type: string
+      description: Insert a prefix before the name part of the name-value pairs to help further processing.
+  - template:
+      type: string
+      description: The macro that contains the part of the message that the parser will process.
+

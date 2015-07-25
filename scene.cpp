@@ -31,7 +31,7 @@ void Scene::add_driver(std::shared_ptr<Driver>& new_driver, const QPoint& pos)
   icon->raise();
   icon->show();
 
-  updateGeometry();
+  clear();
 }
 
 void Scene::add_log(LogUPtr& new_log, const QPoint& pos)
@@ -41,7 +41,7 @@ void Scene::add_log(LogUPtr& new_log, const QPoint& pos)
   icon->lower();
   icon->show();
 
-  updateGeometry();
+  clear();
 }
 
 void Scene::move_driver(const QPoint& pos)
@@ -99,19 +99,28 @@ void Scene::mousePressEvent(QMouseEvent* event)
   deleteLabel->lower();
   deleteLabel->show();
 
-  if (selected_driver_icon && copy_icon)
+  if (selected_driver_icon)
   {
-    std::shared_ptr<Driver> driver = selected_driver_icon->get_driver_ptr();
-    add_driver(driver, event->pos());
-    selected_driver_icon = dynamic_cast<DriverIcon*>(children().last());
+    selected_driver_icon->raise();
+
+    if (copy_icon)
+    {
+      std::shared_ptr<Driver> driver = selected_driver_icon->get_driver_ptr();
+      add_driver(driver, event->pos());
+      selected_driver_icon = dynamic_cast<DriverIcon*>(children().last());
+    }
   }
 }
 
 void Scene::mouseReleaseEvent(QMouseEvent* event)
 {
-  if (selected_driver_icon &&
-    selected_driver_icon->parentWidget() == this)
+  if (selected_driver_icon)
   {
+    if (selected_driver_icon->parentWidget() != this)
+    {
+      return;
+    }
+
     const QRect geom = selected_driver_icon->geometry();
     LogIcon* icon = select_nearest_log(event->pos());
 
@@ -167,16 +176,19 @@ void Scene::mouseMoveEvent(QMouseEvent* event)
   }
 }
 
-void Scene::mouseDoubleClickEvent(QMouseEvent *)
+void Scene::mouseDoubleClickEvent(QMouseEvent* event)
 {
-  DriverIcon* icon = select_nearest_driver();
+  DriverIcon* driver_icon = select_nearest_driver();
+  LogIcon* log_icon = select_nearest_log(event->pos());
 
-  if (!icon)
+  if (driver_icon)
   {
-    return;
+    Dialog(driver_icon->get_driver(), this).exec();
   }
-
-  Dialog(icon->get_driver(), this).exec();
+  else if (log_icon)
+  {
+    Dialog(log_icon->get_log(), this).exec();
+  }
 }
 
 void Scene::keyPressEvent(QKeyEvent* event)

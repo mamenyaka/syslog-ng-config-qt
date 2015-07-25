@@ -1,0 +1,23 @@
+name: csv-parser
+type: parser
+description: Use a CSV parser to separate parts of log messages at delimiter characters to columns.
+options:
+  - columns:
+      type: string
+      description: Specify the name of the columns to separate messages to.
+      required: yes
+  - delimiters:
+      type: string
+      description: The delimiter is the character that separates the columns in the message.
+      required: yes
+  - flags:
+      type: set
+      description: Specify options for parsing the message.
+      values: [drop-invalid, escape-none, escape-backslash, escape-double-char, greedy, strip-whitespace]
+  - quote-pairs:
+      type: string
+      description: List quote-pairs between single quotes.
+  - template:
+      type: string
+      description: The macro that contains the part of the message that the parser will process.
+

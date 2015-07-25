@@ -9,6 +9,8 @@
 #include <QHBoxLayout>
 #include <QEvent>
 
+#include <cmath>
+
 #define ICON_SIZE 80
 
 DriverIcon::DriverIcon(std::shared_ptr<Driver>& driver,
@@ -20,11 +22,12 @@ DriverIcon::DriverIcon(std::shared_ptr<Driver>& driver,
   setAutoFillBackground(true);
 
   QLabel* label = new QLabel(QString::fromStdString(this->driver->get_name()), this);
+  label->setFont(QFont("Sans", 8, QFont::DemiBold));
   label->setAlignment(Qt::AlignCenter);
   label->setWordWrap(true);
 
   QVBoxLayout* mainLayout = new QVBoxLayout(this);
-  mainLayout->setMargin(0);
+  mainLayout->setMargin(5);
   mainLayout->addWidget(label);
 
   setupIcon();
@@ -57,7 +60,7 @@ void DriverIcon::paintEvent(QPaintEvent *)
   {
     painter.setRenderHints(QPainter::TextAntialiasing);
     painter.setPen(QPen(Qt::black));
-    painter.drawText(0, height() - 20, width(), 20, Qt::AlignHCenter, QString::number(driver->get_id()));
+    painter.drawText(0, height() - 30, width(), 20, Qt::AlignHCenter, QString::number(driver->get_id()));
   }
 
   painter.end();
@@ -72,26 +75,18 @@ void DriverIcon::setupIcon()
   painter.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
   painter.setPen(Qt::black);
 
-  QRect rect(1, 1, width() - 2, height() - 2);
-
   switch (driver->get_type())
   {
     case DriverType::source:
     {
       painter.setBrush(QColor(255, 128, 128, 192));
-      painter.drawEllipse(rect);
+      painter.drawEllipse(1, 1, width() - 2, height() - 2);
       break;
     }
     case DriverType::destination:
     {
       painter.setBrush(QColor(128, 128, 225, 192));
-      painter.drawRect(rect);
-      break;
-    }
-    case DriverType::template_:
-    {
-      painter.setPen(QColor(255, 128, 255, 192));
-      painter.drawEllipse(rect);
+      painter.drawRect(1, 1, width() - 2, height() - 2);
       break;
     }
     case DriverType::filter:
@@ -109,23 +104,42 @@ void DriverIcon::setupIcon()
       painter.fillPath(path, painter.brush());
       break;
     }
+    case DriverType::template_:
+    {
+      painter.setPen(QColor(255, 128, 255, 192));
+      painter.drawEllipse(1, 1, width() - 2, height() - 2);
+      break;
+    }
     case DriverType::rewrite:
     {
       painter.setBrush(QColor(128, 255, 255, 192));
 
-      double h = (1 - cos(3.14/6.0))*height()/2.0;
+      const double pi = std::acos(-1);
+      double h = (1 - std::cos(pi/6.0))*(height() - 2)/2;
 
       QPainterPath path;
-      path.moveTo(1 + width()*1.0/4.0, 1 + h);
-      path.lineTo(1 + width()*3.0/4.0, 1 + h);
-      path.lineTo(width() - 1, height()/2);
-      path.lineTo(1 + width()*3.0/4.0, height() - 1 - h);
-      path.lineTo(1 + width()*1.0/4.0, height() - 1 - h);
-      path.lineTo(1, height()/2);
+      path.moveTo(width()/2, 1);
+      path.lineTo(width() - 1 - h, 1 + (height() - 2)*1/4);
+      path.lineTo(width() - 1 - h, 1 + (height() - 2)*3/4);
+      path.lineTo(width()/2, height() - 1);
+      path.lineTo(1 + h, 1 + (height() - 2)*3/4);
+      path.lineTo(1 + h, 1 + (height() - 2)*1/4);
       path.closeSubpath();
 
       painter.drawPath(path);
       painter.fillPath(path, painter.brush());
+      break;
+    }
+    case DriverType::parser:
+    {
+      painter.setBrush(QColor(255, 16, 32));
+      painter.drawEllipse(1 + width()*1/4, 1, (width() - 2)/2, (height() - 2)/2);
+      painter.setBrush(QColor(0, 128, 32));
+      painter.drawEllipse(1 + width()*1/4, height()/2, (width() - 2)/2, (height() - 2)/2);
+      painter.setBrush(QColor(64, 128, 255));
+      painter.drawEllipse(1, 1 + (height() - 2)*1/4, (width() - 2)/2, (height() - 2)/2);
+      painter.setBrush(QColor(255, 192, 16));
+      painter.drawEllipse(width()/2, 1 + (height() - 2)*1/4, (width() - 2)/2, (height() - 2)/2);
       break;
     }
   }
@@ -157,9 +171,19 @@ LogIcon::LogIcon(LogUPtr& log,
   mainLayout->addWidget(frame);
 }
 
+Log& LogIcon::get_log()
+{
+  return *log;
+}
+
 void LogIcon::add_driver(DriverIcon& icon)
 {
-  std::shared_ptr<const Driver> driver = icon.get_driver_ptr();
+  if (icon.get_driver().get_type() == DriverType::template_)
+  {
+    return;
+  }
+
+  std::shared_ptr<Driver>& driver = icon.get_driver_ptr();
   log->add_driver(driver);
 
   QVBoxLayout* frameLayout = findChild<QVBoxLayout*>();

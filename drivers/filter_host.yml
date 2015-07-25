@@ -6,3 +6,4 @@ options:
       type: string
       description: The regexp to use.
       required: yes
+

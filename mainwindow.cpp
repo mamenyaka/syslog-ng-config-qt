@@ -20,10 +20,11 @@ MainWindow::MainWindow(QWidget* parent) :
 
   ui->setupUi(this);
 
-  ui->srcWidget->setupDrivers(DriverType::source, config.get_default_drivers());
-  ui->dstWidget->setupDrivers(DriverType::destination, config.get_default_drivers());
-  ui->filWidget->setupDrivers(DriverType::filter, config.get_default_drivers());
-  ui->rewWidget->setupDrivers(DriverType::rewrite, config.get_default_drivers());
+  ui->sourceWidget->setupDrivers(DriverType::source, config.get_default_drivers());
+  ui->destinationWidget->setupDrivers(DriverType::destination, config.get_default_drivers());
+  ui->filterWidget->setupDrivers(DriverType::filter, config.get_default_drivers());
+  ui->rewriteWidget->setupDrivers(DriverType::rewrite, config.get_default_drivers());
+  ui->parserWidget->setupDrivers(DriverType::parser, config.get_default_drivers());
 
   ui->sceneScrollArea->setWidget(scene);
 
@@ -82,9 +83,14 @@ void MainWindow::setupConnections()
   });
 
   connect(ui->actionLog, &QAction::triggered, [&]() {
-    Log new_log;
-    Config::LogUPtr log = config.add_log(new_log);
-    scene->add_log(log, QPoint(100, 100));
+    const Driver& default_log = config.get_default_driver("log", DriverType::log);
+    Log new_log(default_log);
+
+    if (Dialog(new_log, this).exec() == QDialog::Accepted)
+    {
+      Config::LogUPtr log = config.add_log(new_log);
+      scene->add_log(log, QPoint(100, 100));
+    }
   });
 
   connect(ui->actionTemplate, &QAction::triggered, [&]() {

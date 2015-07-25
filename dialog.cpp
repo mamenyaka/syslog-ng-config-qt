@@ -104,7 +104,7 @@ void Dialog::set_form_values()
   QList<QGroupBox*> groupBoxes = findChildren<QGroupBox*>();
   auto groupBox_it = groupBoxes.begin();
 
-  for (Option& option : driver.get_options())
+  for (const Option& option : driver.get_options())
   {
     QGroupBox* groupBox = *groupBox_it++;
     const std::string& current_value = option.get_current_value();
