@@ -54,16 +54,11 @@ const QPixmap& DriverIcon::get_pixmap() const
 
 void DriverIcon::paintEvent(QPaintEvent *)
 {
-  QPainter painter(this);
-
   if (driver->get_id() > -1)
   {
-    painter.setRenderHints(QPainter::TextAntialiasing);
-    painter.setPen(QPen(Qt::black));
-    painter.drawText(0, height() - 30, width(), 20, Qt::AlignHCenter, QString::number(driver->get_id()));
+    QLabel* label = findChild<QLabel*>();
+    label->setText("\n" + QString::fromStdString(driver->get_name()) + "\n" + QString::number(driver->get_id()));
   }
-
-  painter.end();
 }
 
 void DriverIcon::setupIcon()
@@ -94,10 +89,10 @@ void DriverIcon::setupIcon()
       painter.setBrush(QColor(128, 255, 128, 192));
 
       QPainterPath path;
-      path.moveTo(width()/2, 1);
-      path.lineTo(width() - 1, height()/2);
-      path.lineTo(width()/2, height() - 1);
-      path.lineTo(1, height()/2);
+      path.moveTo(width()/2.0, 1);
+      path.lineTo(width() - 1, height()/2.0);
+      path.lineTo(width()/2.0, height() - 1);
+      path.lineTo(1, height()/2.0);
       path.closeSubpath();
 
       painter.drawPath(path);
@@ -118,12 +113,12 @@ void DriverIcon::setupIcon()
       double h = (1 - std::cos(pi/6.0))*(height() - 2)/2;
 
       QPainterPath path;
-      path.moveTo(width()/2, 1);
-      path.lineTo(width() - 1 - h, 1 + (height() - 2)*1/4);
-      path.lineTo(width() - 1 - h, 1 + (height() - 2)*3/4);
-      path.lineTo(width()/2, height() - 1);
-      path.lineTo(1 + h, 1 + (height() - 2)*3/4);
-      path.lineTo(1 + h, 1 + (height() - 2)*1/4);
+      path.moveTo(width()/2.0, 1);
+      path.lineTo(width() - 1 - h, 1 + (height() - 2)*1/4.0);
+      path.lineTo(width() - 1 - h, 1 + (height() - 2)*3/4.0);
+      path.lineTo(width()/2.0, height() - 1);
+      path.lineTo(1 + h, 1 + (height() - 2)*3/4.0);
+      path.lineTo(1 + h, 1 + (height() - 2)*1/4.0);
       path.closeSubpath();
 
       painter.drawPath(path);
@@ -133,13 +128,13 @@ void DriverIcon::setupIcon()
     case DriverType::parser:
     {
       painter.setBrush(QColor(255, 16, 32));
-      painter.drawEllipse(1 + width()*1/4, 1, (width() - 2)/2, (height() - 2)/2);
+      painter.drawEllipse(1 + width()*1/4.0, 1, (width() - 2)/2.0, (height() - 2)/2.0);
       painter.setBrush(QColor(0, 128, 32));
-      painter.drawEllipse(1 + width()*1/4, height()/2, (width() - 2)/2, (height() - 2)/2);
+      painter.drawEllipse(1 + width()*1/4.0, height()/2.0, (width() - 2)/2.0, (height() - 2)/2.0);
       painter.setBrush(QColor(64, 128, 255));
-      painter.drawEllipse(1, 1 + (height() - 2)*1/4, (width() - 2)/2, (height() - 2)/2);
+      painter.drawEllipse(1, 1 + (height() - 2)*1/4.0, (width() - 2)/2.0, (height() - 2)/2.0);
       painter.setBrush(QColor(255, 192, 16));
-      painter.drawEllipse(width()/2, 1 + (height() - 2)*1/4, (width() - 2)/2, (height() - 2)/2);
+      painter.drawEllipse(width()/2.0, 1 + (height() - 2)*1/4.0, (width() - 2)/2.0, (height() - 2)/2.0);
       break;
     }
   }

@@ -37,7 +37,11 @@
            <bool>true</bool>
           </property>
           <widget class="Drivers" name="sourceWidget">
-           <layout class="QVBoxLayout" name="sourceLayout"/>
+           <layout class="QVBoxLayout" name="sourceLayout">
+            <property name="Alignment">
+             <enum>Qt::AlignTop</enum>
+            </property>
+           </layout>
           </widget>
          </widget>
         </item>
@@ -57,7 +61,11 @@
            <bool>true</bool>
           </property>
           <widget class="Drivers" name="destinationWidget">
-           <layout class="QVBoxLayout" name="destinationLayout"/>
+           <layout class="QVBoxLayout" name="destinationLayout">
+            <property name="Alignment">
+             <enum>Qt::AlignTop</enum>
+            </property>
+           </layout>
           </widget>
          </widget>
         </item>
@@ -77,7 +85,11 @@
            <bool>true</bool>
           </property>
           <widget class="Drivers" name="filterWidget">
-           <layout class="QVBoxLayout" name="filterLayout"/>
+           <layout class="QVBoxLayout" name="filterLayout">
+            <property name="Alignment">
+             <enum>Qt::AlignTop</enum>
+            </property>
+           </layout>
           </widget>
          </widget>
         </item>
@@ -97,7 +109,11 @@
            <bool>true</bool>
           </property>
           <widget class="Drivers" name="rewriteWidget">
-           <layout class="QVBoxLayout" name="rewriteLayout"/>
+           <layout class="QVBoxLayout" name="rewriteLayout">
+            <property name="Alignment">
+             <enum>Qt::AlignTop</enum>
+            </property>
+           </layout>
           </widget>
          </widget>
         </item>
@@ -117,7 +133,11 @@
            <bool>true</bool>
           </property>
           <widget class="Drivers" name="parserWidget">
-           <layout class="QVBoxLayout" name="parserLayout"/>
+           <layout class="QVBoxLayout" name="parserLayout">
+            <property name="Alignment">
+             <enum>Qt::AlignTop</enum>
+            </property>
+           </layout>
           </widget>
          </widget>
         </item>
