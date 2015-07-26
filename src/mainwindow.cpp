@@ -83,8 +83,7 @@ void MainWindow::setupConnections()
   });
 
   connect(ui->actionLog, &QAction::triggered, [&]() {
-    const Driver& default_log = config.get_default_driver("log", DriverType::log);
-    Log new_log(default_log);
+    Log new_log = config.get_default_driver("log", DriverType::log);
 
     if (Dialog(new_log, this).exec() == QDialog::Accepted)
     {
@@ -94,8 +93,7 @@ void MainWindow::setupConnections()
   });
 
   connect(ui->actionTemplate, &QAction::triggered, [&]() {
-    const Driver& default_template = config.get_default_driver("template", DriverType::template_);
-    Driver new_template(default_template);
+    Driver new_template = config.get_default_driver("template", DriverType::template_);
 
     if (Dialog(new_template, this).exec() == QDialog::Accepted)
     {
