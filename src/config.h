@@ -1,44 +1,13 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include "option.h"
+
 #include <string>
 #include <vector>
 #include <list>
 #include <memory>
 #include <functional>
-
-enum class OptionType : int { string, number, list, set, tls, value_pairs };
-
-class Option
-{
-  std::string name;
-  OptionType type;
-  std::string description;
-  std::vector<std::string> values;
-  std::string default_value;
-  std::string current_value;
-  bool required = false;
-
-public:
-  Option(const std::string& name,
-         const std::string& type,
-         const std::string& description);
-
-  const std::string& get_name() const;
-  OptionType get_type() const;
-  const std::string& get_description() const;
-  const std::vector<std::string>& get_values() const;
-  const std::string& get_default_value() const;
-  const std::string& get_current_value() const;
-  bool is_required() const;
-
-  void add_value(const std::string& value);
-  void set_default_value(const std::string& default_value);
-  void set_current_value(const std::string& current_value);
-  void set_required(bool required);
-
-  const std::string to_string() const;
-};
 
 enum class DriverType : int { source, destination, log, options, filter, template_, rewrite, parser };
 
@@ -48,27 +17,31 @@ class Driver
   DriverType type;
   std::string description;
   std::string include;
-  std::vector<Option> options;
+  std::vector< std::unique_ptr<Option> > options;
   int id = -1;
 
 public:
   Driver(const std::string& name,
          const std::string& type,
          const std::string& description);
+  Driver(const Driver& driver);
+  Driver& operator=(Driver driver);
 
   const std::string& get_name() const;
   DriverType get_type() const;
   const std::string& get_description() const;
   const std::string& get_include() const;
-  std::vector<Option>& get_options();
-  const std::vector<Option>& get_options() const;
+  std::vector< std::unique_ptr<Option> >& get_options();
+  const std::vector< std::unique_ptr<Option> >& get_options() const;
   int get_id() const;
 
   void set_include(const std::string& include);
-  void add_option(const Option& option);
+  void add_option(Option* option);
   void update_id(int id);
 
-  void restore_defaults();
+  void set_previous_values();
+  void restore_previous_values();
+  void restore_default_values();
 
   const std::string get_type_name() const;
   const std::string get_id_name() const;

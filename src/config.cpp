@@ -7,6 +7,8 @@
 #include <map>
 #include <algorithm>
 
+enum class OptionType : int { string, number, list, set, tls, value_pairs };
+
 std::map<std::string, OptionType> option_type_map {
   {"string", OptionType::string},
   {"number", OptionType::number},
@@ -15,89 +17,6 @@ std::map<std::string, OptionType> option_type_map {
   {"tls", OptionType::tls},
   {"value-pairs", OptionType::value_pairs}
 };
-
-Option::Option(const std::string& name,
-               const std::string& type,
-               const std::string& description) :
-  name(name),
-  type(option_type_map[type]),
-  description(description)
-{}
-
-const std::string& Option::get_name() const
-{
-  return name;
-}
-
-OptionType Option::get_type() const
-{
-  return type;
-}
-
-const std::string& Option::get_description() const
-{
-  return description;
-}
-
-const std::vector<std::string>& Option::get_values() const
-{
-  return values;
-}
-
-const std::string& Option::get_default_value() const
-{
-  return default_value;
-}
-
-const std::string& Option::get_current_value() const
-{
-  return current_value;
-}
-
-bool Option::is_required() const
-{
-  return required;
-}
-
-void Option::add_value(const std::string& value)
-{
-  values.push_back(std::move(value));
-}
-
-void Option::set_default_value(const std::string& default_value)
-{
-  current_value = default_value;
-  this->default_value = default_value;
-}
-
-void Option::set_current_value(const std::string& current_value)
-{
-  this->current_value = current_value;
-}
-
-void Option::set_required(bool required)
-{
-  this->required = required;
-}
-
-const std::string Option::to_string() const
-{
-  std::string config = name + "(";
-
-  if (type == OptionType::number || type == OptionType::list)
-  {
-    config += current_value;
-  }
-  else
-  {
-    config += "\"" + current_value + "\"";
-  }
-
-  config += ")";
-
-  return config;
-}
-
 
 std::map<std::string, DriverType> driver_type_map {
   {"source", DriverType::source},
@@ -117,6 +36,31 @@ Driver::Driver(const std::string& name,
   type(driver_type_map[type]),
   description(description)
 {}
+
+Driver::Driver(const Driver& driver) :
+  name(driver.name),
+  type(driver.type),
+  description(driver.description),
+  include(driver.include),
+  id(driver.id)
+{
+  for (const auto& option : driver.get_options())
+  {
+    options.emplace_back(option->clone());
+  }
+}
+
+Driver& Driver::operator=(Driver driver)
+{
+  name = std::move(driver.name);
+  type = std::move(driver.type);
+  description = std::move(driver.description);
+  include = std::move(driver.include);
+  id = std::move(driver.id);
+  options = std::move(driver.options);
+
+  return *this;
+}
 
 const std::string& Driver::get_name() const
 {
@@ -138,12 +82,12 @@ const std::string& Driver::get_include() const
   return include;
 }
 
-std::vector<Option>& Driver::get_options()
+std::vector< std::unique_ptr<Option> >& Driver::get_options()
 {
   return options;
 }
 
-const std::vector<Option>& Driver::get_options() const
+const std::vector< std::unique_ptr<Option> >& Driver::get_options() const
 {
   return options;
 }
@@ -158,9 +102,9 @@ void Driver::set_include(const std::string& include)
   this->include = include;
 }
 
-void Driver::add_option(const Option& option)
+void Driver::add_option(Option* option)
 {
-  options.push_back(std::move(option));
+  options.emplace_back(std::move(option));
 }
 
 void Driver::update_id(int id)
@@ -168,11 +112,27 @@ void Driver::update_id(int id)
   this->id = id;
 }
 
-void Driver::restore_defaults()
+void Driver::set_previous_values()
 {
-  for (Option& option : options)
+  for (auto& option : options)
   {
-    option.set_current_value(option.get_default_value());
+    option->set_previous();
+  }
+}
+
+void Driver::restore_previous_values()
+{
+  for (auto& option : options)
+  {
+    option->restore_previous();
+  }
+}
+
+void Driver::restore_default_values()
+{
+  for (auto& option : options)
+  {
+    option->restore_default();
   }
 }
 
@@ -199,35 +159,48 @@ const std::string Driver::to_string() const
   }
 
   config += get_type_name() + " " + get_id_name() + " {\n";
-  config += "    " + name + "(";
+  config += "    ";
 
-  for (const Option& option : options)
+  bool special = false;
+  for (const auto& option : options)
   {
-    if (name == option.get_name())
+    if (name == option->get_name())
     {
-      config += "\"" + option.get_current_value() + "\"";
+      special = true;
+      config += option->to_string();
+
       if (type == DriverType::rewrite)
       {
         config += ", ";
       }
+      else
+      {
+        break;
+      }
     }
   }
 
+  if (!special)
+  {
+    config += name + "(";
+  }
   config += "\n";
 
-  for (const Option& option : options)
+  for (const auto& option : options)
   {
-    if (name == option.get_name() ||
-      (!option.is_required() && option.get_current_value() == option.get_default_value()))
+    if (name == option->get_name() ||
+      !(option->is_required() || option->has_changed()))
     {
       continue;
     }
 
-    config += "        " + option.to_string();
+    config += "        " + option->to_string();
+
     if (type == DriverType::rewrite)
     {
       config += ",";
     }
+
     config += "\n";
   }
 
@@ -260,14 +233,14 @@ const std::string Log::to_string() const
     config += "    " + driver->get_type_name() + "(" + driver->get_id_name() + ");\n";
   }
 
-  for (const Option& option : get_options())
+  for (const auto& option : get_options())
   {
-    if (option.get_current_value() == option.get_default_value())
+    if (!option->has_changed())
     {
       continue;
     }
 
-    config += "    " + option.to_string() + ";\n";
+    config += "    " + option->to_string() + ";\n";
   }
 
   config += "};\n";
@@ -284,14 +257,14 @@ const std::string GlobalOptions::to_string() const
 {
   std::string config = get_type_name() + " {\n";
 
-  for (const Option& option : get_options())
+  for (const auto& option : get_options())
   {
-    if (option.get_current_value() == option.get_default_value())
+    if (!option->has_changed())
     {
       continue;
     }
 
-    config += "    " + option.to_string() + ";\n";
+    config += "    " + option->to_string() + ";\n";
   }
 
   config += "};\n";
@@ -315,7 +288,7 @@ Config::Config(const std::string& dir_name)
 
     if (driver.get_type() == DriverType::options)
     {
-      global_options = std::make_unique<GlobalOptions>(driver);
+      global_options = std::make_unique<GlobalOptions>(std::move(driver));
     }
     else
     {
@@ -393,23 +366,49 @@ Driver Config::parse_yaml(const std::string& file_name)
     const std::string type = yaml_option["type"].as<std::string>();
     const std::string description = yaml_option["description"].as<std::string>();
 
-    Option option(name, type, description);
+    Option* option;
+    OptionType option_type = option_type_map[type];
+    switch (option_type)
+    {
+      case OptionType::string:
+        option = new StringOption(name, description);
+        break;
+      case OptionType::number:
+        option = new NumberOption(name, description);
+        break;
+      case OptionType::list:
+        option = new ListOption(name, description);
+        break;
+      case OptionType::set:
+        option = new SetOption(name, description);
+        break;
+      default:
+        continue;
+    }
 
     const YAML::Node& values = yaml_option["values"];
     for (YAML::const_iterator value_it = values.begin(); value_it != values.end(); ++value_it)
     {
       const std::string value = value_it->as<std::string>();
-      option.add_value(value);
+
+      if (option_type == OptionType::list)
+      {
+        static_cast<ListOption*>(option)->add_value(value);
+      }
+      else if (option_type == OptionType::set)
+      {
+        static_cast<SetOption*>(option)->add_value(value);
+      }
     }
 
     if (yaml_option["default"])
     {
-      option.set_default_value(yaml_option["default"].as<std::string>());
+      option->set_default(yaml_option["default"].as<std::string>());
     }
 
     if (yaml_option["required"])
     {
-      option.set_required(yaml_option["required"].as<bool>());
+      option->set_required(yaml_option["required"].as<bool>());
     }
 
     driver.add_option(option);
@@ -441,7 +440,7 @@ int Config::get_driver_count(const std::string& name, DriverType type) const
   return std::count_if(drivers.cbegin(), drivers.cend(),
                        [&name, type](const Driver& driver)->bool {
                          return driver.get_name() == name && driver.get_type() == type;
-                      });
+                       });
 }
 
 void Config::delete_driver(const Driver* old_driver)
@@ -449,9 +448,7 @@ void Config::delete_driver(const Driver* old_driver)
   const std::string name = old_driver->get_name();
   DriverType type = old_driver->get_type();
 
-  drivers.remove_if([old_driver](const Driver& driver)->bool {
-    return &driver == old_driver;
-  });
+  drivers.remove_if([old_driver](const Driver& driver)->bool { return &driver == old_driver; });
 
   int id = 0;
   for (Driver& driver : drivers)
@@ -465,9 +462,7 @@ void Config::delete_driver(const Driver* old_driver)
 
 void Config::delete_log(const Log* old_log)
 {
-  logs.remove_if([old_log](const Log& log)->bool {
-    return &log == old_log;
-  });
+  logs.remove_if([old_log](const Log& log)->bool { return &log == old_log; });
 }
 
 std::ostream& operator<<(std::ostream& os, const Config& config)

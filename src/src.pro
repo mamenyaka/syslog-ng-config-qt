@@ -14,6 +14,7 @@ SOURCES += \
     drivers.cpp \
     scene.cpp \
     dialog.cpp \
+    option.cpp \
     config.cpp
 
 HEADERS += \
@@ -22,6 +23,7 @@ HEADERS += \
     drivers.h \
     scene.h \
     dialog.h \
+    option.h \
     config.h
 
 FORMS += \

@@ -125,13 +125,17 @@ void Test::is_config_valid_test()
 
 void Test::set_option(Driver& driver, const std::string& option_name, const std::string& option_value)
 {
-  std::vector<Option>& options = driver.get_options();
-  Option& option = *std::find_if(options.begin(), options.end(),
-                                [&option_name](const Option& option)->bool {
-                                  return option.get_name() == option_name;
-                                });
+  auto& options = driver.get_options();
+  auto it = std::find_if(options.begin(), options.end(),
+                         [&option_name](const auto& option)->bool {
+                           return option->get_name() == option_name;
+                         });
 
-  option.set_current_value(option_value);
+  if (it != options.end())
+  {
+    auto& option = *it;
+    // TODO
+  }
 }
 
 template<typename... Targs>

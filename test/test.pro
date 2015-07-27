@@ -8,6 +8,7 @@ LIBS += -lyaml-cpp
 
 SOURCES += \
     test.cpp \
+    ../src/option.cpp \
     ../src/config.cpp
 
 HEADERS += test.h

@@ -1,6 +1,7 @@
 name: credit-card-hash
 type: rewrite
 description: Replace any credit card numbers with its 16-character-long SHA-1 hash.
+include: scl/rewrite/cc-mask.conf
 options:
   - value:
       type: string
