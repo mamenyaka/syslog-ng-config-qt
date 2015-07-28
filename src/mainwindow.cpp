@@ -79,7 +79,7 @@ void MainWindow::setupConnections()
 
 
   connect(ui->actionOptions, &QAction::triggered, [&]() {
-    Dialog(config.get_global_options()).exec();
+    Dialog(config.get_global_options(), this).exec();
   });
 
   connect(ui->actionLog, &QAction::triggered, [&]() {

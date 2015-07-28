@@ -1,0 +1,31 @@
+name: tls
+type: options
+description: Send and receive log messages securely over the network using the TLS protocol.
+options:
+  - ca-dir:
+      type: string
+      description: Name of a directory, that contains a set of trusted CA certificates in PEM format.
+  - cert-file:
+      type: string
+      description: Name of a file, that contains an X.509 certificate in PEM format.
+  - cipher-suite:
+      type: string
+      description: Specifies the cipher, hash, and key-exchange algorithms used for the encryption.
+  - crl-dir:
+      type: string
+      description: Name of a directory that contains the Certificate Revocation Lists for trusted CAs.
+  - key-file:
+      type: string
+      description: Name of a file, that contains an unencrypted private key in PEM format.
+  - peer-verify:
+      type: list
+      description: The verification method of the peer.
+      values: [optional-trusted, optional-untrusted, required-trusted, required-untrusted]
+      default: required-trusted
+  - trusted-dn:
+      type: string
+      description: The distinguished names of the accepted certificates.
+  - trusted-keys:
+      type: string
+      description: The fingerprints of the accepted certificates.
+

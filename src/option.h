@@ -3,9 +3,11 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 class QVBoxLayout;
 class QGroupBox;
+class Driver;
 
 class Option
 {
@@ -66,7 +68,8 @@ protected:
 class StringOption : public OptionBase<std::string, StringOption>
 {
 public:
-  StringOption(const std::string& name, const std::string& description);
+  StringOption(const std::string& name,
+               const std::string& description);
 
   void create_form(QVBoxLayout* vboxLayout) const;
   void set_form_value(QGroupBox* groupBox) const;
@@ -78,7 +81,8 @@ public:
 class NumberOption : public OptionBase<int, NumberOption>
 {
 public:
-  NumberOption(const std::string& name, const std::string& description);
+  NumberOption(const std::string& name,
+               const std::string& description);
 
   void set_default(const std::string& default_value);
 
@@ -94,10 +98,11 @@ class ListOption : public OptionBase<int, ListOption>
   std::vector<std::string> values;
 
 public:
-  ListOption(const std::string& name, const std::string& description);
+  ListOption(const std::string& name,
+             const std::string& description);
 
-  void add_value(const std::string& value);
   void set_default(const std::string& default_value);
+  void add_value(const std::string& value);
 
   void create_form(QVBoxLayout* vboxLayout) const;
   void set_form_value(QGroupBox* groupBox) const;
@@ -111,9 +116,29 @@ class SetOption : public OptionBase<std::string, SetOption>
   std::vector<std::string> values;
 
 public:
-  SetOption(const std::string& name, const std::string& description);
+  SetOption(const std::string& name,
+            const std::string& description);
 
   void add_value(const std::string& value);
+
+  void create_form(QVBoxLayout* vboxLayout) const;
+  void set_form_value(QGroupBox* groupBox) const;
+  bool set_option(QGroupBox* groupBox);
+
+  const std::string to_string() const;
+};
+
+class TLSOption : public OptionBase<std::string, TLSOption>
+{
+  std::unique_ptr<Driver> driver;
+
+public:
+  TLSOption(const std::string& name,
+            const std::string& description);
+  TLSOption(const TLSOption& other);
+
+  bool has_changed() const;
+  void set_driver(const Driver& driver);
 
   void create_form(QVBoxLayout* vboxLayout) const;
   void set_form_value(QGroupBox* groupBox) const;

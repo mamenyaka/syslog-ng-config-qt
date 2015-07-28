@@ -24,8 +24,8 @@ public:
   Driver(const std::string& name,
          const std::string& type,
          const std::string& description);
-  Driver(const Driver& driver);
-  Driver& operator=(Driver driver);
+  Driver(const Driver& other);
+  Driver& operator=(Driver other);
 
   const std::string& get_name() const;
   DriverType get_type() const;
@@ -107,7 +107,7 @@ public:
 
   const Driver& get_default_driver(const std::string& name, DriverType type) const;
 
-  Driver parse_yaml(const std::string& file_name);
+  void parse_yaml(const std::string& file_name);
 
   const std::string to_string() const;
 

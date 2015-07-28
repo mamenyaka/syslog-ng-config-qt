@@ -1,4 +1,6 @@
 #include "option.h"
+#include "config.h"
+#include "dialog.h"
 
 #include <QVBoxLayout>
 #include <QGroupBox>
@@ -6,6 +8,7 @@
 #include <QSpinBox>
 #include <QComboBox>
 #include <QCheckBox>
+#include <QPushButton>
 
 #include <limits>
 
@@ -38,7 +41,7 @@ void Option::set_required(bool required)
 
 template<typename Value, typename Derived>
 OptionBase<Value, Derived>::OptionBase(const std::string& name,
-                              const std::string& description) :
+                                       const std::string& description) :
   Option(name, description)
 {}
 
@@ -157,11 +160,6 @@ ListOption::ListOption(const std::string& name,
   current_value = default_value = -1;
 }
 
-void ListOption::add_value(const std::string& value)
-{
-  values.push_back(std::move(value));
-}
-
 void ListOption::set_default(const std::string& default_value)
 {
   auto it = std::find_if(values.cbegin(), values.cend(),
@@ -173,6 +171,11 @@ void ListOption::set_default(const std::string& default_value)
   {
     current_value = this->default_value = std::distance(values.cbegin(), it);
   }
+}
+
+void ListOption::add_value(const std::string& value)
+{
+  values.push_back(std::move(value));
 }
 
 void ListOption::create_form(QVBoxLayout* vboxLayout) const
@@ -252,4 +255,74 @@ bool SetOption::set_option(QGroupBox* groupBox)
 const std::string SetOption::to_string() const
 {
   return get_name() + "(\"" + current_value + "\")";
+}
+
+TLSOption::TLSOption(const std::string& name,
+                     const std::string& description) :
+  OptionBase(name, description)
+{}
+
+TLSOption::TLSOption(const TLSOption& other) :
+  OptionBase<std::string, TLSOption>(other)
+{
+  if (other.driver.get())
+  {
+    driver = std::make_unique<Driver>(*other.driver);
+  }
+}
+
+bool TLSOption::has_changed() const
+{
+  for (const auto& option : driver->get_options())
+  {
+    if (option->is_required() || option->has_changed())
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+void TLSOption::set_driver(const Driver& driver)
+{
+  this->driver = std::make_unique<Driver>(driver);
+}
+
+void TLSOption::create_form(QVBoxLayout* vboxLayout) const
+{
+  QPushButton* button = new QPushButton("set TLS options");
+  vboxLayout->addWidget(button);
+}
+
+void TLSOption::set_form_value(QGroupBox* groupBox) const
+{
+  QPushButton* button = groupBox->findChild<QPushButton*>();
+  Dialog* dialog = new Dialog(*driver, groupBox);
+
+  QObject::connect(button, &QPushButton::clicked, dialog, &Dialog::exec);
+}
+
+bool TLSOption::set_option(QGroupBox* groupBox)
+{
+  return true;
+}
+
+const std::string TLSOption::to_string() const
+{
+  std::string config = get_name() + "(\n";
+
+  for (const auto& option : driver->get_options())
+  {
+    if (!(option->is_required() || option->has_changed()))
+    {
+      continue;
+    }
+
+    config += "            " + option->to_string() + "\n";
+  }
+
+  config += "        )";
+
+  return config;
 }

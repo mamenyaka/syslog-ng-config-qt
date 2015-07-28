@@ -37,27 +37,27 @@ Driver::Driver(const std::string& name,
   description(description)
 {}
 
-Driver::Driver(const Driver& driver) :
-  name(driver.name),
-  type(driver.type),
-  description(driver.description),
-  include(driver.include),
-  id(driver.id)
+Driver::Driver(const Driver& other) :
+  name(other.name),
+  type(other.type),
+  description(other.description),
+  include(other.include),
+  id(other.id)
 {
-  for (const auto& option : driver.get_options())
+  for (const auto& option : other.get_options())
   {
     options.emplace_back(option->clone());
   }
 }
 
-Driver& Driver::operator=(Driver driver)
+Driver& Driver::operator=(Driver other)
 {
-  name = std::move(driver.name);
-  type = std::move(driver.type);
-  description = std::move(driver.description);
-  include = std::move(driver.include);
-  id = std::move(driver.id);
-  options = std::move(driver.options);
+  name = std::move(other.name);
+  type = std::move(other.type);
+  description = std::move(other.description);
+  include = std::move(other.include);
+  id = std::move(other.id);
+  options = std::move(other.options);
 
   return *this;
 }
@@ -104,7 +104,7 @@ void Driver::set_include(const std::string& include)
 
 void Driver::add_option(Option* option)
 {
-  options.emplace_back(std::move(option));
+  options.emplace_back(option);
 }
 
 void Driver::update_id(int id)
@@ -284,22 +284,26 @@ Config::Config(const std::string& dir_name)
       continue;
     }
 
-    Driver driver = parse_yaml(it.filePath().toStdString());
-
-    if (driver.get_type() == DriverType::options)
-    {
-      global_options = std::make_unique<GlobalOptions>(std::move(driver));
-    }
-    else
-    {
-      default_drivers.push_back(std::move(driver));
-    }
+    parse_yaml(it.filePath().toStdString());
   }
 
   std::sort(default_drivers.begin(), default_drivers.end(),
             [](const Driver& a, const Driver& b)->bool {
               return a.get_name() < b.get_name();
             });
+
+  const Driver& tls = get_default_driver("tls", DriverType::options);
+  for (Driver& driver : default_drivers)
+  {
+    for (auto& option : driver.get_options())
+    {
+      if (option->get_name() == "tls")
+      {
+        static_cast<TLSOption&>(*option).set_driver(tls);
+        break;
+      }
+    }
+  }
 }
 
 const std::vector<Driver>& Config::get_default_drivers() const
@@ -341,7 +345,7 @@ const Driver& Config::get_default_driver(const std::string& name, DriverType typ
                        });
 }
 
-Driver Config::parse_yaml(const std::string& file_name)
+void Config::parse_yaml(const std::string& file_name)
 {
   const YAML::Node yaml_driver = YAML::LoadFile(file_name);
 
@@ -382,6 +386,9 @@ Driver Config::parse_yaml(const std::string& file_name)
       case OptionType::set:
         option = new SetOption(name, description);
         break;
+      case OptionType::tls:
+        option = new TLSOption(name, description);
+        break;
       default:
         continue;
     }
@@ -414,7 +421,14 @@ Driver Config::parse_yaml(const std::string& file_name)
     driver.add_option(option);
   }
 
-  return driver;
+  if (driver.get_name() == "global")
+  {
+    global_options = std::make_unique<GlobalOptions>(std::move(driver));
+  }
+  else
+  {
+    default_drivers.push_back(std::move(driver));
+  }
 }
 
 const std::string Config::to_string() const

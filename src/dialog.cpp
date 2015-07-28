@@ -67,7 +67,8 @@ void Dialog::create_form()
 
 void Dialog::set_form_values()
 {
-  QList<QGroupBox*> groupBoxes = findChildren<QGroupBox*>();
+  QWidget* parent = findChild<QWidget*>("formWidget");
+  QList<QGroupBox*> groupBoxes = parent->findChildren<QGroupBox*>(QString(), Qt::FindChildOption::FindDirectChildrenOnly);
   auto groupBox_it = groupBoxes.begin();
 
   for (const auto& option : driver.get_options())
@@ -79,7 +80,8 @@ void Dialog::set_form_values()
 
 bool Dialog::set_driver_options()
 {
-  QList<QGroupBox*> groupBoxes = findChildren<QGroupBox*>();
+  QWidget* parent = findChild<QWidget*>("formWidget");
+  QList<QGroupBox*> groupBoxes = parent->findChildren<QGroupBox*>(QString(), Qt::FindChildOption::FindDirectChildrenOnly);
   auto groupBox_it = groupBoxes.begin();
 
   for (auto& option : driver.get_options())

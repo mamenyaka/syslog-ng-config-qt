@@ -8,7 +8,10 @@ LIBS += -lyaml-cpp
 
 SOURCES += \
     test.cpp \
+    ../src/dialog.cpp \
     ../src/option.cpp \
     ../src/config.cpp
 
-HEADERS += test.h
+HEADERS += \
+    test.h \
+    ../src/dialog.h
