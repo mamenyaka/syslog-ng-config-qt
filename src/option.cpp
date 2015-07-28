@@ -36,38 +36,44 @@ void Option::set_required(bool required)
 }
 
 
-template<typename Value>
-OptionBase<Value>::OptionBase(const std::string& name,
+template<typename Value, typename Derived>
+OptionBase<Value, Derived>::OptionBase(const std::string& name,
                               const std::string& description) :
   Option(name, description)
 {}
 
-template<typename Value>
-bool OptionBase<Value>::has_changed() const
+template<typename Value, typename Derived>
+Option* OptionBase<Value, Derived>::clone() const
+{
+  return new Derived(static_cast<const Derived&>(*this));
+}
+
+template<typename Value, typename Derived>
+bool OptionBase<Value, Derived>::has_changed() const
 {
   return current_value != default_value;
 }
 
-template<typename Value>
-void OptionBase<Value>::set_default(const Value& default_value)
+template<typename Value, typename Derived>
+void OptionBase<Value, Derived>::set_default(const Value& default_value)
 {
   current_value = this->default_value = default_value;
 }
 
-template<typename Value>
-void OptionBase<Value>::restore_default()
+template<typename Value, typename Derived>
+void OptionBase<Value, Derived>::restore_default()
 {
   current_value = default_value;
 }
 
-template<typename Value>
-void OptionBase<Value>::set_previous()
+template<typename Value, typename Derived>
+void OptionBase<Value, Derived>::set_previous()
 {
   previous_value = current_value;
 }
 
-template<typename Value>
-void OptionBase<Value>::restore_previous()
+template<typename Value, typename Derived>
+void OptionBase<Value, Derived>::restore_previous()
 {
   current_value = previous_value;
 }
@@ -77,11 +83,6 @@ StringOption::StringOption(const std::string& name,
                            const std::string& description) :
   OptionBase(name, description)
 {}
-
-StringOption* StringOption::clone() const
-{
-  return new StringOption(*this);
-}
 
 void StringOption::create_form(QVBoxLayout* vboxLayout) const
 {
@@ -114,11 +115,6 @@ NumberOption::NumberOption(const std::string& name,
   OptionBase(name, description)
 {
   current_value = default_value = -1;
-}
-
-NumberOption* NumberOption::clone() const
-{
-  return new NumberOption(*this);
 }
 
 void NumberOption::set_default(const std::string& default_value)
@@ -159,11 +155,6 @@ ListOption::ListOption(const std::string& name,
   OptionBase(name, description)
 {
   current_value = default_value = -1;
-}
-
-ListOption* ListOption::clone() const
-{
-  return new ListOption(*this);
 }
 
 void ListOption::add_value(const std::string& value)
@@ -218,11 +209,6 @@ SetOption::SetOption(const std::string& name,
                      const std::string& description) :
   OptionBase(name, description)
 {}
-
-SetOption* SetOption::clone() const
-{
-  return new SetOption(*this);
-}
 
 void SetOption::add_value(const std::string& value)
 {
