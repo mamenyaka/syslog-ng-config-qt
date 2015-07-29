@@ -141,7 +141,7 @@ void Test::set_option(Driver& driver, const std::string& option_name, const std:
 template<typename... Targs>
 LogUPtr Test::add_drivers_to_log(Config& config, Targs&... more)
 {
-  Log new_log = config.get_default_driver("log", DriverType::log);
+  Log new_log = config.get_default_driver("log", DriverType::options);
   LogUPtr log = config.add_log(new_log);
   add_driver_to_log_recursive(log, more...);
 

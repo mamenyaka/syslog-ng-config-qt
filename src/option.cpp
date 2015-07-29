@@ -38,6 +38,11 @@ void Option::set_required(bool required)
   this->required = required;
 }
 
+const std::string Option::to_string() const
+{
+  return name + "(" + get_current_value() + ")";
+}
+
 
 template<typename Value, typename Derived>
 OptionBase<Value, Derived>::OptionBase(const std::string& name,
@@ -87,6 +92,11 @@ StringOption::StringOption(const std::string& name,
   OptionBase(name, description)
 {}
 
+const std::string StringOption::get_current_value() const
+{
+  return "\"" + current_value + "\"";
+}
+
 void StringOption::create_form(QVBoxLayout* vboxLayout) const
 {
   QLineEdit* lineEdit = new QLineEdit;
@@ -107,17 +117,17 @@ bool StringOption::set_option(QGroupBox* groupBox)
   return !is_required() || !current_value.empty();
 }
 
-const std::string StringOption::to_string() const
-{
-  return get_name() + "(\"" + current_value + "\")";
-}
-
 
 NumberOption::NumberOption(const std::string& name,
                            const std::string& description) :
   OptionBase(name, description)
 {
   current_value = default_value = -1;
+}
+
+const std::string NumberOption::get_current_value() const
+{
+  return std::to_string(current_value);
 }
 
 void NumberOption::set_default(const std::string& default_value)
@@ -147,17 +157,17 @@ bool NumberOption::set_option(QGroupBox* groupBox)
   return !is_required() || current_value != -1;
 }
 
-const std::string NumberOption::to_string() const
-{
-  return get_name() + "(" + std::to_string(current_value) + ")";
-}
-
 
 ListOption::ListOption(const std::string& name,
                        const std::string& description) :
   OptionBase(name, description)
 {
   current_value = default_value = -1;
+}
+
+const std::string ListOption::get_current_value() const
+{
+  return values.at(current_value);
 }
 
 void ListOption::set_default(const std::string& default_value)
@@ -202,16 +212,16 @@ bool ListOption::set_option(QGroupBox* groupBox)
   return !is_required() || current_value != -1;
 }
 
-const std::string ListOption::to_string() const
-{
-  return get_name() + "(" + values.at(current_value) + ")";
-}
-
 
 SetOption::SetOption(const std::string& name,
                      const std::string& description) :
   OptionBase(name, description)
 {}
+
+const std::string SetOption::get_current_value() const
+{
+  return "\"" + current_value + "\"";
+}
 
 void SetOption::add_value(const std::string& value)
 {
@@ -239,6 +249,8 @@ void SetOption::set_form_value(QGroupBox* groupBox) const
 
 bool SetOption::set_option(QGroupBox* groupBox)
 {
+  current_value.clear();
+
   QList<QCheckBox*> checkBoxes = groupBox->findChildren<QCheckBox*>();
   for (QCheckBox* checkBox : checkBoxes)
   {
@@ -252,10 +264,6 @@ bool SetOption::set_option(QGroupBox* groupBox)
   return !is_required() || !current_value.empty();
 }
 
-const std::string SetOption::to_string() const
-{
-  return get_name() + "(\"" + current_value + "\")";
-}
 
 TLSOption::TLSOption(const std::string& name,
                      const std::string& description) :
@@ -269,6 +277,25 @@ TLSOption::TLSOption(const TLSOption& other) :
   {
     driver = std::make_unique<Driver>(*other.driver);
   }
+}
+
+const std::string TLSOption::get_current_value() const
+{
+  std::string config = "\n";
+
+  for (const auto& option : driver->get_options())
+  {
+    if (!(option->is_required() || option->has_changed()))
+    {
+      continue;
+    }
+
+    config += "            " + option->to_string() + "\n";
+  }
+
+  config += "        ";
+
+  return config;
 }
 
 bool TLSOption::has_changed() const
@@ -303,26 +330,7 @@ void TLSOption::set_form_value(QGroupBox* groupBox) const
   QObject::connect(button, &QPushButton::clicked, dialog, &Dialog::exec);
 }
 
-bool TLSOption::set_option(QGroupBox* groupBox)
+bool TLSOption::set_option(QGroupBox *)
 {
   return true;
-}
-
-const std::string TLSOption::to_string() const
-{
-  std::string config = get_name() + "(\n";
-
-  for (const auto& option : driver->get_options())
-  {
-    if (!(option->is_required() || option->has_changed()))
-    {
-      continue;
-    }
-
-    config += "            " + option->to_string() + "\n";
-  }
-
-  config += "        )";
-
-  return config;
 }

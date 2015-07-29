@@ -1,5 +1,5 @@
 name: log
-type: log
+type: options
 description: Determines what happens with the incoming log messages.
 options:
   - flags:

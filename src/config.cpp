@@ -21,7 +21,6 @@ std::map<std::string, OptionType> option_type_map {
 std::map<std::string, DriverType> driver_type_map {
   {"source", DriverType::source},
   {"destination", DriverType::destination},
-  {"log", DriverType::log},
   {"options", DriverType::options},
   {"filter", DriverType::filter},
   {"template", DriverType::template_},
@@ -159,15 +158,13 @@ const std::string Driver::to_string() const
   }
 
   config += get_type_name() + " " + get_id_name() + " {\n";
-  config += "    ";
+  config += "    " + name + "(";
 
-  bool special = false;
   for (const auto& option : options)
   {
     if (name == option->get_name())
     {
-      special = true;
-      config += option->to_string();
+      config += option->get_current_value();
 
       if (type == DriverType::rewrite)
       {
@@ -180,10 +177,6 @@ const std::string Driver::to_string() const
     }
   }
 
-  if (!special)
-  {
-    config += name + "(";
-  }
   config += "\n";
 
   for (const auto& option : options)
@@ -224,9 +217,14 @@ void Log::remove_driver(const std::shared_ptr<const Driver>& driver)
   drivers.remove(driver);
 }
 
+bool Log::has_changed() const
+{
+  return !drivers.empty();
+}
+
 const std::string Log::to_string() const
 {
-  std::string config = get_type_name() + " {\n";
+  std::string config = "log {\n";
 
   for (const std::shared_ptr<const Driver>& driver : drivers)
   {
@@ -253,9 +251,22 @@ GlobalOptions::GlobalOptions(const Driver& default_driver) :
   Driver(default_driver)
 {}
 
+bool GlobalOptions::has_changed() const
+{
+  for (const auto& option : get_options())
+  {
+    if (option->has_changed())
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 const std::string GlobalOptions::to_string() const
 {
-  std::string config = get_type_name() + " {\n";
+  std::string config = "options {\n";
 
   for (const auto& option : get_options())
   {
@@ -434,7 +445,11 @@ void Config::parse_yaml(const std::string& file_name)
 const std::string Config::to_string() const
 {
   std::string config;
-  config += global_options->to_string() + "\n";
+
+  if (global_options->has_changed())
+  {
+    config += global_options->to_string() + "\n";
+  }
 
   for (const Driver& driver : drivers)
   {
@@ -443,7 +458,10 @@ const std::string Config::to_string() const
 
   for (const Log& log : logs)
   {
-    config += log.to_string() + "\n";
+    if (log.has_changed())
+    {
+      config += log.to_string() + "\n";
+    }
   }
 
   return config;

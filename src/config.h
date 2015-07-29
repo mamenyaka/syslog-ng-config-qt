@@ -9,7 +9,7 @@
 #include <memory>
 #include <functional>
 
-enum class DriverType : int { source, destination, log, options, filter, template_, rewrite, parser };
+enum class DriverType : int { source, destination, options, filter, template_, rewrite, parser };
 
 class Driver
 {
@@ -58,6 +58,7 @@ public:
   void add_driver(std::shared_ptr<const Driver> driver);
   void remove_driver(const std::shared_ptr<const Driver>& driver);
 
+  bool has_changed() const;
   const std::string to_string() const;
 
   const std::string& get_include() const = delete;
@@ -75,6 +76,7 @@ class GlobalOptions : public Driver
 public:
   GlobalOptions(const Driver& driver);
 
+  bool has_changed() const;
   const std::string to_string() const;
 
   const std::string& get_include() const = delete;

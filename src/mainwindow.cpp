@@ -83,7 +83,7 @@ void MainWindow::setupConnections()
   });
 
   connect(ui->actionLog, &QAction::triggered, [&]() {
-    Log new_log = config.get_default_driver("log", DriverType::log);
+    Log new_log = config.get_default_driver("log", DriverType::options);
 
     if (Dialog(new_log, this).exec() == QDialog::Accepted)
     {
