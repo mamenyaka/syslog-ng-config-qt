@@ -1,0 +1,22 @@
+name: value-pairs
+type: options
+description: Select and construct name-value pairs from any information already available about the log message, or extracted from the message itself.
+options:
+  - exclude:
+      type: string
+      description: Remove the specified macros from the selection.
+  - key:
+      type: string
+      description: A "glob" expression specifying the macros to be included in selection.
+  - pair:
+      type: string
+      description: Define a new name-value pair to be included in the message.
+  - rekey:
+      type: string
+      description: Manipulate and modify the name of the value-pairs.
+  - scope:
+      type: set
+      description: Select predefined groups of macros.
+      values: [nv-pairs, dot-nv-pairs, all-nv-pairs, rfc3164, rfc5424, all-macros, selected-macros, sdata, everything]
+      default: "selected-macros nv-pairs"
+

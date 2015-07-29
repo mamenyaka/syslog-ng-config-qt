@@ -137,6 +137,8 @@ void DriverIcon::setupIcon()
       painter.drawEllipse(width()/2.0, 1 + (height() - 2)*1/4.0, (width() - 2)/2.0, (height() - 2)/2.0);
       break;
     }
+    default:
+      break;
   }
 
   painter.end();

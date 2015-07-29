@@ -130,14 +130,14 @@ public:
   bool set_option(QGroupBox* groupBox);
 };
 
-class TLSOption : public OptionBase<std::string, TLSOption>
+class ExternOption : public OptionBase<std::string, ExternOption>
 {
   std::unique_ptr<Driver> driver;
 
 public:
-  TLSOption(const std::string& name,
-            const std::string& description);
-  TLSOption(const TLSOption& other);
+  ExternOption(const std::string& name,
+               const std::string& description);
+  ExternOption(const ExternOption& other);
 
   const std::string get_current_value() const;
 

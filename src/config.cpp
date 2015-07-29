@@ -310,13 +310,20 @@ Config::Config(const std::string& dir_name)
             });
 
   const Driver& tls = get_default_driver("tls", DriverType::options);
+  const Driver& value_pairs = get_default_driver("value-pairs", DriverType::options);
   for (Driver& driver : default_drivers)
   {
     for (auto& option : driver.get_options())
     {
       if (option->get_name() == "tls")
       {
-        static_cast<TLSOption&>(*option).set_driver(tls);
+        static_cast<ExternOption&>(*option).set_driver(tls);
+        break;
+      }
+
+      if (option->get_name() == "value-pairs")
+      {
+        static_cast<ExternOption&>(*option).set_driver(value_pairs);
         break;
       }
     }
@@ -404,10 +411,9 @@ void Config::parse_yaml(const std::string& file_name)
         option = new SetOption(name, description);
         break;
       case OptionType::tls:
-        option = new TLSOption(name, description);
+      case OptionType::value_pairs:
+        option = new ExternOption(name, description);
         break;
-      default:
-        continue;
     }
 
     const YAML::Node& values = yaml_option["values"];

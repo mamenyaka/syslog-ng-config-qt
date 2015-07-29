@@ -251,13 +251,15 @@ bool SetOption::set_option(QGroupBox* groupBox)
 {
   current_value.clear();
 
+  std::string sep = get_name() == "scope" ? " " : ", ";
+
   QList<QCheckBox*> checkBoxes = groupBox->findChildren<QCheckBox*>();
   for (QCheckBox* checkBox : checkBoxes)
   {
     if (checkBox->isChecked())
     {
       std::string value = checkBox->text().toStdString();
-      current_value += (current_value.empty() ? "" : ", ") + value;
+      current_value += (current_value.empty() ? "" : sep) + value;
     }
   }
 
@@ -265,13 +267,13 @@ bool SetOption::set_option(QGroupBox* groupBox)
 }
 
 
-TLSOption::TLSOption(const std::string& name,
-                     const std::string& description) :
+ExternOption::ExternOption(const std::string& name,
+                           const std::string& description) :
   OptionBase(name, description)
 {}
 
-TLSOption::TLSOption(const TLSOption& other) :
-  OptionBase<std::string, TLSOption>(other)
+ExternOption::ExternOption(const ExternOption& other) :
+  OptionBase<std::string, ExternOption>(other)
 {
   if (other.driver.get())
   {
@@ -279,7 +281,7 @@ TLSOption::TLSOption(const TLSOption& other) :
   }
 }
 
-const std::string TLSOption::get_current_value() const
+const std::string ExternOption::get_current_value() const
 {
   std::string config = "\n";
 
@@ -298,7 +300,7 @@ const std::string TLSOption::get_current_value() const
   return config;
 }
 
-bool TLSOption::has_changed() const
+bool ExternOption::has_changed() const
 {
   for (const auto& option : driver->get_options())
   {
@@ -311,18 +313,18 @@ bool TLSOption::has_changed() const
   return false;
 }
 
-void TLSOption::set_driver(const Driver& driver)
+void ExternOption::set_driver(const Driver& driver)
 {
   this->driver = std::make_unique<Driver>(driver);
 }
 
-void TLSOption::create_form(QVBoxLayout* vboxLayout) const
+void ExternOption::create_form(QVBoxLayout* vboxLayout) const
 {
-  QPushButton* button = new QPushButton("set TLS options");
+  QPushButton* button = new QPushButton("set options");
   vboxLayout->addWidget(button);
 }
 
-void TLSOption::set_form_value(QGroupBox* groupBox) const
+void ExternOption::set_form_value(QGroupBox* groupBox) const
 {
   QPushButton* button = groupBox->findChild<QPushButton*>();
   Dialog* dialog = new Dialog(*driver, groupBox);
@@ -330,7 +332,7 @@ void TLSOption::set_form_value(QGroupBox* groupBox) const
   QObject::connect(button, &QPushButton::clicked, dialog, &Dialog::exec);
 }
 
-bool TLSOption::set_option(QGroupBox *)
+bool ExternOption::set_option(QGroupBox *)
 {
   return true;
 }
