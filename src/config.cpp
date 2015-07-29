@@ -177,7 +177,10 @@ const std::string Driver::to_string() const
     }
   }
 
-  config += "\n";
+  if (config.back() == ' ')
+  {
+    config.pop_back();
+  }
 
   for (const auto& option : options)
   {
@@ -187,17 +190,20 @@ const std::string Driver::to_string() const
       continue;
     }
 
-    config += "        " + option->to_string();
+    config += "\n        " + option->to_string();
 
     if (type == DriverType::rewrite)
     {
       config += ",";
     }
-
-    config += "\n";
   }
 
-  config += "    );\n};\n";
+  if (config.back() == ',')
+  {
+    config.pop_back();
+  }
+
+  config += "\n    );\n};\n";
 
   return config;
 }
