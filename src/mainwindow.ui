@@ -36,7 +36,7 @@
           <property name="widgetResizable">
            <bool>true</bool>
           </property>
-          <widget class="Drivers" name="sourceWidget">
+          <widget class="Tab" name="sourceWidget">
            <layout class="QVBoxLayout" name="sourceLayout">
             <property name="Alignment">
              <enum>Qt::AlignTop</enum>
@@ -60,7 +60,7 @@
           <property name="widgetResizable">
            <bool>true</bool>
           </property>
-          <widget class="Drivers" name="destinationWidget">
+          <widget class="Tab" name="destinationWidget">
            <layout class="QVBoxLayout" name="destinationLayout">
             <property name="Alignment">
              <enum>Qt::AlignTop</enum>
@@ -84,8 +84,32 @@
           <property name="widgetResizable">
            <bool>true</bool>
           </property>
-          <widget class="Drivers" name="filterWidget">
+          <widget class="Tab" name="filterWidget">
            <layout class="QVBoxLayout" name="filterLayout">
+            <property name="Alignment">
+             <enum>Qt::AlignTop</enum>
+            </property>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="templateTab">
+       <attribute name="title">
+        <string>Template</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="templateMainLayout">
+        <item>
+         <widget class="QScrollArea" name="templateScrollArea">
+          <property name="horizontalScrollBarPolicy">
+           <enum>Qt::ScrollBarAlwaysOff</enum>
+          </property>
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="Tab" name="templateWidget">
+           <layout class="QVBoxLayout" name="templateLayout">
             <property name="Alignment">
              <enum>Qt::AlignTop</enum>
             </property>
@@ -108,7 +132,7 @@
           <property name="widgetResizable">
            <bool>true</bool>
           </property>
-          <widget class="Drivers" name="rewriteWidget">
+          <widget class="Tab" name="rewriteWidget">
            <layout class="QVBoxLayout" name="rewriteLayout">
             <property name="Alignment">
              <enum>Qt::AlignTop</enum>
@@ -132,7 +156,7 @@
           <property name="widgetResizable">
            <bool>true</bool>
           </property>
-          <widget class="Drivers" name="parserWidget">
+          <widget class="Tab" name="parserWidget">
            <layout class="QVBoxLayout" name="parserLayout">
             <property name="Alignment">
              <enum>Qt::AlignTop</enum>
@@ -184,7 +208,6 @@
     <addaction name="actionOptions"/>
     <addaction name="separator"/>
     <addaction name="actionLog"/>
-    <addaction name="actionTemplate"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -239,14 +262,6 @@
     <string>Ctrl+L</string>
    </property>
   </action>
-  <action name="actionTemplate">
-   <property name="text">
-    <string>New &amp;template</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+T</string>
-   </property>
-  </action>
   <action name="actionOptions">
    <property name="text">
     <string>Global options</string>
@@ -263,9 +278,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>Drivers</class>
+   <class>Tab</class>
    <extends>QWidget</extends>
-   <header>drivers.h</header>
+   <header>tab.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

@@ -1,5 +1,5 @@
 #include "icon.h"
-#include "config.h"
+#include "driver.h"
 
 #include <QLabel>
 #include <QPainter>
@@ -8,8 +8,6 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QEvent>
-
-#include <cmath>
 
 #define ICON_SIZE 80
 
@@ -37,12 +35,7 @@ DriverIcon::DriverIcon(std::shared_ptr<Driver>& driver,
   setPalette(palette);
 }
 
-Driver& DriverIcon::get_driver()
-{
-  return *driver;
-}
-
-std::shared_ptr<Driver>& DriverIcon::get_driver_ptr()
+std::shared_ptr<Driver>& DriverIcon::get_driver()
 {
   return driver;
 }
@@ -70,82 +63,13 @@ void DriverIcon::setupIcon()
   painter.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
   painter.setPen(Qt::black);
 
-  switch (driver->get_type())
-  {
-    case DriverType::source:
-    {
-      painter.setBrush(QColor(255, 128, 128, 192));
-      painter.drawEllipse(1, 1, width() - 2, height() - 2);
-      break;
-    }
-    case DriverType::destination:
-    {
-      painter.setBrush(QColor(128, 128, 225, 192));
-      painter.drawRect(1, 1, width() - 2, height() - 2);
-      break;
-    }
-    case DriverType::filter:
-    {
-      painter.setBrush(QColor(128, 255, 128, 192));
-
-      QPainterPath path;
-      path.moveTo(width()/2.0, 1);
-      path.lineTo(width() - 1, height()/2.0);
-      path.lineTo(width()/2.0, height() - 1);
-      path.lineTo(1, height()/2.0);
-      path.closeSubpath();
-
-      painter.drawPath(path);
-      painter.fillPath(path, painter.brush());
-      break;
-    }
-    case DriverType::template_:
-    {
-      painter.setPen(QColor(255, 128, 255, 192));
-      painter.drawEllipse(1, 1, width() - 2, height() - 2);
-      break;
-    }
-    case DriverType::rewrite:
-    {
-      painter.setBrush(QColor(128, 255, 255, 192));
-
-      const double pi = std::acos(-1);
-      double h = (1 - std::cos(pi/6.0))*(height() - 2)/2;
-
-      QPainterPath path;
-      path.moveTo(width()/2.0, 1);
-      path.lineTo(width() - 1 - h, 1 + (height() - 2)*1/4.0);
-      path.lineTo(width() - 1 - h, 1 + (height() - 2)*3/4.0);
-      path.lineTo(width()/2.0, height() - 1);
-      path.lineTo(1 + h, 1 + (height() - 2)*3/4.0);
-      path.lineTo(1 + h, 1 + (height() - 2)*1/4.0);
-      path.closeSubpath();
-
-      painter.drawPath(path);
-      painter.fillPath(path, painter.brush());
-      break;
-    }
-    case DriverType::parser:
-    {
-      painter.setBrush(QColor(255, 16, 32));
-      painter.drawEllipse(1 + width()*1/4.0, 1, (width() - 2)/2.0, (height() - 2)/2.0);
-      painter.setBrush(QColor(0, 128, 32));
-      painter.drawEllipse(1 + width()*1/4.0, height()/2.0, (width() - 2)/2.0, (height() - 2)/2.0);
-      painter.setBrush(QColor(64, 128, 255));
-      painter.drawEllipse(1, 1 + (height() - 2)*1/4.0, (width() - 2)/2.0, (height() - 2)/2.0);
-      painter.setBrush(QColor(255, 192, 16));
-      painter.drawEllipse(width()/2.0, 1 + (height() - 2)*1/4.0, (width() - 2)/2.0, (height() - 2)/2.0);
-      break;
-    }
-    default:
-      break;
-  }
+  driver->draw(&painter, width(), height());
 
   painter.end();
 }
 
 
-LogIcon::LogIcon(LogUPtr& log,
+LogIcon::LogIcon(std::shared_ptr<Log>& log,
                  QWidget* parent) :
   QWidget(parent),
   log(std::move(log))
@@ -168,19 +92,19 @@ LogIcon::LogIcon(LogUPtr& log,
   mainLayout->addWidget(frame);
 }
 
-Log& LogIcon::get_log()
+std::shared_ptr<Log>& LogIcon::get_log()
 {
-  return *log;
+  return log;
 }
 
 void LogIcon::add_driver(DriverIcon& icon)
 {
-  if (icon.get_driver().get_type() == DriverType::template_)
+  if (icon.get_driver()->get_type() == "template")
   {
     return;
   }
 
-  std::shared_ptr<Driver>& driver = icon.get_driver_ptr();
+  std::shared_ptr<Driver>& driver = icon.get_driver();
   log->add_driver(driver);
 
   QVBoxLayout* frameLayout = findChild<QVBoxLayout*>();
@@ -192,7 +116,7 @@ void LogIcon::add_driver(DriverIcon& icon)
 
 void LogIcon::remove_driver(DriverIcon& icon)
 {
-  std::shared_ptr<Driver>& driver = icon.get_driver_ptr();
+  std::shared_ptr<Driver>& driver = icon.get_driver();
   log->remove_driver(driver);
 
   QVBoxLayout* frameLayout = findChild<QVBoxLayout*>();

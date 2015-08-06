@@ -2,6 +2,10 @@ name: pipe
 type: destination
 description: Send messages to a named pipe.
 options:
+  - pipe:
+      type: string
+      description: The filename of the pipe to open.
+      required: yes
   - flags:
       type: set
       description: Influence the behavior of the destination driver.
@@ -39,10 +43,6 @@ options:
       type: string
       description: The permission mask of the file if it is created by syslog-ng.
       default: 0600
-  - pipe:
-      type: string
-      description: The filename of the pipe to open.
-      required: yes
   - suppress:
       type: number
       description: Suppress the repeated messages and send the message only once. The parameter of this option specifies the number of seconds syslog-ng waits for identical messages.

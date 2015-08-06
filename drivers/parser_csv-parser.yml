@@ -1,6 +1,6 @@
 name: csv-parser
 type: parser
-description: Use a CSV parser to separate parts of log messages at delimiter characters to columns.
+description: Separate parts of log messages at delimiter characters to columns.
 options:
   - columns:
       type: string

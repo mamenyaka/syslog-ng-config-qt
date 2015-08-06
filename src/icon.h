@@ -9,8 +9,6 @@
 class Driver;
 class Log;
 
-typedef std::unique_ptr< Log, std::function<void(const Log *)> > LogUPtr;
-
 class DriverIcon : public QWidget
 {
   Q_OBJECT
@@ -22,8 +20,7 @@ public:
   explicit DriverIcon(std::shared_ptr<Driver>& driver,
                       QWidget* parent = 0);
 
-  Driver& get_driver();
-  std::shared_ptr<Driver>& get_driver_ptr();
+  std::shared_ptr<Driver>& get_driver();
   const QPixmap& get_pixmap() const;
 
 protected:
@@ -37,13 +34,13 @@ class LogIcon : public QWidget
 {
   Q_OBJECT
 
-  LogUPtr log;
+  std::shared_ptr<Log> log;
 
 public:
-  explicit LogIcon(LogUPtr& log,
+  explicit LogIcon(std::shared_ptr<Log>& log,
                    QWidget* parent = 0);
 
-  Log& get_log();
+  std::shared_ptr<Log>& get_log();
 
   void add_driver(DriverIcon& icon);
   void remove_driver(DriverIcon& icon);

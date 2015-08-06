@@ -9,8 +9,6 @@ class Driver;
 class Log;
 class Config;
 
-typedef std::unique_ptr< Log, std::function<void(const Log *)> > LogUPtr;
-
 class Test : public QObject
 {
   Q_OBJECT
@@ -22,12 +20,14 @@ private slots:
 private:
   void set_option(Driver& driver, const std::string& option_name, const std::string& option_value);
 
-  template<typename... Targs>
-  LogUPtr add_drivers_to_log(Config& config, Targs&... more);
+  std::shared_ptr<Driver> add_driver(Config& config, const std::string& driver_name, const std::string& driver_type);
 
   template<typename... Targs>
-  void add_driver_to_log_recursive(LogUPtr& log, std::shared_ptr<Driver>& driver, Targs&... more);
-  void add_driver_to_log_recursive(LogUPtr& log);
+  std::shared_ptr<Log> add_drivers_to_log(Config& config, Targs&... more);
+
+  template<typename... Targs>
+  void add_driver_to_log_recursive(std::shared_ptr<Log>& log, std::shared_ptr<Driver>& driver, Targs&... more);
+  void add_driver_to_log_recursive(std::shared_ptr<Log> &) {}
 };
 
 #endif  // TEST_H

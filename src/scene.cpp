@@ -34,7 +34,7 @@ void Scene::add_driver(std::shared_ptr<Driver>& new_driver, const QPoint& pos)
   clear();
 }
 
-void Scene::add_log(LogUPtr& new_log, const QPoint& pos)
+void Scene::add_log(std::shared_ptr<Log>& new_log, const QPoint& pos)
 {
   LogIcon* icon = new LogIcon(new_log, this);
   icon->move(pos.x() - icon->width()/2, pos.y() - icon->height()/2);
@@ -86,7 +86,7 @@ void Scene::reset()
     delete icon;
   }
 
-  config.get_global_options().restore_default_values();
+  config.get_global_options()->get_options().restore_default_values();
 
   clear();
 }
@@ -105,7 +105,7 @@ void Scene::mousePressEvent(QMouseEvent* event)
 
     if (copy_icon)
     {
-      std::shared_ptr<Driver> driver = selected_driver_icon->get_driver_ptr();
+      std::shared_ptr<Driver> driver = selected_driver_icon->get_driver();
       add_driver(driver, event->pos());
       selected_driver_icon = dynamic_cast<DriverIcon*>(children().last());
     }
@@ -183,11 +183,11 @@ void Scene::mouseDoubleClickEvent(QMouseEvent* event)
 
   if (driver_icon)
   {
-    Dialog(driver_icon->get_driver(), this).exec();
+    Dialog(*driver_icon->get_driver(), this).exec();
   }
   else if (log_icon)
   {
-    Dialog(log_icon->get_log(), this).exec();
+    Dialog(log_icon->get_log()->get_options(), this).exec();
   }
 }
 
@@ -231,14 +231,13 @@ void Scene::dropEvent(QDropEvent* event)
   QByteArray itemData = event->mimeData()->data("drivericon");
   QDataStream dataStream(&itemData, QIODevice::ReadOnly);
 
-  QString name;
-  int type;
+  QString name, type;
   dataStream >> name >> type;
 
-  const Driver& default_driver = config.get_default_driver(name.toStdString(), (DriverType) type);
-  Driver new_driver(default_driver);
+  const Driver& default_driver = config.get_default_driver(name.toStdString(), type.toStdString());
+  std::unique_ptr<Driver> new_driver(default_driver.clone());
 
-  if (Dialog(new_driver, this).exec() == QDialog::Accepted)
+  if (Dialog(*new_driver, this).exec() == QDialog::Accepted)
   {
     std::shared_ptr<Driver> driver = config.add_driver(new_driver);
     add_driver(driver, event->pos());

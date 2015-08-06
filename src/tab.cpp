@@ -1,30 +1,30 @@
-#include "drivers.h"
+#include "tab.h"
+#include "driver.h"
 #include "icon.h"
-#include "config.h"
 
 #include <QLayout>
 #include <QMouseEvent>
 #include <QDrag>
 #include <QMimeData>
 
-Drivers::Drivers(QWidget* parent) :
+Tab::Tab(QWidget* parent) :
   QWidget(parent)
 {}
 
-void Drivers::setupDrivers(DriverType type, const std::vector<Driver>& default_drivers)
+void Tab::setupDrivers(const std::string& type, const std::vector< std::unique_ptr< const Driver > >& default_drivers)
 {
-  for (const Driver& default_driver : default_drivers)
+  for (const std::unique_ptr<const Driver>& default_driver : default_drivers)
   {
-    if (default_driver.get_type() == type)
+    if (default_driver->get_type() == type)
     {
-      std::shared_ptr<Driver> driver(const_cast<Driver*>(&default_driver), [](const Driver *) {});
+      std::shared_ptr<Driver> driver(default_driver->clone());
       DriverIcon* icon = new DriverIcon(driver);
       layout()->addWidget(icon);
     }
   }
 }
 
-void Drivers::mousePressEvent(QMouseEvent *)
+void Tab::mousePressEvent(QMouseEvent *)
 {
   DriverIcon* icon = select_nearest_driver();
 
@@ -33,11 +33,11 @@ void Drivers::mousePressEvent(QMouseEvent *)
     return;
   }
 
-  Driver& driver = icon->get_driver();
+  std::shared_ptr<Driver>& driver = icon->get_driver();
 
   QByteArray itemData;
   QDataStream dataStream(&itemData, QIODevice::WriteOnly);
-  dataStream << QString::fromStdString(driver.get_name()) << (int) driver.get_type();
+  dataStream << QString::fromStdString(driver->get_name()) << QString::fromStdString(driver->get_type());
 
   QMimeData* mimeData = new QMimeData;
   mimeData->setData("drivericon", itemData);
@@ -52,7 +52,7 @@ void Drivers::mousePressEvent(QMouseEvent *)
   drag->exec();
 }
 
-DriverIcon* Drivers::select_nearest_driver() const
+DriverIcon* Tab::select_nearest_driver() const
 {
   for (DriverIcon* icon : findChildren<DriverIcon*>())
   {

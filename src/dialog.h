@@ -21,9 +21,12 @@ public:
                   QWidget* parent = 0);
   ~Dialog();
 
-private:
-  void setupConnections();
+public slots:
+  int exec();
+  void accept();
+  void reject();
 
+private:
   void create_form();
   void set_form_values();
   bool set_driver_options();

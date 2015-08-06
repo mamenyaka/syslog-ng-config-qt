@@ -6,4 +6,7 @@ options:
       type: string
       description: The regexp.
       required: yes
+  - value:
+      type: string
+      description: The macro to limit the scope of the match to a specific part of the message. 
 

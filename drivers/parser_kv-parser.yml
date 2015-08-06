@@ -1,0 +1,8 @@
+name: kv-parser
+type: parser
+description: Separate a message consisting of whitespace or comma-separated key=value pairs into name-value pairs.
+options:
+  - prefix:
+      type: string
+      description: Insert a prefix before the name part of the name-value pairs to help further processing.
+

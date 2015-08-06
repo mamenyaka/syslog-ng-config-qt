@@ -1,6 +1,6 @@
 name: json-parser
 type: parser
-description: Use a JSON parser to separate parts of log messages at delimiter characters to columns.
+description: Separate parts of JSON-encoded log messages to name-value pairs.
 options:
   - extract-prefix:
       type: string

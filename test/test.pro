@@ -10,6 +10,7 @@ SOURCES += \
     test.cpp \
     ../src/dialog.cpp \
     ../src/option.cpp \
+    ../src/driver.cpp \
     ../src/config.cpp
 
 HEADERS += \

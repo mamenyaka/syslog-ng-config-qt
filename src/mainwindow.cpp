@@ -20,11 +20,12 @@ MainWindow::MainWindow(QWidget* parent) :
 
   ui->setupUi(this);
 
-  ui->sourceWidget->setupDrivers(DriverType::source, config.get_default_drivers());
-  ui->destinationWidget->setupDrivers(DriverType::destination, config.get_default_drivers());
-  ui->filterWidget->setupDrivers(DriverType::filter, config.get_default_drivers());
-  ui->rewriteWidget->setupDrivers(DriverType::rewrite, config.get_default_drivers());
-  ui->parserWidget->setupDrivers(DriverType::parser, config.get_default_drivers());
+  ui->sourceWidget->setupDrivers("source", config.get_default_drivers());
+  ui->destinationWidget->setupDrivers("destination", config.get_default_drivers());
+  ui->filterWidget->setupDrivers("filter", config.get_default_drivers());
+  ui->templateWidget->setupDrivers("template", config.get_default_drivers());
+  ui->rewriteWidget->setupDrivers("rewrite", config.get_default_drivers());
+  ui->parserWidget->setupDrivers("parser", config.get_default_drivers());
 
   ui->sceneScrollArea->setWidget(scene);
 
@@ -79,27 +80,15 @@ void MainWindow::setupConnections()
 
 
   connect(ui->actionOptions, &QAction::triggered, [&]() {
-    Dialog(config.get_global_options(), this).exec();
+    Dialog(config.get_global_options()->get_options(), this).exec();
   });
 
   connect(ui->actionLog, &QAction::triggered, [&]() {
-    Log new_log = config.get_default_driver("log", DriverType::options);
+    const Driver& log_options = config.get_default_driver("log", "options");
+    std::unique_ptr<Log> new_log = std::make_unique<Log>(static_cast<const Options&>(log_options));
 
-    if (Dialog(new_log, this).exec() == QDialog::Accepted)
-    {
-      Config::LogUPtr log = config.add_log(new_log);
-      scene->add_log(log, QPoint(100, 100));
-    }
-  });
-
-  connect(ui->actionTemplate, &QAction::triggered, [&]() {
-    Driver new_template = config.get_default_driver("template", DriverType::template_);
-
-    if (Dialog(new_template, this).exec() == QDialog::Accepted)
-    {
-      std::shared_ptr<Driver> template_ = config.add_driver(new_template);
-      scene->add_driver(template_, QPoint(100, 100));
-    }
+    std::shared_ptr<Log> log = config.add_log(new_log);
+    scene->add_log(log, QPoint(100, 100));
   });
 
 

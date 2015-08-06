@@ -2,6 +2,10 @@ name: program
 type: source
 description: Opens a named pipe with the specified name and listens for messages.
 options:
+  - program:
+      type: string
+      description: The name of the application to start and read messages from.
+      required: yes
   - flags:
       type: set
       description: Specifies the log parsing options of the source.
@@ -31,10 +35,6 @@ options:
       type: number
       description: Specifies input padding.
       default: 0
-  - program:
-      type: string
-      description: The name of the application to start and read messages from.
-      required: yes
   - program-override:
       type: string
       description: Replaces the ${PROGRAM} part of the message with the parameter string.

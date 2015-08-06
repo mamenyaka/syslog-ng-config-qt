@@ -10,20 +10,22 @@ LIBS += -lyaml-cpp
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
-    icon.cpp \
-    drivers.cpp \
+    tab.cpp \
     scene.cpp \
+    icon.cpp \
     dialog.cpp \
     option.cpp \
+    driver.cpp \
     config.cpp
 
 HEADERS += \
     mainwindow.h \
-    icon.h \
-    drivers.h \
+    tab.h \
     scene.h \
+    icon.h \
     dialog.h \
     option.h \
+    driver.h \
     config.h
 
 FORMS += \

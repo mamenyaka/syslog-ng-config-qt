@@ -2,6 +2,10 @@ name: program
 type: destination
 description: Start an external application or script and send the log messages to its standard input.
 options:
+  - program:
+      type: string
+      description: The program name to start.
+      required: yes
   - flags:
       type: set
       description: Influence the behavior of the destination driver.
@@ -23,10 +27,6 @@ options:
       description: Specify how to send the "MARK" signal.
       values: [internal, dst-idle, host-idle, periodical, none, global]
       default: internal
-  - program:
-      type: string
-      description: The program name to start.
-      required: yes
   - suppress:
       type: number
       description: Suppress the repeated messages and send the message only once. The parameter of this option specifies the number of seconds syslog-ng waits for identical messages.

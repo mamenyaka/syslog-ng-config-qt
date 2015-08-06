@@ -2,6 +2,10 @@ name: file
 type: destination
 description: Output messages to the specified text file, or to a set of files.
 options:
+  - file:
+      type: string
+      description: The file to read messages from, including the path.
+      required: yes
   - create-dirs:
       type: list
       description: Enable creating non-existing directories.
@@ -19,10 +23,6 @@ options:
       type: string
       description: The permission mask of directories created by syslog-ng.
       default: 0700
-  - file:
-      type: string
-      description: The file to read messages from, including the path.
-      required: yes
   - flags:
       type: set
       description: Influence the behavior of the destination driver.

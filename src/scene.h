@@ -12,8 +12,6 @@ class Driver;
 class Log;
 class QLabel;
 
-typedef std::unique_ptr< Log, std::function<void(const Log *)> > LogUPtr;
-
 class Scene : public QWidget
 {
   Q_OBJECT
@@ -30,7 +28,7 @@ public:
                  QWidget* parent = 0);
 
   void add_driver(std::shared_ptr<Driver>& new_driver, const QPoint& pos);
-  void add_log(LogUPtr& new_log, const QPoint& pos);
+  void add_log(std::shared_ptr<Log>& new_log, const QPoint& pos);
 
   void move_driver(const QPoint& pos);
   void move_log(const QPoint& pos);

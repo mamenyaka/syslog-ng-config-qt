@@ -2,6 +2,10 @@ name: sun-streams
 type: source
 description: Solaris uses its "STREAMS" framework to send messages.
 options:
+  - sun-streams:
+      type: string
+      description: Specifies the "STREAMS" device to open.
+      required: yes
   - door:
       type: string
       description: Specifies the filename of a door to open.
@@ -42,10 +46,6 @@ options:
   - program-override:
       type: string
       description: Replaces the ${PROGRAM} part of the message with the parameter string.
-  - sun-streams:
-      type: string
-      description: Specifies the "STREAMS" device to open.
-      required: yes
   - tags:
       type: string
       description: Label the messages received from the source with custom tags.

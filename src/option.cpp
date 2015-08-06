@@ -1,5 +1,5 @@
 #include "option.h"
-#include "config.h"
+#include "driver.h"
 #include "dialog.h"
 
 #include <QVBoxLayout>
@@ -44,43 +44,37 @@ const std::string Option::to_string() const
 }
 
 
-template<typename Value, typename Derived>
+template<typename Value, class Derived>
 OptionBase<Value, Derived>::OptionBase(const std::string& name,
                                        const std::string& description) :
   Option(name, description)
 {}
 
-template<typename Value, typename Derived>
+template<typename Value, class Derived>
 Option* OptionBase<Value, Derived>::clone() const
 {
   return new Derived(static_cast<const Derived&>(*this));
 }
 
-template<typename Value, typename Derived>
+template<typename Value, class Derived>
 bool OptionBase<Value, Derived>::has_changed() const
 {
-  return current_value != default_value;
+  return required || current_value != default_value;
 }
 
-template<typename Value, typename Derived>
-void OptionBase<Value, Derived>::set_default(const Value& default_value)
-{
-  current_value = this->default_value = default_value;
-}
-
-template<typename Value, typename Derived>
-void OptionBase<Value, Derived>::restore_default()
-{
-  current_value = default_value;
-}
-
-template<typename Value, typename Derived>
+template<typename Value, class Derived>
 void OptionBase<Value, Derived>::set_previous()
 {
   previous_value = current_value;
 }
 
-template<typename Value, typename Derived>
+template<typename Value, class Derived>
+void OptionBase<Value, Derived>::restore_default()
+{
+  current_value = default_value;
+}
+
+template<typename Value, class Derived>
 void OptionBase<Value, Derived>::restore_previous()
 {
   current_value = previous_value;
@@ -95,6 +89,18 @@ StringOption::StringOption(const std::string& name,
 const std::string StringOption::get_current_value() const
 {
   return "\"" + current_value + "\"";
+}
+
+void StringOption::set_default(const std::string& default_value)
+{
+  this->default_value = default_value;
+  set_current(default_value);
+}
+
+void StringOption::set_current(const std::string& current_value)
+{
+  this->current_value = current_value;
+  set_previous();
 }
 
 void StringOption::create_form(QVBoxLayout* vboxLayout) const
@@ -114,7 +120,7 @@ bool StringOption::set_option(QGroupBox* groupBox)
   QLineEdit* lineEdit = groupBox->findChild<QLineEdit*>();
   current_value = lineEdit->text().toStdString();
 
-  return !is_required() || !current_value.empty();
+  return !(is_required() && current_value.empty());
 }
 
 
@@ -132,7 +138,14 @@ const std::string NumberOption::get_current_value() const
 
 void NumberOption::set_default(const std::string& default_value)
 {
-  current_value = this->default_value = std::stoi(default_value);
+  this->default_value = std::stoi(default_value);
+  set_current(default_value);
+}
+
+void NumberOption::set_current(const std::string& current_value)
+{
+  this->current_value = std::stoi(current_value);
+  set_previous();
 }
 
 void NumberOption::create_form(QVBoxLayout* vboxLayout) const
@@ -154,7 +167,7 @@ bool NumberOption::set_option(QGroupBox* groupBox)
   QSpinBox* spinBox = groupBox->findChild<QSpinBox*>();
   current_value = spinBox->value();
 
-  return !is_required() || current_value != -1;
+  return !(is_required() && current_value == -1);
 }
 
 
@@ -172,15 +185,14 @@ const std::string ListOption::get_current_value() const
 
 void ListOption::set_default(const std::string& default_value)
 {
-  auto it = std::find_if(values.cbegin(), values.cend(),
-                         [&default_value](const std::string& value)->bool {
-                           return value == default_value;
-                         });
+  this->default_value = find_index(default_value);
+  set_current(default_value);
+}
 
-  if (it != values.cend())
-  {
-    current_value = this->default_value = std::distance(values.cbegin(), it);
-  }
+void ListOption::set_current(const std::string& current_value)
+{
+  this->current_value = find_index(current_value);
+  set_previous();
 }
 
 void ListOption::add_value(const std::string& value)
@@ -209,7 +221,24 @@ bool ListOption::set_option(QGroupBox* groupBox)
   QComboBox* comboBox = groupBox->findChild<QComboBox*>();
   current_value = comboBox->currentIndex();
 
-  return !is_required() || current_value != -1;
+  return !(is_required() && current_value == -1);
+}
+
+int ListOption::find_index(const std::string& value) const
+{
+  auto it = std::find_if(values.cbegin(), values.cend(),
+                         [&value](const std::string& v)->bool {
+                           return v == value;
+                         });
+
+  if (it != values.cend())
+  {
+    return std::distance(values.cbegin(), it);
+  }
+  else
+  {
+    return -1;
+  }
 }
 
 
@@ -221,6 +250,18 @@ SetOption::SetOption(const std::string& name,
 const std::string SetOption::get_current_value() const
 {
   return "\"" + current_value + "\"";
+}
+
+void SetOption::set_default(const std::string& default_value)
+{
+  this->default_value = default_value;
+  set_current(default_value);
+}
+
+void SetOption::set_current(const std::string& current_value)
+{
+  this->current_value = current_value;
+  set_previous();
 }
 
 void SetOption::add_value(const std::string& value)
@@ -251,7 +292,7 @@ bool SetOption::set_option(QGroupBox* groupBox)
 {
   current_value.clear();
 
-  std::string sep = get_name() == "scope" ? " " : ", ";
+  std::string sep = (name == "scope" ? " " : ", ");
 
   QList<QCheckBox*> checkBoxes = groupBox->findChildren<QCheckBox*>();
   for (QCheckBox* checkBox : checkBoxes)
@@ -263,7 +304,7 @@ bool SetOption::set_option(QGroupBox* groupBox)
     }
   }
 
-  return !is_required() || !current_value.empty();
+  return !(is_required() && current_value.empty());
 }
 
 
@@ -273,38 +314,38 @@ ExternOption::ExternOption(const std::string& name,
 {}
 
 ExternOption::ExternOption(const ExternOption& other) :
-  OptionBase<std::string, ExternOption>(other)
+  OptionBase<bool, ExternOption>(other)
 {
-  if (other.driver.get())
+  if (other.options.get())
   {
-    driver = std::make_unique<Driver>(*other.driver);
+    options = std::make_unique<Options>(*other.options);
   }
 }
 
 const std::string ExternOption::get_current_value() const
 {
-  std::string config = "\n";
+  std::string config;
 
-  for (const auto& option : driver->get_options())
+  for (const std::unique_ptr<Option>& option : options->get_options())
   {
-    if (!(option->is_required() || option->has_changed()))
+    if (!option->has_changed())
     {
       continue;
     }
 
-    config += "            " + option->to_string() + "\n";
+    config += "\n            " + option->to_string();
   }
 
-  config += "        ";
+  config += "\n        ";
 
   return config;
 }
 
 bool ExternOption::has_changed() const
 {
-  for (const auto& option : driver->get_options())
+  for (const std::unique_ptr<Option>& option : options->get_options())
   {
-    if (option->is_required() || option->has_changed())
+    if (option->has_changed())
     {
       return true;
     }
@@ -313,26 +354,40 @@ bool ExternOption::has_changed() const
   return false;
 }
 
-void ExternOption::set_driver(const Driver& driver)
+void ExternOption::set_previous()
 {
-  this->driver = std::make_unique<Driver>(driver);
+  for (std::unique_ptr<Option>& option : options->get_options())
+  {
+    option->set_previous();
+  }
+}
+
+void ExternOption::restore_default()
+{
+  for (std::unique_ptr<Option>& option : options->get_options())
+  {
+    option->restore_default();
+  }
+}
+
+void ExternOption::restore_previous()
+{
+  for (std::unique_ptr<Option>& option : options->get_options())
+  {
+    option->restore_previous();
+  }
+}
+
+void ExternOption::set_options(const Options& options)
+{
+  this->options = std::make_unique<Options>(options);
 }
 
 void ExternOption::create_form(QVBoxLayout* vboxLayout) const
 {
   QPushButton* button = new QPushButton("set options");
   vboxLayout->addWidget(button);
-}
 
-void ExternOption::set_form_value(QGroupBox* groupBox) const
-{
-  QPushButton* button = groupBox->findChild<QPushButton*>();
-  Dialog* dialog = new Dialog(*driver, groupBox);
-
+  Dialog* dialog = new Dialog(*options, vboxLayout->parentWidget());
   QObject::connect(button, &QPushButton::clicked, dialog, &Dialog::exec);
-}
-
-bool ExternOption::set_option(QGroupBox *)
-{
-  return true;
 }

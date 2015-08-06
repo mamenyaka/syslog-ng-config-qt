@@ -2,6 +2,10 @@ name: unix-stream
 type: destination
 description: Send messages to a UNIX domain socket in "SOCK_STREAM" mode.
 options:
+  - unix-stream:
+      type: string
+      description: The name of the socket to connect to.
+      required: yes
   - flags:
       type: set
       description: Influence the behavior of the destination driver.
@@ -70,8 +74,4 @@ options:
       description: Override the global timestamp format.
       values: [rfc3164, bsd, rfc3339, iso]
       default: rfc3164
-  - unix-stream:
-      type: string
-      description: The name of the socket to connect to.
-      required: yes
 

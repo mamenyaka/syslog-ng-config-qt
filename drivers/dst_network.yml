@@ -2,6 +2,10 @@ name: network
 type: destination
 description: Send messages to a remote host using the RFC3164 protocol.
 options:
+  - network:
+      type: string
+      description: The destination host address where messages should be sent.
+      required: yes
   - flags:
       type: set
       description: Influence the behavior of the destination driver.
@@ -48,10 +52,6 @@ options:
       description: Specify how to send the "MARK" signal.
       values: [dst-idle, host-idle, periodical, none, global]
       default: global
-  - network:
-      type: string
-      description: The destination host address where messages should be sent.
-      required: yes
   - port:
       type: number
       description: The port number to connect to.

@@ -2,6 +2,10 @@ name: unix-stream
 type: source
 description: Open an "AF_UNIX" socket and start listening on it for messages using Linux "SOCK_STREAM" semantics.
 options:
+  - unix-stream:
+      type: string
+      description: The filename of the socket to create, including the path.
+      required: yes
   - encoding:
       type: string
       description: Specifies the characterset of messages using the legacy BSD-syslog protocol.
@@ -81,8 +85,4 @@ options:
   - time-zone:
       type: string
       description: The default timezone for messages read from the source.
-  - unix-stream:
-      type: string
-      description: The filename of the socket to create, including the path.
-      required: yes
 

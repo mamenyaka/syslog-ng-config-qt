@@ -7,10 +7,11 @@
 
 class QVBoxLayout;
 class QGroupBox;
-class Driver;
+class Options;
 
 class Option
 {
+protected:
   std::string name;
   std::string description;
   bool required = false;
@@ -32,9 +33,10 @@ public:
   virtual bool has_changed() const = 0;
 
   virtual void set_default(const std::string& default_value) = 0;
-  virtual void restore_default() = 0;
-
+  virtual void set_current(const std::string& default_value) = 0;
   virtual void set_previous() = 0;
+
+  virtual void restore_default() = 0;
   virtual void restore_previous() = 0;
 
   virtual void create_form(QVBoxLayout* vboxLayout) const = 0;
@@ -44,27 +46,26 @@ public:
   virtual const std::string to_string() const;
 };
 
-template<typename Value, typename Derived>
+template<typename Value, class Derived>
 class OptionBase : public Option
 {
-public:
-  OptionBase(const std::string& name,
-             const std::string& description);
-
-  virtual Option* clone() const;
-
-  virtual bool has_changed() const;
-
-  virtual void set_default(const Value& default_value);
-  virtual void restore_default();
-
-  virtual void set_previous();
-  virtual void restore_previous();
-
 protected:
   Value default_value;
   Value current_value;
   Value previous_value;
+
+public:
+  OptionBase(const std::string& name,
+             const std::string& description);
+
+  Option* clone() const;
+
+  virtual bool has_changed() const;
+
+  virtual void set_previous();
+
+  virtual void restore_default();
+  virtual void restore_previous();
 };
 
 class StringOption : public OptionBase<std::string, StringOption>
@@ -74,6 +75,9 @@ public:
                const std::string& description);
 
   const std::string get_current_value() const;
+
+  void set_default(const std::string& default_value);
+  void set_current(const std::string& current_value);
 
   void create_form(QVBoxLayout* vboxLayout) const;
   void set_form_value(QGroupBox* groupBox) const;
@@ -89,6 +93,7 @@ public:
   const std::string get_current_value() const;
 
   void set_default(const std::string& default_value);
+  void set_current(const std::string& current_value);
 
   void create_form(QVBoxLayout* vboxLayout) const;
   void set_form_value(QGroupBox* groupBox) const;
@@ -106,11 +111,16 @@ public:
   const std::string get_current_value() const;
 
   void set_default(const std::string& default_value);
+  void set_current(const std::string& current_value);
+
   void add_value(const std::string& value);
 
   void create_form(QVBoxLayout* vboxLayout) const;
   void set_form_value(QGroupBox* groupBox) const;
   bool set_option(QGroupBox* groupBox);
+
+private:
+  int find_index(const std::string& value) const;
 };
 
 class SetOption : public OptionBase<std::string, SetOption>
@@ -123,6 +133,9 @@ public:
 
   const std::string get_current_value() const;
 
+  void set_default(const std::string& default_value);
+  void set_current(const std::string& current_value);
+
   void add_value(const std::string& value);
 
   void create_form(QVBoxLayout* vboxLayout) const;
@@ -130,9 +143,9 @@ public:
   bool set_option(QGroupBox* groupBox);
 };
 
-class ExternOption : public OptionBase<std::string, ExternOption>
+class ExternOption : public OptionBase<bool, ExternOption>
 {
-  std::unique_ptr<Driver> driver;
+  std::unique_ptr<Options> options;
 
 public:
   ExternOption(const std::string& name,
@@ -142,11 +155,19 @@ public:
   const std::string get_current_value() const;
 
   bool has_changed() const;
-  void set_driver(const Driver& driver);
+
+  void set_default(const std::string &) {}
+  void set_current(const std::string &) {}
+  void set_previous();
+
+  void restore_default();
+  void restore_previous();
+
+  void set_options(const Options& options);
 
   void create_form(QVBoxLayout* vboxLayout) const;
-  void set_form_value(QGroupBox* groupBox) const;
-  bool set_option(QGroupBox *);
+  void set_form_value(QGroupBox *) const {}
+  bool set_option(QGroupBox *) { return true; }
 };
 
 #endif  // OPTION_H

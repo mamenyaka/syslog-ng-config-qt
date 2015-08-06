@@ -2,6 +2,10 @@ name: file
 type: source
 description: Opens the specified file and reads messages.
 options:
+  - file:
+      type: string
+      description: The file to read messages from, including the path.
+      required: yes
   - default-facility:
       type: list
       description: This parameter assigns a facility value to the messages received from the file source, if the message does not specify one.
@@ -11,10 +15,6 @@ options:
       type: list
       description: This parameter assigns an emergency level to the messages received from the file source, if the message does not specify one.
       values: [emerg, alert, crit, err, warning, notice, info, debug]
-  - file:
-      type: string
-      description: The file to read messages from, including the path.
-      required: yes
   - encoding:
       type: string
       description: Specifies the characterset of messages using the legacy BSD-syslog protocol.
