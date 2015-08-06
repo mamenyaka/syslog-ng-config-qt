@@ -8,7 +8,9 @@ Driver::Driver(const std::string& name,
                const std::string& description) :
   name(name),
   description(description)
-{}
+{
+  options.reserve(20);
+}
 
 Driver::Driver(const Driver& other) :
  name(other.name),

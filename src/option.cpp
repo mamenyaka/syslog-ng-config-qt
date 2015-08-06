@@ -176,6 +176,8 @@ ListOption::ListOption(const std::string& name,
   OptionBase(name, description)
 {
   current_value = default_value = -1;
+
+  values.reserve(10);
 }
 
 const std::string ListOption::get_current_value() const
@@ -245,7 +247,9 @@ int ListOption::find_index(const std::string& value) const
 SetOption::SetOption(const std::string& name,
                      const std::string& description) :
   OptionBase(name, description)
-{}
+{
+  values.reserve(10);
+}
 
 const std::string SetOption::get_current_value() const
 {

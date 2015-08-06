@@ -32,6 +32,8 @@ std::map<std::string, DriverType> driver_type_map {
 
 Config::Config(const std::string& dir_name)
 {
+  default_drivers.reserve(60);
+
   QDirIterator it(QString::fromStdString(dir_name));
   while (it.hasNext())
   {
