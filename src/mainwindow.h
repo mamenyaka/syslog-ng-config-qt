@@ -18,6 +18,8 @@ class MainWindow : public QMainWindow
   Config* config;
   Scene* scene;
 
+  QString last_saved;
+
 public:
   explicit MainWindow(QWidget* parent = 0);
   ~MainWindow();

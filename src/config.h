@@ -32,6 +32,4 @@ private:
   void delete_logpath(const Logpath* old_logpath);
 };
 
-std::ostream& operator<<(std::ostream& os, const Config& config);
-
 #endif  // CONFIG_H

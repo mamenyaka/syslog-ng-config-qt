@@ -266,10 +266,3 @@ void Config::delete_logpath(const Logpath* old_logpath)
 {
   logpaths.remove_if([old_logpath](const std::unique_ptr<Logpath>& logpath)->bool { return logpath.get() == old_logpath; });
 }
-
-std::ostream& operator<<(std::ostream& os, const Config& config)
-{
-  os << config.to_string();
-
-  return os;
-}

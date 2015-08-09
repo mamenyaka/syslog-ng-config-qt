@@ -6,11 +6,8 @@
 
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QTextStream>
 #include <QCloseEvent>
-
-#include <fstream>
-
-#define WARNING "Warning: All unsaved data will be lost! Are you sure?"
 
 MainWindow::MainWindow(QWidget* parent) :
   QMainWindow(parent),
@@ -43,13 +40,21 @@ MainWindow::~MainWindow()
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-  if (QMessageBox::question(this, "Exit", WARNING) == QMessageBox::Yes)
+  if (last_saved == QString::fromStdString(config->to_string()))
   {
     event->accept();
   }
   else
   {
-    event->ignore();
+    if (QMessageBox::question(this, "Exit",
+      "All unsaved data will be lost! Are you sure?") == QMessageBox::Yes)
+    {
+      event->accept();
+    }
+    else
+    {
+      event->ignore();
+    }
   }
 }
 
@@ -67,16 +72,28 @@ bool MainWindow::eventFilter(QObject*, QEvent* event)
 void MainWindow::setupConnections()
 {
   connect(ui->actionNew, &QAction::triggered, [&]() {
-    if (QMessageBox::question(this, "New configuration", WARNING) == QMessageBox::Yes)
+    if (QMessageBox::question(this, "New configuration",
+      "Current configuration will be lost! Are you sure?") == QMessageBox::Yes)
     {
       scene->reset();
     }
   });
 
   connect(ui->actionSave, &QAction::triggered, [&]() {
-    const std::string file_name = QFileDialog::getSaveFileName(this, tr("Save config"), QDir::homePath()).toStdString();
-    std::ofstream out(file_name);
-    out << *config;
+    QString file_name = QFileDialog::getSaveFileName(this, tr("Save config"), QDir::homePath());
+    QFile file(file_name);
+
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+      return;
+    }
+
+    last_saved = QString::fromStdString(config->to_string());
+
+    QTextStream out(&file);
+    out << last_saved;
+
+    file.close();
   });
 
   connect(ui->actionExit, &QAction::triggered, this, &MainWindow::close);
