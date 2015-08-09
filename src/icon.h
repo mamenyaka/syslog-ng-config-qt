@@ -44,6 +44,9 @@ public:
 
 protected:
   bool eventFilter(QObject *, QEvent* event);
+
+private:
+  int get_index(ObjectIcon& icon);
 };
 
 #endif  // ICON_H

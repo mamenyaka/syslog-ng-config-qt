@@ -103,8 +103,10 @@ void LogpathIcon::add_object(ObjectIcon& icon)
   std::shared_ptr<Object>& object = icon.get_object();
   logpath->add_object(object);
 
+  const int index = get_index(icon);
+
   QVBoxLayout* frameLayout = findChild<QVBoxLayout*>();
-  frameLayout->addWidget(&icon);
+  frameLayout->insertWidget(index, &icon);
 
   icon.show();
   adjustSize();
@@ -126,4 +128,22 @@ bool LogpathIcon::eventFilter(QObject *, QEvent* event)
 {
   event->ignore();
   return true;
+}
+
+int LogpathIcon::get_index(ObjectIcon& icon)
+{
+  QVBoxLayout* frameLayout = findChild<QVBoxLayout*>();
+  QPoint pos = mapFrom(icon.parentWidget(), icon.pos());
+
+  for (int i = 0; i < frameLayout->count(); i++)
+  {
+    ObjectIcon* icon = static_cast<ObjectIcon*>(frameLayout->itemAt(i)->widget());
+
+    if (icon->y() > pos.y())
+    {
+      return frameLayout->indexOf(icon);
+    }
+  }
+
+  return frameLayout->count();
 }
