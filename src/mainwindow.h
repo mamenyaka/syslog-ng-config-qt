@@ -31,6 +31,10 @@ protected:
 
 private:
   void setupConnections();
+
+  // non copyable
+  MainWindow(const MainWindow&) = delete;
+  MainWindow& operator=(const MainWindow&) = delete;
 };
 
 #endif // MAINWINDOW_H

@@ -380,6 +380,11 @@ Options& GlobalOptions::get_options()
   return options;
 }
 
+void GlobalOptions::restore_default_values()
+{
+  options.restore_default_values();
+}
+
 const std::string GlobalOptions::to_string() const
 {
   std::string config;

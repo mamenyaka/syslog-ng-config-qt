@@ -30,6 +30,10 @@ private:
   void create_form();
   void set_form_values();
   bool set_object_options();
+
+  // non copyable
+  Dialog(const Dialog&) = delete;
+  Dialog& operator=(const Dialog&) = delete;
 };
 
 #endif  // DIALOG_H

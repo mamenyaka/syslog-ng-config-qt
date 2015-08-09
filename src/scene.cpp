@@ -12,13 +12,13 @@
 Scene::Scene(Config& config,
              QWidget* parent) :
   QWidget(parent),
-  config(config)
+  config(config),
+  deleteLabel(new QLabel(this))
 {
   setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
   setMouseTracking(true);
   setAcceptDrops(true);
 
-  deleteLabel = new QLabel(this);
   deleteLabel->setPixmap(QIcon::fromTheme("edit-delete-symbolic").pixmap(40, 40));
   deleteLabel->move(20, 20);
   deleteLabel->hide();
@@ -76,7 +76,7 @@ void Scene::reset()
     delete icon;
   }
 
-  config.get_global_options()->get_options().restore_default_values();
+  config.get_global_options()->restore_default_values();
 
   clear();
 }
@@ -86,8 +86,11 @@ void Scene::mousePressEvent(QMouseEvent* event)
   selected_object_icon = select_nearest_object();
   selected_logpath_icon = select_nearest_logpath(event->pos());
 
-  deleteLabel->lower();
-  deleteLabel->show();
+  if (selected_object_icon || selected_logpath_icon)
+  {
+    deleteLabel->lower();
+    deleteLabel->show();
+  }
 
   if (selected_object_icon)
   {
@@ -97,20 +100,16 @@ void Scene::mousePressEvent(QMouseEvent* event)
     {
       std::shared_ptr<Object> object = selected_object_icon->get_object();
       add_object(object, event->pos());
-      selected_object_icon = dynamic_cast<ObjectIcon*>(children().last());
+      selected_object_icon = static_cast<ObjectIcon*>(children().last());
     }
   }
 }
 
 void Scene::mouseReleaseEvent(QMouseEvent* event)
 {
-  if (selected_object_icon)
+  if (selected_object_icon &&
+    selected_object_icon->parentWidget() == this)
   {
-    if (selected_object_icon->parentWidget() != this)
-    {
-      return;
-    }
-
     const QRect geom = selected_object_icon->geometry();
     LogpathIcon* icon = select_nearest_logpath(event->pos());
 
@@ -143,13 +142,10 @@ void Scene::mouseMoveEvent(QMouseEvent* event)
   {
     if (selected_object_icon->parentWidget() != this)
     {
-      LogpathIcon* icon = dynamic_cast<LogpathIcon*>(selected_object_icon->parentWidget()->parentWidget());
-      if (icon)
-      {
-        icon->remove_object(*selected_object_icon);
-        selected_object_icon->setParent(this);
-        selected_object_icon->show();
-      }
+      LogpathIcon* icon = static_cast<LogpathIcon*>(selected_object_icon->parentWidget()->parentWidget());
+      icon->remove_object(*selected_object_icon);
+      selected_object_icon->setParent(this);
+      selected_object_icon->show();
     }
 
     if (event->x() > 0 && event->y() > 0)

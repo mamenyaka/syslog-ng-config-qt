@@ -19,6 +19,7 @@ protected:
 public:
   Option(const std::string& name,
          const std::string& description);
+  virtual ~Option() {}
 
   virtual Option* clone() const = 0;
 

@@ -23,6 +23,7 @@ public:
   Object(const std::string& name,
          const std::string& description);
   Object(const Object& other);
+  virtual ~Object() {}
 
   virtual Object* clone() const = 0;
 
@@ -173,6 +174,8 @@ public:
   GlobalOptions(const Options& options);
 
   Options& get_options();
+
+  void restore_default_values();
 
   const std::string to_string() const;
 

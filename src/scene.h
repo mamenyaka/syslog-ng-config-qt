@@ -54,6 +54,10 @@ protected:
 private:
   ObjectIcon* select_nearest_object() const;
   LogpathIcon* select_nearest_logpath(const QPoint& pos) const;
+
+  // non copyable
+  Scene(const Scene&) = delete;
+  Scene& operator=(const Scene&) = delete;
 };
 
 #endif  // SCENE_H
