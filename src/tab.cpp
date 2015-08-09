@@ -2,7 +2,7 @@
 #include "object.h"
 #include "icon.h"
 
-#include <QLayout>
+#include <QGridLayout>
 #include <QMouseEvent>
 #include <QDrag>
 #include <QMimeData>
@@ -13,13 +13,23 @@ Tab::Tab(QWidget* parent) :
 
 void Tab::setupObjects(const std::string& type, const std::vector< std::unique_ptr<const Object> >& default_objects)
 {
+  QGridLayout* mainLayout = static_cast<QGridLayout*>(layout());
+  mainLayout->setSpacing(10);
+
+  int row = 0, col = 0;
   for (const std::unique_ptr<const Object>& default_object : default_objects)
   {
     if (default_object->get_type() == type)
     {
       std::shared_ptr<Object> object(default_object->clone());
       ObjectIcon* icon = new ObjectIcon(object);
-      layout()->addWidget(icon);
+      mainLayout->addWidget(icon, row, col++);
+
+      if (col == 2)
+      {
+        col = 0;
+        row++;
+      }
     }
   }
 }

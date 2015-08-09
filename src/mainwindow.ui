@@ -2,14 +2,6 @@
 <ui version="4.0">
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>650</width>
-    <height>500</height>
-   </rect>
-  </property>
   <property name="windowTitle">
    <string>syslog-ng config</string>
   </property>
@@ -20,8 +12,8 @@
       <property name="tabPosition">
        <enum>QTabWidget::West</enum>
       </property>
-      <property name="fixedWidth">
-       <number>165</number>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Minimum"/>
       </property>
       <widget class="QWidget" name="sourceTab">
        <attribute name="title">
@@ -37,7 +29,7 @@
            <bool>true</bool>
           </property>
           <widget class="Tab" name="sourceWidget">
-           <layout class="QVBoxLayout" name="sourceLayout">
+           <layout class="QGridLayout" name="sourceLayout">
             <property name="Alignment">
              <enum>Qt::AlignTop</enum>
             </property>
@@ -61,7 +53,7 @@
            <bool>true</bool>
           </property>
           <widget class="Tab" name="destinationWidget">
-           <layout class="QVBoxLayout" name="destinationLayout">
+           <layout class="QGridLayout" name="destinationLayout">
             <property name="Alignment">
              <enum>Qt::AlignTop</enum>
             </property>
@@ -85,7 +77,7 @@
            <bool>true</bool>
           </property>
           <widget class="Tab" name="filterWidget">
-           <layout class="QVBoxLayout" name="filterLayout">
+           <layout class="QGridLayout" name="filterLayout">
             <property name="Alignment">
              <enum>Qt::AlignTop</enum>
             </property>
@@ -109,7 +101,7 @@
            <bool>true</bool>
           </property>
           <widget class="Tab" name="templateWidget">
-           <layout class="QVBoxLayout" name="templateLayout">
+           <layout class="QGridLayout" name="templateLayout">
             <property name="Alignment">
              <enum>Qt::AlignTop</enum>
             </property>
@@ -133,7 +125,7 @@
            <bool>true</bool>
           </property>
           <widget class="Tab" name="rewriteWidget">
-           <layout class="QVBoxLayout" name="rewriteLayout">
+           <layout class="QGridLayout" name="rewriteLayout">
             <property name="Alignment">
              <enum>Qt::AlignTop</enum>
             </property>
@@ -157,7 +149,7 @@
            <bool>true</bool>
           </property>
           <widget class="Tab" name="parserWidget">
-           <layout class="QVBoxLayout" name="parserLayout">
+           <layout class="QGridLayout" name="parserLayout">
             <property name="Alignment">
              <enum>Qt::AlignTop</enum>
             </property>
