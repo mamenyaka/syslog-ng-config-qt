@@ -15,7 +15,7 @@ SOURCES += \
     icon.cpp \
     dialog.cpp \
     option.cpp \
-    driver.cpp \
+    object.cpp \
     config.cpp
 
 HEADERS += \
@@ -25,7 +25,7 @@ HEADERS += \
     icon.h \
     dialog.h \
     option.h \
-    driver.h \
+    object.h \
     config.h
 
 FORMS += \

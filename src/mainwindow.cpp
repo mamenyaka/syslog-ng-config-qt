@@ -1,7 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "dialog.h"
+#include "config.h"
 #include "scene.h"
+#include "dialog.h"
 
 #include <QMessageBox>
 #include <QFileDialog>
@@ -13,21 +14,22 @@
 
 MainWindow::MainWindow(QWidget* parent) :
   QMainWindow(parent),
-  scene(new Scene(config)),
-  ui(new Ui::MainWindow)
+  ui(new Ui::MainWindow),
+  config(new Config),
+  scene(new Scene(*config))
 {
-  installEventFilter(this);
-
   ui->setupUi(this);
 
-  ui->sourceWidget->setupDrivers("source", config.get_default_drivers());
-  ui->destinationWidget->setupDrivers("destination", config.get_default_drivers());
-  ui->filterWidget->setupDrivers("filter", config.get_default_drivers());
-  ui->templateWidget->setupDrivers("template", config.get_default_drivers());
-  ui->rewriteWidget->setupDrivers("rewrite", config.get_default_drivers());
-  ui->parserWidget->setupDrivers("parser", config.get_default_drivers());
+  ui->sourceWidget->setupObjects("source", config->get_default_objects());
+  ui->destinationWidget->setupObjects("destination", config->get_default_objects());
+  ui->filterWidget->setupObjects("filter", config->get_default_objects());
+  ui->templateWidget->setupObjects("template", config->get_default_objects());
+  ui->rewriteWidget->setupObjects("rewrite", config->get_default_objects());
+  ui->parserWidget->setupObjects("parser", config->get_default_objects());
 
   ui->sceneScrollArea->setWidget(scene);
+
+  installEventFilter(this);
 
   setupConnections();
 }
@@ -35,6 +37,7 @@ MainWindow::MainWindow(QWidget* parent) :
 MainWindow::~MainWindow()
 {
   delete scene;
+  delete config;
   delete ui;
 }
 
@@ -73,22 +76,22 @@ void MainWindow::setupConnections()
   connect(ui->actionSave, &QAction::triggered, [&]() {
     const std::string file_name = QFileDialog::getSaveFileName(this, tr("Save config"), QDir::homePath()).toStdString();
     std::ofstream out(file_name);
-    out << config;
+    out << *config;
   });
 
   connect(ui->actionExit, &QAction::triggered, this, &MainWindow::close);
 
 
   connect(ui->actionOptions, &QAction::triggered, [&]() {
-    Dialog(config.get_global_options()->get_options(), this).exec();
+    Dialog(config->get_global_options()->get_options(), this).exec();
   });
 
-  connect(ui->actionLog, &QAction::triggered, [&]() {
-    const Driver& log_options = config.get_default_driver("log", "options");
-    std::unique_ptr<Log> new_log = std::make_unique<Log>(static_cast<const Options&>(log_options));
+  connect(ui->actionLogpath, &QAction::triggered, [&]() {
+    const Options& log_options = static_cast<const Options&>(config->get_default_object("log", "options"));
+    Logpath* new_logpath = new Logpath(log_options);
 
-    std::shared_ptr<Log> log = config.add_log(new_log);
-    scene->add_log(log, QPoint(100, 100));
+    std::shared_ptr<Logpath> logpath = config->add_logpath(new_logpath);
+    scene->add_logpath(logpath, QPoint(100, 100));
   });
 
 

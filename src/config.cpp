@@ -6,33 +6,33 @@
 
 #include <map>
 
-enum class OptionType : int { string, number, list, set, tls, value_pairs };
+enum class OptionType : int { STRING, NUMBER, LIST, SET, TLS, VALUE_PAIRS };
 
 std::map<std::string, OptionType> option_type_map {
-  {"string", OptionType::string},
-  {"number", OptionType::number},
-  {"list", OptionType::list},
-  {"set", OptionType::set},
-  {"tls", OptionType::tls},
-  {"value-pairs", OptionType::value_pairs}
+  {"string", OptionType::STRING},
+  {"number", OptionType::NUMBER},
+  {"list", OptionType::LIST},
+  {"set", OptionType::SET},
+  {"tls", OptionType::TLS},
+  {"value-pairs", OptionType::VALUE_PAIRS}
 };
 
-enum class DriverType : int { source, destination, filter, template_, rewrite, parser, options };
+enum class ObjectType : int { SOURCE, DESTINATION, FILTER, TEMPLATE, REWRITE, PARSER, OPTIONS };
 
-std::map<std::string, DriverType> driver_type_map {
-  {"source", DriverType::source},
-  {"destination", DriverType::destination},
-  {"options", DriverType::options},
-  {"filter", DriverType::filter},
-  {"template", DriverType::template_},
-  {"rewrite", DriverType::rewrite},
-  {"parser", DriverType::parser}
+std::map<std::string, ObjectType> object_type_map {
+  {"source", ObjectType::SOURCE},
+  {"destination", ObjectType::DESTINATION},
+  {"options", ObjectType::OPTIONS},
+  {"filter", ObjectType::FILTER},
+  {"template", ObjectType::TEMPLATE},
+  {"rewrite", ObjectType::REWRITE},
+  {"parser", ObjectType::PARSER}
 };
 
 
 Config::Config(const std::string& dir_name)
 {
-  default_drivers.reserve(60);
+  default_objects.reserve(60);
 
   QDirIterator it(QString::fromStdString(dir_name));
   while (it.hasNext())
@@ -46,20 +46,20 @@ Config::Config(const std::string& dir_name)
     parse_yaml(it.filePath().toStdString());
   }
 
-  std::sort(default_drivers.begin(), default_drivers.end(),
-            [](std::unique_ptr<const Driver>& a, std::unique_ptr<const Driver>& b)->bool {
+  std::sort(default_objects.begin(), default_objects.end(),
+            [](std::unique_ptr<const Object>& a, std::unique_ptr<const Object>& b)->bool {
               return a->get_name() < b->get_name();
             });
 
-  const Options& options_global = static_cast<const Options&>(get_default_driver("global", "options"));
-  const Options& options_tls = static_cast<const Options&>(get_default_driver("tls", "options"));
-  const Options& options_value_pairs = static_cast<const Options&>(get_default_driver("value-pairs", "options"));
+  const Options& options_global = static_cast<const Options&>(get_default_object("global", "options"));
+  const Options& options_tls = static_cast<const Options&>(get_default_object("tls", "options"));
+  const Options& options_value_pairs = static_cast<const Options&>(get_default_object("value-pairs", "options"));
 
   global_options = std::make_unique<GlobalOptions>(options_global);
 
-  for (std::unique_ptr<const Driver>& driver : default_drivers)
+  for (std::unique_ptr<const Object>& object : default_objects)
   {
-    for (const std::unique_ptr<Option>& option : driver->get_options())
+    for (const std::unique_ptr<Option>& option : object->get_options())
     {
       if (option->get_name() == "tls")
       {
@@ -76,16 +76,16 @@ Config::Config(const std::string& dir_name)
   }
 }
 
-const std::vector< std::unique_ptr<const Driver> >& Config::get_default_drivers() const
+const std::vector< std::unique_ptr<const Object> >& Config::get_default_objects() const
 {
-  return default_drivers;
+  return default_objects;
 }
 
-const Driver& Config::get_default_driver(const std::string& name, const std::string& type) const
+const Object& Config::get_default_object(const std::string& name, const std::string& type) const
 {
-  auto it = std::find_if(default_drivers.cbegin(), default_drivers.cend(),
-                         [&name, &type](const std::unique_ptr<const Driver>& driver)->bool {
-                           return driver->get_name() == name && driver->get_type() == type;
+  auto it = std::find_if(default_objects.cbegin(), default_objects.cend(),
+                         [&name, &type](const std::unique_ptr<const Object>& object)->bool {
+                           return object->get_name() == name && object->get_type() == type;
                          });
   return **it;
 }
@@ -95,70 +95,70 @@ std::unique_ptr<GlobalOptions>& Config::get_global_options()
   return global_options;
 }
 
-std::shared_ptr<Driver> Config::add_driver(std::unique_ptr<Driver>& new_driver)
+std::shared_ptr<Object> Config::add_object(Object* new_object)
 {
-  const std::string name = new_driver->get_name();
-  const std::string type = new_driver->get_type();
+  const std::string name = new_object->get_name();
+  const std::string type = new_object->get_type();
 
-  drivers.push_back(std::move(new_driver));
+  objects.emplace_back(new_object);
 
-  update_drivers_id(name, type);
+  update_objects_id(name, type);
 
-  std::unique_ptr<Driver>& driver = drivers.back();
+  std::unique_ptr<Object>& object = objects.back();
 
-  return std::shared_ptr<Driver>(driver.get(), [&](const Driver* driver) { delete_driver(driver); });
+  return std::shared_ptr<Object>(object.get(), [&](const Object* object) { delete_object(object); });
 }
 
-std::shared_ptr<Log> Config::add_log(std::unique_ptr<Log>& new_log)
+std::shared_ptr<Logpath> Config::add_logpath(Logpath* new_logpath)
 {
-  logs.push_back(std::move(*new_log));
+  logpaths.emplace_back(new_logpath);
 
-  Log& log = logs.back();
+  std::unique_ptr<Logpath>& logpath = logpaths.back();
 
-  return std::shared_ptr<Log>(&log, [&](const Log* log) { delete_log(log); });
+  return std::shared_ptr<Logpath>(logpath.get(), [&](const Logpath* logpath) { delete_logpath(logpath); });
 }
 
 void Config::parse_yaml(const std::string& file_name)
 {
-  const YAML::Node yaml_driver = YAML::LoadFile(file_name);
+  const YAML::Node yaml_object = YAML::LoadFile(file_name);
 
-  const std::string name = yaml_driver["name"].as<std::string>();
-  const std::string type = yaml_driver["type"].as<std::string>();
-  const std::string description = yaml_driver["description"].as<std::string>();
+  const std::string name = yaml_object["name"].as<std::string>();
+  const std::string type = yaml_object["type"].as<std::string>();
+  const std::string description = yaml_object["description"].as<std::string>();
 
-  Driver* driver;
-  DriverType driver_type = driver_type_map[type];
-  switch (driver_type)
+  Object* object;
+  ObjectType object_type = object_type_map[type];
+  switch (object_type)
   {
-    case DriverType::source:
-      driver = new Source(name, description);
+    case ObjectType::SOURCE:
+      object = new Source(name, description);
       break;
-    case DriverType::destination:
-      driver = new Destination(name, description);
+    case ObjectType::DESTINATION:
+      object = new Destination(name, description);
       break;
-    case DriverType::options:
-      driver = new Options(name, description);
+    case ObjectType::OPTIONS:
+      object = new Options(name, description);
       break;
-    case DriverType::filter:
-      driver = new Filter(name, description);
+    case ObjectType::FILTER:
+      object = new Filter(name, description);
       break;
-    case DriverType::template_:
-      driver = new Template(name, description);
+    case ObjectType::TEMPLATE:
+      object = new Template(name, description);
       break;
-    case DriverType::rewrite:
-      driver = new Rewrite(name, description);
+    case ObjectType::REWRITE:
+      object = new Rewrite(name, description);
       break;
-    case DriverType::parser:
-      driver = new Parser(name, description);
+    case ObjectType::PARSER:
+      object = new Parser(name, description);
       break;
   }
 
-  if (yaml_driver["include"])
+  if (yaml_object["include"])
   {
-    driver->set_include(yaml_driver["include"].as<std::string>());
+    object->set_include(yaml_object["include"].as<std::string>());
   }
 
-  const YAML::Node& options = yaml_driver["options"];
+  const YAML::Node& options = yaml_object["options"];
   for (YAML::const_iterator option_it = options.begin(); option_it != options.end(); ++option_it)
   {
     YAML::const_iterator tmp = option_it->begin();
@@ -172,20 +172,20 @@ void Config::parse_yaml(const std::string& file_name)
     OptionType option_type = option_type_map[type];
     switch (option_type)
     {
-      case OptionType::string:
+      case OptionType::STRING:
         option = new StringOption(name, description);
         break;
-      case OptionType::number:
+      case OptionType::NUMBER:
         option = new NumberOption(name, description);
         break;
-      case OptionType::list:
+      case OptionType::LIST:
         option = new ListOption(name, description);
         break;
-      case OptionType::set:
+      case OptionType::SET:
         option = new SetOption(name, description);
         break;
-      case OptionType::tls:
-      case OptionType::value_pairs:
+      case OptionType::TLS:
+      case OptionType::VALUE_PAIRS:
         option = new ExternOption(name, description);
         break;
     }
@@ -195,11 +195,11 @@ void Config::parse_yaml(const std::string& file_name)
     {
       const std::string value = value_it->as<std::string>();
 
-      if (option_type == OptionType::list)
+      if (option_type == OptionType::LIST)
       {
         static_cast<ListOption*>(option)->add_value(value);
       }
-      else if (option_type == OptionType::set)
+      else if (option_type == OptionType::SET)
       {
         static_cast<SetOption*>(option)->add_value(value);
       }
@@ -215,10 +215,10 @@ void Config::parse_yaml(const std::string& file_name)
       option->set_required(yaml_option["required"].as<bool>());
     }
 
-    driver->add_option(option);
+    object->add_option(option);
   }
 
-  default_drivers.emplace_back(driver);
+  default_objects.emplace_back(object);
 }
 
 const std::string Config::to_string() const
@@ -227,44 +227,44 @@ const std::string Config::to_string() const
 
   config += global_options->to_string();
 
-  for (const std::unique_ptr<Driver>& driver : drivers)
+  for (const std::unique_ptr<Object>& object : objects)
   {
-    config += driver->to_string();
+    config += object->to_string();
   }
 
-  for (const Log& log : logs)
+  for (const std::unique_ptr<Logpath>& logpath : logpaths)
   {
-    config += log.to_string();
+    config += logpath->to_string();
   }
 
   return config;
 }
 
-void Config::update_drivers_id(const std::string& name, const std::string& type)
+void Config::update_objects_id(const std::string& name, const std::string& type)
 {
   int id = 0;
-  for (std::unique_ptr<Driver>& driver : drivers)
+  for (std::unique_ptr<Object>& object : objects)
   {
-    if (driver->get_name() == name && driver->get_type() == type)
+    if (object->get_name() == name && object->get_type() == type)
     {
-      driver->set_id(id++);
+      object->set_id(id++);
     }
   }
 }
 
-void Config::delete_driver(const Driver* old_driver)
+void Config::delete_object(const Object* old_object)
 {
-  const std::string name = old_driver->get_name();
-  const std::string type = old_driver->get_type();
+  const std::string name = old_object->get_name();
+  const std::string type = old_object->get_type();
 
-  drivers.remove_if([old_driver](std::unique_ptr<Driver>& driver)->bool { return driver.get() == old_driver; });
+  objects.remove_if([old_object](const std::unique_ptr<Object>& object)->bool { return object.get() == old_object; });
 
-  update_drivers_id(name, type);
+  update_objects_id(name, type);
 }
 
-void Config::delete_log(const Log* old_log)
+void Config::delete_logpath(const Logpath* old_logpath)
 {
-  logs.remove_if([old_log](const Log& log)->bool { return &log == old_log; });
+  logpaths.remove_if([old_logpath](const std::unique_ptr<Logpath>& logpath)->bool { return logpath.get() == old_logpath; });
 }
 
 std::ostream& operator<<(std::ostream& os, const Config& config)

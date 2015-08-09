@@ -1,5 +1,5 @@
 #include "tab.h"
-#include "driver.h"
+#include "object.h"
 #include "icon.h"
 
 #include <QLayout>
@@ -11,14 +11,14 @@ Tab::Tab(QWidget* parent) :
   QWidget(parent)
 {}
 
-void Tab::setupDrivers(const std::string& type, const std::vector< std::unique_ptr< const Driver > >& default_drivers)
+void Tab::setupObjects(const std::string& type, const std::vector< std::unique_ptr<const Object> >& default_objects)
 {
-  for (const std::unique_ptr<const Driver>& default_driver : default_drivers)
+  for (const std::unique_ptr<const Object>& default_object : default_objects)
   {
-    if (default_driver->get_type() == type)
+    if (default_object->get_type() == type)
     {
-      std::shared_ptr<Driver> driver(default_driver->clone());
-      DriverIcon* icon = new DriverIcon(driver);
+      std::shared_ptr<Object> object(default_object->clone());
+      ObjectIcon* icon = new ObjectIcon(object);
       layout()->addWidget(icon);
     }
   }
@@ -26,23 +26,23 @@ void Tab::setupDrivers(const std::string& type, const std::vector< std::unique_p
 
 void Tab::mousePressEvent(QMouseEvent *)
 {
-  DriverIcon* icon = select_nearest_driver();
+  ObjectIcon* icon = select_nearest_object();
 
   if (!icon)
   {
     return;
   }
 
-  std::shared_ptr<Driver>& driver = icon->get_driver();
+  std::shared_ptr<Object>& object = icon->get_object();
 
   QByteArray itemData;
   QDataStream dataStream(&itemData, QIODevice::WriteOnly);
-  dataStream << QString::fromStdString(driver->get_name()) << QString::fromStdString(driver->get_type());
+  dataStream << QString::fromStdString(object->get_name()) << QString::fromStdString(object->get_type());
 
   QMimeData* mimeData = new QMimeData;
-  mimeData->setData("drivericon", itemData);
+  mimeData->setData("objecticon", itemData);
 
-  const QPixmap& pixmap = icon->get_pixmap();
+  const QPixmap pixmap = icon->palette().brush(QPalette::Background).texture();
 
   QDrag *drag = new QDrag(window());
   drag->setMimeData(mimeData);
@@ -52,9 +52,9 @@ void Tab::mousePressEvent(QMouseEvent *)
   drag->exec();
 }
 
-DriverIcon* Tab::select_nearest_driver() const
+ObjectIcon* Tab::select_nearest_object() const
 {
-  for (DriverIcon* icon : findChildren<DriverIcon*>())
+  for (ObjectIcon* icon : findChildren<ObjectIcon*>())
   {
     if (icon->underMouse())
     {

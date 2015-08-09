@@ -5,8 +5,8 @@
 
 #include <memory>
 
-class Driver;
-class DriverIcon;
+class Object;
+class ObjectIcon;
 
 class Tab : public QWidget
 {
@@ -15,13 +15,13 @@ class Tab : public QWidget
 public:
   explicit Tab(QWidget* parent = 0);
 
-  void setupDrivers(const std::string& type, const std::vector< std::unique_ptr<const Driver> >& default_drivers);
+  void setupObjects(const std::string& type, const std::vector< std::unique_ptr<const Object> >& default_objects);
 
 protected:
   void mousePressEvent(QMouseEvent *);
 
 private:
-  DriverIcon* select_nearest_driver() const;
+  ObjectIcon* select_nearest_object() const;
 };
 
 #endif  // TAB_H

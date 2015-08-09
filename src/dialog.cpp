@@ -1,25 +1,27 @@
 #include "dialog.h"
 #include "ui_dialog.h"
-#include "driver.h"
+#include "object.h"
 
 #include <QGroupBox>
 #include <QAbstractButton>
 
-Dialog::Dialog(Driver& driver, QWidget* parent) :
+Dialog::Dialog(Object& object, QWidget* parent) :
   QDialog(parent),
-  driver(driver),
-  ui(new Ui::Dialog)
+  ui(new Ui::Dialog),
+  object(object)
 {
   ui->setupUi(this);
 
-  ui->label->setText(QString::fromStdString(driver.get_description()));
+  ui->label->setText(QString::fromStdString(object.get_description()));
+
+  setWindowTitle("Configure " + QString::fromStdString(object.get_type()));
 
   create_form();
 
   connect(ui->buttonBox, &QDialogButtonBox::clicked, [&](QAbstractButton* button) {
     if (ui->buttonBox->standardButton(button) == QDialogButtonBox::RestoreDefaults)
     {
-      driver.restore_default_values();
+      object.restore_default_values();
       set_form_values();
     }
   });
@@ -38,16 +40,16 @@ int Dialog::exec()
 
 void Dialog::accept()
 {
-  if (set_driver_options())
+  if (set_object_options())
   {
-    driver.set_previous_values();
+    object.set_previous_values();
     QDialog::accept();
   }
 }
 
 void Dialog::reject()
 {
-  driver.restore_previous_values();
+  object.restore_previous_values();
   QDialog::reject();
 }
 
@@ -55,7 +57,7 @@ void Dialog::create_form()
 {
   QFormLayout* formLayout = findChild<QFormLayout*>();
 
-  for (const std::unique_ptr<Option>& option : driver.get_options())
+  for (const std::unique_ptr<Option>& option : object.get_options())
   {
     const std::string name = (option->is_required() ? "* " : "") + option->get_name();
     QGroupBox* groupBox = new QGroupBox(QString::fromStdString(name));
@@ -74,20 +76,20 @@ void Dialog::set_form_values()
   QList<QGroupBox*> groupBoxes = parent->findChildren<QGroupBox*>(QString(), Qt::FindChildOption::FindDirectChildrenOnly);
   auto it = groupBoxes.begin();
 
-  for (const std::unique_ptr<Option>& option : driver.get_options())
+  for (const std::unique_ptr<Option>& option : object.get_options())
   {
     QGroupBox* groupBox = *it++;
     option->set_form_value(groupBox);
   }
 }
 
-bool Dialog::set_driver_options()
+bool Dialog::set_object_options()
 {
   QWidget* parent = findChild<QWidget*>("formWidget");
   QList<QGroupBox*> groupBoxes = parent->findChildren<QGroupBox*>(QString(), Qt::FindChildOption::FindDirectChildrenOnly);
   auto it = groupBoxes.begin();
 
-  for (std::unique_ptr<Option>& option : driver.get_options())
+  for (std::unique_ptr<Option>& option : object.get_options())
   {
     QGroupBox* groupBox = *it++;
 

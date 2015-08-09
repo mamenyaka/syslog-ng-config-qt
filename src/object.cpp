@@ -1,10 +1,10 @@
-#include "driver.h"
+#include "object.h"
 
 #include <QPainter>
 
 #include <cmath>
 
-Driver::Driver(const std::string& name,
+Object::Object(const std::string& name,
                const std::string& description) :
   name(name),
   description(description)
@@ -12,7 +12,7 @@ Driver::Driver(const std::string& name,
   options.reserve(20);
 }
 
-Driver::Driver(const Driver& other) :
+Object::Object(const Object& other) :
  name(other.name),
  description(other.description),
  include(other.include),
@@ -24,52 +24,52 @@ Driver::Driver(const Driver& other) :
   }
 }
 
-const std::string& Driver::get_name() const
+const std::string& Object::get_name() const
 {
   return name;
 }
 
-const std::string& Driver::get_description() const
+const std::string& Object::get_description() const
 {
   return description;
 }
 
-std::vector< std::unique_ptr<Option> >& Driver::get_options()
+std::vector< std::unique_ptr<Option> >& Object::get_options()
 {
   return options;
 }
 
-const std::vector< std::unique_ptr<Option> >& Driver::get_options() const
+const std::vector< std::unique_ptr<Option> >& Object::get_options() const
 {
   return options;
 }
 
-const std::string& Driver::get_include() const
+const std::string& Object::get_include() const
 {
   return include;
 }
 
-int Driver::get_id() const
+int Object::get_id() const
 {
   return id;
 }
 
-void Driver::add_option(Option* option)
+void Object::add_option(Option* option)
 {
   options.emplace_back(option);
 }
 
-void Driver::set_include(const std::string& include)
+void Object::set_include(const std::string& include)
 {
   this->include = include;
 }
 
-void Driver::set_id(int id)
+void Object::set_id(int id)
 {
   this->id = id;
 }
 
-void Driver::set_previous_values()
+void Object::set_previous_values()
 {
   for (std::unique_ptr<Option>& option : options)
   {
@@ -77,7 +77,7 @@ void Driver::set_previous_values()
   }
 }
 
-void Driver::restore_previous_values()
+void Object::restore_previous_values()
 {
   for (std::unique_ptr<Option>& option : options)
   {
@@ -85,7 +85,7 @@ void Driver::restore_previous_values()
   }
 }
 
-void Driver::restore_default_values()
+void Object::restore_default_values()
 {
   for (std::unique_ptr<Option>& option : options)
   {
@@ -93,12 +93,19 @@ void Driver::restore_default_values()
   }
 }
 
-const std::string Driver::get_id_name() const
+const std::string Object::get_id_name() const
 {
-  return std::string(1, get_type().at(0)) + "_" + name + std::to_string(id);
+  return std::string(1, get_type().at(0)) +
+         "_" + name +
+         (id > -1 ? std::to_string(id) : "");
 }
 
-const std::string Driver::to_string() const
+const std::string Object::get_separator() const
+{
+  return "";
+}
+
+const std::string Object::to_string() const
 {
   std::string config;
 
@@ -114,7 +121,7 @@ const std::string Driver::to_string() const
   {
     if (name == option->get_name())
     {
-      config += option->get_current_value();
+      config += option->get_current_value() + get_separator();
       continue;
     }
 
@@ -123,7 +130,12 @@ const std::string Driver::to_string() const
       continue;
     }
 
-    config += "\n        " + option->to_string();
+    config += "\n        " + option->to_string() + get_separator();
+  }
+
+  if (config.back() == ',')
+  {
+    config.pop_back();
   }
 
   config += "\n    );";
@@ -134,20 +146,20 @@ const std::string Driver::to_string() const
 
 
 template<class Derived>
-DriverBase<Derived>::DriverBase(const std::string& name,
-                       const std::string& description) :
-  Driver(name, description)
+ObjectBase<Derived>::ObjectBase(const std::string& name,
+                                const std::string& description) :
+  Object(name, description)
 {}
 
 template<class Derived>
-Driver* DriverBase<Derived>::clone() const
+Object* ObjectBase<Derived>::clone() const
 {
   return new Derived(static_cast<const Derived&>(*this));
 }
 
-
-Source::Source(const std::string& name, const std::string& description) :
-  DriverBase(name, description)
+Source::Source(const std::string& name,
+               const std::string& description) :
+  ObjectBase<Source>(name, description)
 {}
 
 void Source::draw(QPainter* painter, int width, int height) const
@@ -162,8 +174,9 @@ const std::string Source::get_type() const
 }
 
 
-Destination::Destination(const std::string& name, const std::string& description) :
-  DriverBase(name, description)
+Destination::Destination(const std::string& name,
+                         const std::string& description) :
+  ObjectBase<Destination>(name, description)
 {}
 
 void Destination::draw(QPainter* painter, int width, int height) const
@@ -178,8 +191,9 @@ const std::string Destination::get_type() const
 }
 
 
-Filter::Filter(const std::string& name, const std::string& description) :
-  DriverBase(name, description)
+Filter::Filter(const std::string& name,
+               const std::string& description) :
+  ObjectBase<Filter>(name, description)
 {}
 
 void Filter::draw(QPainter* painter, int width, int height) const
@@ -202,8 +216,9 @@ const std::string Filter::get_type() const
 }
 
 
-Template::Template(const std::string& name, const std::string& description) :
-  DriverBase(name, description)
+Template::Template(const std::string& name,
+                   const std::string& description) :
+  ObjectBase<Template>(name, description)
 {}
 
 void Template::draw(QPainter* painter, int width, int height) const
@@ -218,8 +233,9 @@ const std::string Template::get_type() const
 }
 
 
-Rewrite::Rewrite(const std::string& name, const std::string& description) :
-  DriverBase(name, description)
+Rewrite::Rewrite(const std::string& name,
+                 const std::string& description) :
+  ObjectBase<Rewrite>(name, description)
 {}
 
 void Rewrite::draw(QPainter* painter, int width, int height) const
@@ -246,49 +262,15 @@ const std::string Rewrite::get_type() const
   return "rewrite";
 }
 
-const std::string Rewrite::to_string() const
+const std::string Rewrite::get_separator() const
 {
-  std::string config;
-
-  if (!include.empty())
-  {
-    config += "@include \"" + include + "\"\n\n";
-  }
-
-  config += get_type() + " " + get_id_name() + " {";
-  config += "\n    " + name + "(";
-
-  for (const std::unique_ptr<Option>& option : options)
-  {
-    if (name == option->get_name())
-    {
-      config += option->get_current_value() + ", ";
-      continue;
-    }
-
-    if (config.back() == ' ')
-    {
-      config.pop_back();
-      config.pop_back();
-    }
-
-    if (!option->has_changed())
-    {
-      continue;
-    }
-
-    config += ",\n        " + option->to_string();
-  }
-
-  config += "\n    );";
-  config += "\n};\n\n";
-
-  return config;
+  return ",";
 }
 
 
-Parser::Parser(const std::string& name, const std::string& description) :
-  DriverBase(name, description)
+Parser::Parser(const std::string& name,
+               const std::string& description) :
+  ObjectBase<Parser>(name, description)
 {}
 
 void Parser::draw(QPainter* painter, int width, int height) const
@@ -309,9 +291,20 @@ const std::string Parser::get_type() const
 }
 
 
-Options::Options(const std::string& name, const std::string& description) :
-  DriverBase(name, description)
+Options::Options(const std::string& name,
+                 const std::string& description) :
+  ObjectBase<Options>(name, description)
 {}
+
+void Options::set_separator(const std::string& separator)
+{
+  this->separator = separator;
+}
+
+const std::string Options::get_type() const
+{
+  return "options";
+}
 
 const std::string Options::to_string() const
 {
@@ -324,63 +317,53 @@ const std::string Options::to_string() const
       continue;
     }
 
-    config += "\n    " + option->to_string();
+    config += "\n    " + option->to_string() + separator;
   }
 
   return config;
 }
 
-const std::string Options::get_type() const
+
+Logpath::Logpath(const Options& options) :
+  options(options)
 {
-  return "options";
+  this->options.set_separator(";");
 }
 
-
-Log::Log(const Options& options) :
-  options(options)
-{}
-
-Options& Log::get_options()
+Options& Logpath::get_options()
 {
   return options;
 }
 
-void Log::add_driver(const std::shared_ptr<Driver>& driver)
+void Logpath::add_object(const std::shared_ptr<Object>& object)
 {
-  drivers.push_back(driver);
+  objects.push_back(object);
 }
 
-void Log::remove_driver(const std::shared_ptr<const Driver>& driver)
+void Logpath::remove_object(const std::shared_ptr<const Object>& object)
 {
-  drivers.remove(driver);
+  objects.remove(object);
 }
 
-bool Log::has_changed() const
-{
-  return !drivers.empty();
-}
-
-const std::string Log::to_string() const
+const std::string Logpath::to_string() const
 {
   std::string config;
 
-  if (has_changed())
+  if (objects.empty())
   {
-    config += "log {";
-
-    for (const std::shared_ptr<const Driver>& driver : drivers)
-    {
-      config += "\n    " + driver->get_type() + "(" + driver->get_id_name() + ");";
-    }
-
-    const std::unique_ptr<Option>& flags = options.get_options().front();
-    if (flags->has_changed())
-    {
-      config += "\n    " + flags->to_string() + ";";
-    }
-
-    config += "\n};\n\n";
+    return config;
   }
+
+  config += "log {";
+
+  for (const std::shared_ptr<const Object>& object : objects)
+  {
+    config += "\n    " + object->get_type() + "(" + object->get_id_name() + ");";
+  }
+
+  config += options.to_string();
+
+  config += "\n};\n\n";
 
   return config;
 }
@@ -388,11 +371,29 @@ const std::string Log::to_string() const
 
 GlobalOptions::GlobalOptions(const Options& options) :
   options(options)
-{}
+{
+  this->options.set_separator(";");
+}
 
 Options& GlobalOptions::get_options()
 {
   return options;
+}
+
+const std::string GlobalOptions::to_string() const
+{
+  std::string config;
+
+  if (has_changed())
+  {
+    config += "options {";
+
+    config += options.to_string();
+
+    config += "\n};\n\n";
+  }
+
+  return config;
 }
 
 bool GlobalOptions::has_changed() const
@@ -406,28 +407,4 @@ bool GlobalOptions::has_changed() const
   }
 
   return false;
-}
-
-const std::string GlobalOptions::to_string() const
-{
-  std::string config;
-
-  if (has_changed())
-  {
-    config += "options {";
-
-    for (const std::unique_ptr<Option>& option : options.get_options())
-    {
-      if (!option->has_changed())
-      {
-        continue;
-      }
-
-      config += "\n    " + option->to_string() + ";";
-    }
-
-    config += "\n};\n\n";
-  }
-
-  return config;
 }

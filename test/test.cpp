@@ -26,9 +26,10 @@ void Test::is_config_valid_test_data()
 
 void Test::is_config_valid_test()
 {
-  Config config("../drivers");
+  Config config("../objects");
 
-  Options& options_global = config.get_global_options()->get_options();
+  std::unique_ptr<GlobalOptions>& global_options = config.get_global_options();
+  Options& options_global = global_options->get_options();
   set_option(options_global, "stats-freq", "0");
   set_option(options_global, "flush-lines", "0");
   set_option(options_global, "time-reopen", "10");
@@ -37,47 +38,47 @@ void Test::is_config_valid_test()
   set_option(options_global, "perm", "0640");
   set_option(options_global, "group", "log");
 
-  std::shared_ptr<Driver> system = add_driver(config,"system", "source");
-  std::shared_ptr<Driver> internal = add_driver(config,"internal", "source");
+  std::shared_ptr<Object> system = add_object(config, "system", "source");
+  std::shared_ptr<Object> internal = add_object(config, "internal", "source");
 
-  std::shared_ptr<Driver> d_authlog = add_driver(config, "file", "destination");
-  std::shared_ptr<Driver> d_syslog = add_driver(config, "file", "destination");
-  std::shared_ptr<Driver> d_cron = add_driver(config, "file", "destination");
-  std::shared_ptr<Driver> d_daemon = add_driver(config, "file", "destination");
-  std::shared_ptr<Driver> d_kernel = add_driver(config, "file", "destination");
-  std::shared_ptr<Driver> d_lpr = add_driver(config, "file", "destination");
-  std::shared_ptr<Driver> d_user = add_driver(config, "file", "destination");
-  std::shared_ptr<Driver> d_uucp = add_driver(config, "file", "destination");
-  std::shared_ptr<Driver> d_mail = add_driver(config, "file", "destination");
-  std::shared_ptr<Driver> d_news = add_driver(config, "file", "destination");
-  std::shared_ptr<Driver> d_ppp = add_driver(config, "file", "destination");
-  std::shared_ptr<Driver> d_debug = add_driver(config, "file", "destination");
-  std::shared_ptr<Driver> d_messages = add_driver(config, "file", "destination");
-  std::shared_ptr<Driver> d_errors = add_driver(config, "file", "destination");
-  std::shared_ptr<Driver> d_everything = add_driver(config, "file", "destination");
-  std::shared_ptr<Driver> d_iptables = add_driver(config, "file", "destination");
-  std::shared_ptr<Driver> d_acpid = add_driver(config, "file", "destination");
-  std::shared_ptr<Driver> d_console = add_driver(config, "usertty", "destination");
-  std::shared_ptr<Driver> d_console_all = add_driver(config, "file", "destination");
+  std::shared_ptr<Object> d_authlog = add_object(config, "file", "destination");
+  std::shared_ptr<Object> d_syslog = add_object(config, "file", "destination");
+  std::shared_ptr<Object> d_cron = add_object(config, "file", "destination");
+  std::shared_ptr<Object> d_daemon = add_object(config, "file", "destination");
+  std::shared_ptr<Object> d_kernel = add_object(config, "file", "destination");
+  std::shared_ptr<Object> d_lpr = add_object(config, "file", "destination");
+  std::shared_ptr<Object> d_user = add_object(config, "file", "destination");
+  std::shared_ptr<Object> d_uucp = add_object(config, "file", "destination");
+  std::shared_ptr<Object> d_mail = add_object(config, "file", "destination");
+  std::shared_ptr<Object> d_news = add_object(config, "file", "destination");
+  std::shared_ptr<Object> d_ppp = add_object(config, "file", "destination");
+  std::shared_ptr<Object> d_debug = add_object(config, "file", "destination");
+  std::shared_ptr<Object> d_messages = add_object(config, "file", "destination");
+  std::shared_ptr<Object> d_errors = add_object(config, "file", "destination");
+  std::shared_ptr<Object> d_everything = add_object(config, "file", "destination");
+  std::shared_ptr<Object> d_iptables = add_object(config, "file", "destination");
+  std::shared_ptr<Object> d_acpid = add_object(config, "file", "destination");
+  std::shared_ptr<Object> d_console = add_object(config, "usertty", "destination");
+  std::shared_ptr<Object> d_console_all = add_object(config, "file", "destination");
 
-  std::shared_ptr<Driver> f_auth = add_driver(config, "facility", "filter");
-  std::shared_ptr<Driver> f_authpriv = add_driver(config, "facility", "filter");
-  std::shared_ptr<Driver> f_syslog = add_driver(config, "program", "filter");
-  std::shared_ptr<Driver> f_cron = add_driver(config, "facility", "filter");
-  std::shared_ptr<Driver> f_daemon = add_driver(config, "facility", "filter");
-  std::shared_ptr<Driver> f_lpr = add_driver(config, "facility", "filter");
-  std::shared_ptr<Driver> f_mail = add_driver(config, "facility", "filter");
-  std::shared_ptr<Driver> f_news = add_driver(config, "facility", "filter");
-  std::shared_ptr<Driver> f_user = add_driver(config, "facility", "filter");
-  std::shared_ptr<Driver> f_uucp = add_driver(config, "facility", "filter");
-  std::shared_ptr<Driver> f_ppp = add_driver(config, "facility", "filter");
-  std::shared_ptr<Driver> f_emergency = add_driver(config, "level", "filter");
-  std::shared_ptr<Driver> f_info = add_driver(config, "level", "filter");
-  std::shared_ptr<Driver> f_notice = add_driver(config, "level", "filter");
-  std::shared_ptr<Driver> f_warn = add_driver(config, "level", "filter");
-  std::shared_ptr<Driver> f_crit = add_driver(config, "level", "filter");
-  std::shared_ptr<Driver> f_err = add_driver(config, "level", "filter");
-  std::shared_ptr<Driver> f_acpid = add_driver(config, "program", "filter");
+  std::shared_ptr<Object> f_auth = add_object(config, "facility", "filter");
+  std::shared_ptr<Object> f_authpriv = add_object(config, "facility", "filter");
+  std::shared_ptr<Object> f_syslog = add_object(config, "program", "filter");
+  std::shared_ptr<Object> f_cron = add_object(config, "facility", "filter");
+  std::shared_ptr<Object> f_daemon = add_object(config, "facility", "filter");
+  std::shared_ptr<Object> f_lpr = add_object(config, "facility", "filter");
+  std::shared_ptr<Object> f_mail = add_object(config, "facility", "filter");
+  std::shared_ptr<Object> f_news = add_object(config, "facility", "filter");
+  std::shared_ptr<Object> f_user = add_object(config, "facility", "filter");
+  std::shared_ptr<Object> f_uucp = add_object(config, "facility", "filter");
+  std::shared_ptr<Object> f_ppp = add_object(config, "facility", "filter");
+  std::shared_ptr<Object> f_emergency = add_object(config, "level", "filter");
+  std::shared_ptr<Object> f_info = add_object(config, "level", "filter");
+  std::shared_ptr<Object> f_notice = add_object(config, "level", "filter");
+  std::shared_ptr<Object> f_warn = add_object(config, "level", "filter");
+  std::shared_ptr<Object> f_crit = add_object(config, "level", "filter");
+  std::shared_ptr<Object> f_err = add_object(config, "level", "filter");
+  std::shared_ptr<Object> f_acpid = add_object(config, "program", "filter");
 
   set_option(*d_authlog, "file", "/var/log/auth.log");
   set_option(*d_syslog, "file", "/var/log/syslog.log");
@@ -118,26 +119,26 @@ void Test::is_config_valid_test()
   set_option(*f_err, "level", "err");
   set_option(*f_acpid, "program", "acpid");
 
-  std::vector< std::shared_ptr<Log> > logs;
-  logs.push_back(add_drivers_to_log(config, system, internal, f_acpid, d_acpid));
-  logs.push_back(add_drivers_to_log(config, system, internal, f_authpriv, d_authlog));
-  logs.push_back(add_drivers_to_log(config, system, internal, f_syslog, d_syslog));
-  logs.push_back(add_drivers_to_log(config, system, internal, f_cron, d_cron));
-  logs.push_back(add_drivers_to_log(config, system, internal, f_daemon, d_daemon));
-  logs.push_back(add_drivers_to_log(config, system, internal, d_kernel));
-  logs.push_back(add_drivers_to_log(config, system, internal, f_lpr, d_lpr));
-  logs.push_back(add_drivers_to_log(config, system, internal, f_mail, d_mail));
-  logs.push_back(add_drivers_to_log(config, system, internal, f_news, d_news));
-  logs.push_back(add_drivers_to_log(config, system, internal, f_ppp, d_ppp));
-  logs.push_back(add_drivers_to_log(config, system, internal, f_user, d_user));
-  logs.push_back(add_drivers_to_log(config, system, internal, f_uucp, d_uucp));
-  logs.push_back(add_drivers_to_log(config, system, internal, d_debug));
-  logs.push_back(add_drivers_to_log(config, system, internal, d_messages));
-  logs.push_back(add_drivers_to_log(config, system, internal, f_err, d_errors));
-  logs.push_back(add_drivers_to_log(config, system, internal, f_emergency, d_console));
-  logs.push_back(add_drivers_to_log(config, system, internal, d_everything));
-  logs.push_back(add_drivers_to_log(config, system, internal, d_iptables));
-  logs.push_back(add_drivers_to_log(config, system, internal, d_console_all));
+  std::vector< std::shared_ptr<Logpath> > logpaths;
+  logpaths.push_back(add_objects_to_logpath(config, system, internal, f_acpid, d_acpid));
+  logpaths.push_back(add_objects_to_logpath(config, system, internal, f_authpriv, d_authlog));
+  logpaths.push_back(add_objects_to_logpath(config, system, internal, f_syslog, d_syslog));
+  logpaths.push_back(add_objects_to_logpath(config, system, internal, f_cron, d_cron));
+  logpaths.push_back(add_objects_to_logpath(config, system, internal, f_daemon, d_daemon));
+  logpaths.push_back(add_objects_to_logpath(config, system, internal, d_kernel));
+  logpaths.push_back(add_objects_to_logpath(config, system, internal, f_lpr, d_lpr));
+  logpaths.push_back(add_objects_to_logpath(config, system, internal, f_mail, d_mail));
+  logpaths.push_back(add_objects_to_logpath(config, system, internal, f_news, d_news));
+  logpaths.push_back(add_objects_to_logpath(config, system, internal, f_ppp, d_ppp));
+  logpaths.push_back(add_objects_to_logpath(config, system, internal, f_user, d_user));
+  logpaths.push_back(add_objects_to_logpath(config, system, internal, f_uucp, d_uucp));
+  logpaths.push_back(add_objects_to_logpath(config, system, internal, d_debug));
+  logpaths.push_back(add_objects_to_logpath(config, system, internal, d_messages));
+  logpaths.push_back(add_objects_to_logpath(config, system, internal, f_err, d_errors));
+  logpaths.push_back(add_objects_to_logpath(config, system, internal, f_emergency, d_console));
+  logpaths.push_back(add_objects_to_logpath(config, system, internal, d_everything));
+  logpaths.push_back(add_objects_to_logpath(config, system, internal, d_iptables));
+  logpaths.push_back(add_objects_to_logpath(config, system, internal, d_console_all));
 
   QFETCH(QString, conf);
 
@@ -146,9 +147,9 @@ void Test::is_config_valid_test()
   QCOMPARE(QString::fromStdString(config.to_string()), conf);
 }
 
-void Test::set_option(Driver& driver, const std::string& option_name, const std::string& option_value)
+void Test::set_option(Object& object, const std::string& option_name, const std::string& option_value)
 {
-  std::vector< std::unique_ptr<Option> >& options = driver.get_options();
+  std::vector< std::unique_ptr<Option> >& options = object.get_options();
   auto it = std::find_if(options.begin(), options.end(),
                          [&option_name](std::unique_ptr<Option>& option)->bool {
                            return option->get_name() == option_name;
@@ -161,33 +162,33 @@ void Test::set_option(Driver& driver, const std::string& option_name, const std:
   }
 }
 
-std::shared_ptr<Driver> Test::add_driver(Config& config, const std::string& driver_name, const std::string& driver_type)
+std::shared_ptr<Object> Test::add_object(Config& config, const std::string& object_name, const std::string& object_type)
 {
-  const Driver& default_driver = config.get_default_driver(driver_name, driver_type);
-  std::unique_ptr<Driver> new_driver(default_driver.clone());
+  const Object& default_object = config.get_default_object(object_name, object_type);
+  Object* new_object = default_object.clone();
 
-  return config.add_driver(new_driver);
+  return config.add_object(new_object);
 }
 
 template<typename... Targs>
-std::shared_ptr<Log> Test::add_drivers_to_log(Config& config, Targs&... more)
+std::shared_ptr<Logpath> Test::add_objects_to_logpath(Config& config, Targs&... more)
 {
-  const Driver& log_options = config.get_default_driver("log", "options");
-  std::unique_ptr<Log> new_log = std::make_unique<Log>(static_cast<const Options&>(log_options));
+  const Options& logpath_options = static_cast<const Options&>(config.get_default_object("log", "options"));
+  Logpath* new_logpath = new Logpath(logpath_options);
 
-  std::shared_ptr<Log> log = config.add_log(new_log);
-  add_driver_to_log_recursive(log, more...);
+  std::shared_ptr<Logpath> logpath = config.add_logpath(new_logpath);
+  add_object_to_logpath_recursive(logpath, more...);
 
-  return log;
+  return logpath;
 }
 
 template<typename... Targs>
-void Test::add_driver_to_log_recursive(std::shared_ptr<Log>& log, std::shared_ptr<Driver>& driver, Targs&... more)
+void Test::add_object_to_logpath_recursive(std::shared_ptr<Logpath>& logpath, std::shared_ptr<Object>& object, Targs&... more)
 {
-  const std::shared_ptr<Driver> d = driver;
-  log->add_driver(d);
+  const std::shared_ptr<Object> d = object;
+  logpath->add_object(d);
 
-  add_driver_to_log_recursive(log, more...);
+  add_object_to_logpath_recursive(logpath, more...);
 }
 
 QTEST_MAIN(Test)

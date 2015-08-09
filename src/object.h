@@ -1,5 +1,5 @@
-#ifndef DRIVER_H
-#define DRIVER_H
+#ifndef OBJECT_H
+#define OBJECT_H
 
 #include "option.h"
 
@@ -10,7 +10,7 @@
 
 class QPainter;
 
-class Driver
+class Object
 {
 protected:
   std::string name;
@@ -20,11 +20,11 @@ protected:
   int id = -1;
 
 public:
-  Driver(const std::string& name,
+  Object(const std::string& name,
          const std::string& description);
-  Driver(const Driver& other);
+  Object(const Object& other);
 
-  virtual Driver* clone() const = 0;
+  virtual Object* clone() const = 0;
 
   const std::string& get_name() const;
   const std::string& get_description() const;
@@ -45,91 +45,101 @@ public:
 
   virtual const std::string get_type() const = 0;
   virtual const std::string get_id_name() const;
+  virtual const std::string get_separator() const;
   virtual const std::string to_string() const;
 };
 
 template<class Derived>
-class DriverBase : public Driver
+class ObjectBase : public Object
 {
 public:
-  DriverBase(const std::string& name,
+  ObjectBase(const std::string& name,
              const std::string& description);
 
-  Driver* clone() const;
+  Object* clone() const;
 };
 
-class Source : public DriverBase<Source>
+class Source : public ObjectBase<Source>
 {
 public:
-  Source(const std::string& name, const std::string& description);
+  Source(const std::string& name,
+         const std::string& description);
 
   void draw(QPainter* painter, int width, int height) const;
 
   const std::string get_type() const;
 };
 
-class Destination : public DriverBase<Destination>
+class Destination : public ObjectBase<Destination>
 {
 public:
-  Destination(const std::string& name, const std::string& description);
+  Destination(const std::string& name,
+              const std::string& description);
 
   void draw(QPainter* painter, int width, int height) const;
 
   const std::string get_type() const;
 };
 
-class Filter : public DriverBase<Filter>
+class Filter : public ObjectBase<Filter>
 {
 public:
-  Filter(const std::string& name, const std::string& description);
+  Filter(const std::string& name,
+         const std::string& description);
 
   void draw(QPainter* painter, int width, int height) const;
 
   const std::string get_type() const;
 };
 
-class Template : public DriverBase<Template>
+class Template : public ObjectBase<Template>
 {
 public:
-  Template(const std::string& name, const std::string& description);
+  Template(const std::string& name,
+           const std::string& description);
 
   void draw(QPainter* painter, int width, int height) const;
 
   const std::string get_type() const;
 };
 
-class Rewrite : public DriverBase<Rewrite>
+class Rewrite : public ObjectBase<Rewrite>
 {
 public:
-  Rewrite(const std::string& name, const std::string& description);
+  Rewrite(const std::string& name,
+          const std::string& description);
 
   void draw(QPainter* painter, int width, int height) const;
 
   const std::string get_type() const;
-
-  const std::string to_string() const;
+  const std::string get_separator() const;
 };
 
-class Parser : public DriverBase<Parser>
+class Parser : public ObjectBase<Parser>
 {
 public:
-  Parser(const std::string& name, const std::string& description);
+  Parser(const std::string& name,
+         const std::string& description);
 
   void draw(QPainter* painter, int width, int height) const;
 
   const std::string get_type() const;
 };
 
-class Options : public DriverBase<Options>
+class Options : public ObjectBase<Options>
 {
+  std::string separator;
+
 public:
-  Options(const std::string& name, const std::string& description);
+  Options(const std::string& name,
+          const std::string& description);
+
+  void set_separator(const std::string& separator);
 
   void draw(QPainter *, int , int ) const {}
 
-  const std::string to_string() const;
-
   const std::string get_type() const;
+  const std::string to_string() const;
 
   const std::string& get_include() const = delete;
   int get_id() const = delete;
@@ -139,20 +149,19 @@ public:
   void set_id(int id) = delete;
 };
 
-class Log
+class Logpath
 {
   Options options;
-  std::list< std::shared_ptr<const Driver> > drivers;
+  std::list< std::shared_ptr<const Object> > objects;
 
 public:
-  Log(const Options& options);
+  Logpath(const Options& options);
 
   Options& get_options();
 
-  void add_driver(const std::shared_ptr<Driver>& driver);
-  void remove_driver(const std::shared_ptr<const Driver>& driver);
+  void add_object(const std::shared_ptr<Object>& object);
+  void remove_object(const std::shared_ptr<const Object>& object);
 
-  bool has_changed() const;
   const std::string to_string() const;
 };
 
@@ -165,8 +174,10 @@ public:
 
   Options& get_options();
 
-  bool has_changed() const;
   const std::string to_string() const;
+
+private:
+  bool has_changed() const;
 };
 
-#endif  // DRIVER_H
+#endif  // OBJECT_H

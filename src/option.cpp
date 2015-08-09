@@ -1,5 +1,5 @@
 #include "option.h"
-#include "driver.h"
+#include "object.h"
 #include "dialog.h"
 
 #include <QVBoxLayout>

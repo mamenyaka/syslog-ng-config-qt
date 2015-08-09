@@ -1,7 +1,8 @@
 #include "icon.h"
-#include "driver.h"
+#include "object.h"
 
 #include <QLabel>
+#include <QPixmap>
 #include <QPainter>
 #include <QPalette>
 #include <QFrame>
@@ -11,15 +12,15 @@
 
 #define ICON_SIZE 80
 
-DriverIcon::DriverIcon(std::shared_ptr<Driver>& driver,
+ObjectIcon::ObjectIcon(std::shared_ptr<Object>& object,
                        QWidget* parent) :
   QWidget(parent),
-  driver(std::move(driver))
+  object(std::move(object))
 {
   setFixedSize(ICON_SIZE, ICON_SIZE);
   setAutoFillBackground(true);
 
-  QLabel* label = new QLabel(QString::fromStdString(this->driver->get_name()), this);
+  QLabel* label = new QLabel(QString::fromStdString(this->object->get_name()), this);
   label->setFont(QFont("Sans", 8, QFont::DemiBold));
   label->setAlignment(Qt::AlignCenter);
   label->setWordWrap(true);
@@ -29,50 +30,45 @@ DriverIcon::DriverIcon(std::shared_ptr<Driver>& driver,
   mainLayout->addWidget(label);
 
   setupIcon();
-
-  QPalette palette;
-  palette.setBrush(QPalette::Window, QBrush(pixmap));
-  setPalette(palette);
 }
 
-std::shared_ptr<Driver>& DriverIcon::get_driver()
+std::shared_ptr<Object>& ObjectIcon::get_object()
 {
-  return driver;
+  return object;
 }
 
-const QPixmap& DriverIcon::get_pixmap() const
+void ObjectIcon::paintEvent(QPaintEvent *)
 {
-  return pixmap;
-}
-
-void DriverIcon::paintEvent(QPaintEvent *)
-{
-  if (driver->get_id() > -1)
+  if (object->get_id() > -1)
   {
     QLabel* label = findChild<QLabel*>();
-    label->setText("\n" + QString::fromStdString(driver->get_name()) + "\n" + QString::number(driver->get_id()));
+    label->setText("\n" + QString::fromStdString(object->get_name()) + "\n" + QString::number(object->get_id()));
   }
 }
 
-void DriverIcon::setupIcon()
+void ObjectIcon::setupIcon()
 {
-  pixmap = QPixmap(size());
+  QPixmap pixmap(size());
   pixmap.fill(Qt::transparent);
 
   QPainter painter(&pixmap);
   painter.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
   painter.setPen(Qt::black);
 
-  driver->draw(&painter, width(), height());
+  object->draw(&painter, width(), height());
 
   painter.end();
+
+  QPalette palette;
+  palette.setBrush(QPalette::Background, QBrush(pixmap));
+  setPalette(palette);
 }
 
 
-LogIcon::LogIcon(std::shared_ptr<Log>& log,
-                 QWidget* parent) :
+LogpathIcon::LogpathIcon(std::shared_ptr<Logpath>& logpath,
+                         QWidget* parent) :
   QWidget(parent),
-  log(std::move(log))
+  logpath(std::move(logpath))
 {
   installEventFilter(this);
 
@@ -92,20 +88,20 @@ LogIcon::LogIcon(std::shared_ptr<Log>& log,
   mainLayout->addWidget(frame);
 }
 
-std::shared_ptr<Log>& LogIcon::get_log()
+std::shared_ptr<Logpath>& LogpathIcon::get_logpath()
 {
-  return log;
+  return logpath;
 }
 
-void LogIcon::add_driver(DriverIcon& icon)
+void LogpathIcon::add_object(ObjectIcon& icon)
 {
-  if (icon.get_driver()->get_type() == "template")
+  if (icon.get_object()->get_type() == "template")
   {
     return;
   }
 
-  std::shared_ptr<Driver>& driver = icon.get_driver();
-  log->add_driver(driver);
+  std::shared_ptr<Object>& object = icon.get_object();
+  logpath->add_object(object);
 
   QVBoxLayout* frameLayout = findChild<QVBoxLayout*>();
   frameLayout->addWidget(&icon);
@@ -114,10 +110,10 @@ void LogIcon::add_driver(DriverIcon& icon)
   adjustSize();
 }
 
-void LogIcon::remove_driver(DriverIcon& icon)
+void LogpathIcon::remove_object(ObjectIcon& icon)
 {
-  std::shared_ptr<Driver>& driver = icon.get_driver();
-  log->remove_driver(driver);
+  std::shared_ptr<Object>& object = icon.get_object();
+  logpath->remove_object(object);
 
   QVBoxLayout* frameLayout = findChild<QVBoxLayout*>();
   frameLayout->removeWidget(&icon);
@@ -126,7 +122,7 @@ void LogIcon::remove_driver(DriverIcon& icon)
   adjustSize();
 }
 
-bool LogIcon::eventFilter(QObject *, QEvent* event)
+bool LogpathIcon::eventFilter(QObject *, QEvent* event)
 {
   event->ignore();
   return true;

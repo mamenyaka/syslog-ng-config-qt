@@ -2,26 +2,23 @@
 #define ICON_H
 
 #include <QWidget>
-#include <QPixmap>
 
 #include <memory>
 
-class Driver;
-class Log;
+class Object;
+class Logpath;
 
-class DriverIcon : public QWidget
+class ObjectIcon : public QWidget
 {
   Q_OBJECT
 
-  std::shared_ptr<Driver> driver;
-  QPixmap pixmap;
+  std::shared_ptr<Object> object;
 
 public:
-  explicit DriverIcon(std::shared_ptr<Driver>& driver,
+  explicit ObjectIcon(std::shared_ptr<Object>& object,
                       QWidget* parent = 0);
 
-  std::shared_ptr<Driver>& get_driver();
-  const QPixmap& get_pixmap() const;
+  std::shared_ptr<Object>& get_object();
 
 protected:
   void paintEvent(QPaintEvent *);
@@ -30,20 +27,20 @@ private:
   void setupIcon();
 };
 
-class LogIcon : public QWidget
+class LogpathIcon : public QWidget
 {
   Q_OBJECT
 
-  std::shared_ptr<Log> log;
+  std::shared_ptr<Logpath> logpath;
 
 public:
-  explicit LogIcon(std::shared_ptr<Log>& log,
-                   QWidget* parent = 0);
+  explicit LogpathIcon(std::shared_ptr<Logpath>& logpath,
+                       QWidget* parent = 0);
 
-  std::shared_ptr<Log>& get_log();
+  std::shared_ptr<Logpath>& get_logpath();
 
-  void add_driver(DriverIcon& icon);
-  void remove_driver(DriverIcon& icon);
+  void add_object(ObjectIcon& icon);
+  void remove_object(ObjectIcon& icon);
 
 protected:
   bool eventFilter(QObject *, QEvent* event);

@@ -207,7 +207,7 @@
     </property>
     <addaction name="actionOptions"/>
     <addaction name="separator"/>
-    <addaction name="actionLog"/>
+    <addaction name="actionLogpath"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -254,9 +254,9 @@
     <string>Ctrl+X</string>
    </property>
   </action>
-  <action name="actionLog">
+  <action name="actionLogpath">
    <property name="text">
-    <string>New &amp;log</string>
+    <string>New &amp;log path</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+L</string>

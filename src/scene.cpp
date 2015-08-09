@@ -1,7 +1,7 @@
 #include "scene.h"
-#include "dialog.h"
-#include "icon.h"
 #include "config.h"
+#include "icon.h"
+#include "dialog.h"
 
 #include <QLabel>
 #include <QIcon>
@@ -24,9 +24,9 @@ Scene::Scene(Config& config,
   deleteLabel->hide();
 }
 
-void Scene::add_driver(std::shared_ptr<Driver>& new_driver, const QPoint& pos)
+void Scene::add_object(std::shared_ptr<Object>& new_object, const QPoint& pos)
 {
-  DriverIcon* icon = new DriverIcon(new_driver, this);
+  ObjectIcon* icon = new ObjectIcon(new_object, this);
   icon->move(pos.x() - icon->width()/2, pos.y() - icon->height()/2);
   icon->raise();
   icon->show();
@@ -34,9 +34,9 @@ void Scene::add_driver(std::shared_ptr<Driver>& new_driver, const QPoint& pos)
   clear();
 }
 
-void Scene::add_log(std::shared_ptr<Log>& new_log, const QPoint& pos)
+void Scene::add_logpath(std::shared_ptr<Logpath>& new_logpath, const QPoint& pos)
 {
-  LogIcon* icon = new LogIcon(new_log, this);
+  LogpathIcon* icon = new LogpathIcon(new_logpath, this);
   icon->move(pos.x() - icon->width()/2, pos.y() - icon->height()/2);
   icon->lower();
   icon->show();
@@ -44,21 +44,11 @@ void Scene::add_log(std::shared_ptr<Log>& new_log, const QPoint& pos)
   clear();
 }
 
-void Scene::move_driver(const QPoint& pos)
+void Scene::move_icon(QWidget* icon, const QPoint& pos)
 {
-  const int x = pos.x() - selected_driver_icon->width()/2;
-  const int y = pos.y() - selected_driver_icon->height()/2;
-  selected_driver_icon->move(x, y);
-
-  update();
-  updateGeometry();
-}
-
-void Scene::move_log(const QPoint& pos)
-{
-  const int x = pos.x() - selected_log_icon->width()/2;
-  const int y = pos.y() - selected_log_icon->height()/2;
-  selected_log_icon->move(x, y);
+  const int x = pos.x() - icon->width()/2;
+  const int y = pos.y() - icon->height()/2;
+  icon->move(x, y);
 
   update();
   updateGeometry();
@@ -66,8 +56,8 @@ void Scene::move_log(const QPoint& pos)
 
 void Scene::clear()
 {
-  selected_driver_icon = nullptr;
-  selected_log_icon = nullptr;
+  selected_object_icon = nullptr;
+  selected_logpath_icon = nullptr;
 
   deleteLabel->hide();
   updateGeometry();
@@ -76,12 +66,12 @@ void Scene::clear()
 
 void Scene::reset()
 {
-  for (DriverIcon* icon : findChildren<DriverIcon*>())
+  for (ObjectIcon* icon : findChildren<ObjectIcon*>())
   {
     delete icon;
   }
 
-  for (LogIcon* icon : findChildren<LogIcon*>())
+  for (LogpathIcon* icon : findChildren<LogpathIcon*>())
   {
     delete icon;
   }
@@ -93,54 +83,54 @@ void Scene::reset()
 
 void Scene::mousePressEvent(QMouseEvent* event)
 {
-  selected_driver_icon = select_nearest_driver();
-  selected_log_icon = select_nearest_log(event->pos());
+  selected_object_icon = select_nearest_object();
+  selected_logpath_icon = select_nearest_logpath(event->pos());
 
   deleteLabel->lower();
   deleteLabel->show();
 
-  if (selected_driver_icon)
+  if (selected_object_icon)
   {
-    selected_driver_icon->raise();
+    selected_object_icon->raise();
 
     if (copy_icon)
     {
-      std::shared_ptr<Driver> driver = selected_driver_icon->get_driver();
-      add_driver(driver, event->pos());
-      selected_driver_icon = dynamic_cast<DriverIcon*>(children().last());
+      std::shared_ptr<Object> object = selected_object_icon->get_object();
+      add_object(object, event->pos());
+      selected_object_icon = dynamic_cast<ObjectIcon*>(children().last());
     }
   }
 }
 
 void Scene::mouseReleaseEvent(QMouseEvent* event)
 {
-  if (selected_driver_icon)
+  if (selected_object_icon)
   {
-    if (selected_driver_icon->parentWidget() != this)
+    if (selected_object_icon->parentWidget() != this)
     {
       return;
     }
 
-    const QRect geom = selected_driver_icon->geometry();
-    LogIcon* icon = select_nearest_log(event->pos());
+    const QRect geom = selected_object_icon->geometry();
+    LogpathIcon* icon = select_nearest_logpath(event->pos());
 
     if (icon && icon->geometry().intersects(geom))
     {
-      icon->add_driver(*selected_driver_icon);
+      icon->add_object(*selected_object_icon);
     }
 
     if (deleteLabel->geometry().intersects(geom))
     {
-      delete selected_driver_icon;
+      delete selected_object_icon;
     }
   }
-  else if (selected_log_icon)
+  else if (selected_logpath_icon)
   {
-    const QRect geom = selected_log_icon->geometry();
+    const QRect geom = selected_logpath_icon->geometry();
 
     if (deleteLabel->geometry().intersects(geom))
     {
-      delete selected_log_icon;
+      delete selected_logpath_icon;
     }
   }
 
@@ -149,45 +139,45 @@ void Scene::mouseReleaseEvent(QMouseEvent* event)
 
 void Scene::mouseMoveEvent(QMouseEvent* event)
 {
-  if (selected_driver_icon)
+  if (selected_object_icon)
   {
-    if (selected_driver_icon->parentWidget() != this)
+    if (selected_object_icon->parentWidget() != this)
     {
-      LogIcon* icon = dynamic_cast<LogIcon*>(selected_driver_icon->parentWidget()->parentWidget());
+      LogpathIcon* icon = dynamic_cast<LogpathIcon*>(selected_object_icon->parentWidget()->parentWidget());
       if (icon)
       {
-        icon->remove_driver(*selected_driver_icon);
-        selected_driver_icon->setParent(this);
-        selected_driver_icon->show();
+        icon->remove_object(*selected_object_icon);
+        selected_object_icon->setParent(this);
+        selected_object_icon->show();
       }
     }
 
     if (event->x() > 0 && event->y() > 0)
     {
-      move_driver(event->pos());
+      move_icon(selected_object_icon, event->pos());
     }
   }
-  else if (selected_log_icon)
+  else if (selected_logpath_icon)
   {
     if (event->x() > 0 && event->y() > 0)
     {
-      move_log(event->pos());
+      move_icon(selected_logpath_icon, event->pos());
     }
   }
 }
 
 void Scene::mouseDoubleClickEvent(QMouseEvent* event)
 {
-  DriverIcon* driver_icon = select_nearest_driver();
-  LogIcon* log_icon = select_nearest_log(event->pos());
+  ObjectIcon* object_icon = select_nearest_object();
+  LogpathIcon* logpath_icon = select_nearest_logpath(event->pos());
 
-  if (driver_icon)
+  if (object_icon)
   {
-    Dialog(*driver_icon->get_driver(), this).exec();
+    Dialog(*object_icon->get_object(), this).exec();
   }
-  else if (log_icon)
+  else if (logpath_icon)
   {
-    Dialog(log_icon->get_log()->get_options(), this).exec();
+    Dialog(logpath_icon->get_logpath()->get_options(), this).exec();
   }
 }
 
@@ -216,7 +206,7 @@ void Scene::leaveEvent(QEvent *)
 void Scene::dragEnterEvent(QDragEnterEvent* event)
 {
   if (event->source() == window() &&
-    event->mimeData()->hasFormat("drivericon"))
+    event->mimeData()->hasFormat("objecticon"))
   {
     event->accept();
   }
@@ -228,19 +218,19 @@ void Scene::dragEnterEvent(QDragEnterEvent* event)
 
 void Scene::dropEvent(QDropEvent* event)
 {
-  QByteArray itemData = event->mimeData()->data("drivericon");
+  QByteArray itemData = event->mimeData()->data("objecticon");
   QDataStream dataStream(&itemData, QIODevice::ReadOnly);
 
   QString name, type;
   dataStream >> name >> type;
 
-  const Driver& default_driver = config.get_default_driver(name.toStdString(), type.toStdString());
-  std::unique_ptr<Driver> new_driver(default_driver.clone());
+  const Object& default_object = config.get_default_object(name.toStdString(), type.toStdString());
+  Object* new_object = default_object.clone();
 
-  if (Dialog(*new_driver, this).exec() == QDialog::Accepted)
+  if (Dialog(*new_object, this).exec() == QDialog::Accepted)
   {
-    std::shared_ptr<Driver> driver = config.add_driver(new_driver);
-    add_driver(driver, event->pos());
+    std::shared_ptr<Object> object = config.add_object(new_object);
+    add_object(object, event->pos());
   }
 }
 
@@ -249,9 +239,9 @@ QSize Scene::sizeHint() const
   return childrenRegion().united(QRect(0, 0, 1, 1)).boundingRect().size();
 }
 
-DriverIcon* Scene::select_nearest_driver() const
+ObjectIcon* Scene::select_nearest_object() const
 {
-  for (DriverIcon* icon : findChildren<DriverIcon*>())
+  for (ObjectIcon* icon : findChildren<ObjectIcon*>())
   {
     if (icon->underMouse())
     {
@@ -262,9 +252,9 @@ DriverIcon* Scene::select_nearest_driver() const
   return nullptr;
 }
 
-LogIcon* Scene::select_nearest_log(const QPoint& pos) const
+LogpathIcon* Scene::select_nearest_logpath(const QPoint& pos) const
 {
-  for (LogIcon* icon : findChildren<LogIcon*>())
+  for (LogpathIcon* icon : findChildren<LogpathIcon*>())
   {
     if (icon->geometry().contains(pos))
     {

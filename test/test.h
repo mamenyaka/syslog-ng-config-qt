@@ -5,8 +5,8 @@
 
 #include <memory>
 
-class Driver;
-class Log;
+class Object;
+class Logpath;
 class Config;
 
 class Test : public QObject
@@ -18,16 +18,16 @@ private slots:
   void is_config_valid_test();
 
 private:
-  void set_option(Driver& driver, const std::string& option_name, const std::string& option_value);
+  void set_option(Object& object, const std::string& option_name, const std::string& option_value);
 
-  std::shared_ptr<Driver> add_driver(Config& config, const std::string& driver_name, const std::string& driver_type);
-
-  template<typename... Targs>
-  std::shared_ptr<Log> add_drivers_to_log(Config& config, Targs&... more);
+  std::shared_ptr<Object> add_object(Config& config, const std::string& object_name, const std::string& object_type);
 
   template<typename... Targs>
-  void add_driver_to_log_recursive(std::shared_ptr<Log>& log, std::shared_ptr<Driver>& driver, Targs&... more);
-  void add_driver_to_log_recursive(std::shared_ptr<Log> &) {}
+  std::shared_ptr<Logpath> add_objects_to_logpath(Config& config, Targs&... more);
+
+  template<typename... Targs>
+  void add_object_to_logpath_recursive(std::shared_ptr<Logpath>& logpath, std::shared_ptr<Object>& object, Targs&... more);
+  void add_object_to_logpath_recursive(std::shared_ptr<Logpath> &) {}
 };
 
 #endif  // TEST_H

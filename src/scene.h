@@ -6,10 +6,10 @@
 #include <memory>
 
 class Config;
-class DriverIcon;
-class LogIcon;
-class Driver;
-class Log;
+class ObjectIcon;
+class LogpathIcon;
+class Object;
+class Logpath;
 class QLabel;
 
 class Scene : public QWidget
@@ -17,8 +17,8 @@ class Scene : public QWidget
   Q_OBJECT
 
   Config& config;
-  DriverIcon* selected_driver_icon = nullptr;
-  LogIcon* selected_log_icon = nullptr;
+  ObjectIcon* selected_object_icon = nullptr;
+  LogpathIcon* selected_logpath_icon = nullptr;
   bool copy_icon = false;
 
   QLabel* deleteLabel;
@@ -27,11 +27,10 @@ public:
   explicit Scene(Config& config,
                  QWidget* parent = 0);
 
-  void add_driver(std::shared_ptr<Driver>& new_driver, const QPoint& pos);
-  void add_log(std::shared_ptr<Log>& new_log, const QPoint& pos);
+  void add_object(std::shared_ptr<Object>& new_object, const QPoint& pos);
+  void add_logpath(std::shared_ptr<Logpath>& new_logpath, const QPoint& pos);
 
-  void move_driver(const QPoint& pos);
-  void move_log(const QPoint& pos);
+  void move_icon(QWidget* icon, const QPoint& pos);
 
   void clear();
   void reset();
@@ -53,8 +52,8 @@ protected:
   QSize sizeHint() const;
 
 private:
-  DriverIcon* select_nearest_driver() const;
-  LogIcon* select_nearest_log(const QPoint& pos) const;
+  ObjectIcon* select_nearest_object() const;
+  LogpathIcon* select_nearest_logpath(const QPoint& pos) const;
 };
 
 #endif  // SCENE_H

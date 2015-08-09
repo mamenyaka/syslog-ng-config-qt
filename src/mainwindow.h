@@ -1,23 +1,22 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "config.h"
-
 #include <QMainWindow>
 
-class Scene;
 namespace Ui {
   class MainWindow;
 }
+class Config;
+class Scene;
 
 class MainWindow : public QMainWindow
 {
   Q_OBJECT
 
-  Config config;
-  Scene* scene;
-
   Ui::MainWindow* ui;
+
+  Config* config;
+  Scene* scene;
 
 public:
   explicit MainWindow(QWidget* parent = 0);
