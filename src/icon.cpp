@@ -30,12 +30,12 @@ void Icon::mouseMoveEvent(QMouseEvent* event)
   parentWidget()->updateGeometry();
 }
 
-void Icon::mousePressEvent(QMouseEvent* event)
+void Icon::mousePressEvent(QMouseEvent *)
 {
   emit pressed(this);
 }
 
-void Icon::mouseReleaseEvent(QMouseEvent* event)
+void Icon::mouseReleaseEvent(QMouseEvent *)
 {
   emit released(this);
 }
@@ -154,7 +154,7 @@ void LogpathIcon::remove_object(ObjectIcon& icon)
   adjustSize();
 }
 
-void LogpathIcon::mouseDoubleClickEvent(QMouseEvent* event)
+void LogpathIcon::mouseDoubleClickEvent(QMouseEvent *)
 {
   Dialog(logpath->get_options(), this).exec();
 }
@@ -182,14 +182,13 @@ DeleteIcon::DeleteIcon(QWidget* parent) :
   QWidget(parent)
 {
   QLabel* icon = new QLabel;
-  icon->setPixmap(QIcon::fromTheme("edit-delete-symbolic").pixmap(60, 60));
+  icon->setPixmap(QIcon::fromTheme("user-trash-symbolic").pixmap(60, 60));
 
   QLabel* text = new QLabel("delete");
   text->setFont(QFont("Sans", 8, QFont::DemiBold));
   text->setAlignment(Qt::AlignCenter);
 
   QVBoxLayout* mainLayout = new QVBoxLayout(this);
-  mainLayout->setSpacing(0);
   mainLayout->addWidget(icon);
   mainLayout->addWidget(text);
 }
