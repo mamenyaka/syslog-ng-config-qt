@@ -6,20 +6,16 @@
 #include <memory>
 
 class Config;
-class Icon;
-class ObjectIcon;
-class LogpathIcon;
 class Object;
 class Logpath;
-class QLabel;
+class Icon;
+class LogpathIcon;
 
 class Scene : public QWidget
 {
   Q_OBJECT
 
   Config& config;
-
-  QLabel* deleteLabel;
 
 public:
   explicit Scene(Config& config,
@@ -31,9 +27,6 @@ public:
   void reset();
 
 protected:
-  void mousePressEvent(QMouseEvent* event);
-  void mouseReleaseEvent(QMouseEvent* event);
-
   void leaveEvent(QEvent *);
 
   void dragEnterEvent(QDragEnterEvent* event);
@@ -42,8 +35,9 @@ protected:
   QSize sizeHint() const;
 
 private:
-  Icon* select_nearest_icon() const;
-  ObjectIcon* select_nearest_object() const;
+  void add_icon(Icon* icon, const QPoint& pos);
+  void pressed(Icon* icon);
+  void released(Icon* icon);
   LogpathIcon* select_nearest_logpath(const QPoint& pos) const;
 
   // non copyable

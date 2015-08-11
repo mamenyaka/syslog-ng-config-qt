@@ -3,6 +3,7 @@
 #include "dialog.h"
 
 #include <QLabel>
+#include <QIcon>
 #include <QPainter>
 #include <QPalette>
 #include <QFrame>
@@ -29,6 +30,16 @@ void Icon::mouseMoveEvent(QMouseEvent* event)
   parentWidget()->updateGeometry();
 }
 
+void Icon::mousePressEvent(QMouseEvent* event)
+{
+  emit pressed(this);
+}
+
+void Icon::mouseReleaseEvent(QMouseEvent* event)
+{
+  emit released(this);
+}
+
 
 ObjectIcon::ObjectIcon(std::shared_ptr<Object>& object,
                        QWidget* parent) :
@@ -53,18 +64,6 @@ ObjectIcon::ObjectIcon(std::shared_ptr<Object>& object,
 std::shared_ptr<Object>& ObjectIcon::get_object()
 {
   return object;
-}
-
-void ObjectIcon::mousePressEvent(QMouseEvent* event)
-{
-  if (object->get_id() < 0)
-  {
-    drag();
-  }
-  else
-  {
-    Icon::mousePressEvent(event);
-  }
 }
 
 void ObjectIcon::mouseDoubleClickEvent(QMouseEvent *)
@@ -100,25 +99,6 @@ void ObjectIcon::setupIcon()
   QPalette palette;
   palette.setBrush(QPalette::Background, QBrush(pixmap));
   setPalette(palette);
-}
-
-void ObjectIcon::drag()
-{
-  QByteArray itemData;
-  QDataStream dataStream(&itemData, QIODevice::WriteOnly);
-  dataStream << QString::fromStdString(object->get_name()) << QString::fromStdString(object->get_type());
-
-  QMimeData* mimeData = new QMimeData;
-  mimeData->setData("objecticon", itemData);
-
-  const QPixmap pixmap = palette().brush(QPalette::Background).texture();
-
-  QDrag *drag = new QDrag(window());
-  drag->setMimeData(mimeData);
-  drag->setPixmap(pixmap);
-  drag->setHotSpot(pixmap.rect().center());
-
-  drag->exec();
 }
 
 
@@ -195,4 +175,21 @@ int LogpathIcon::get_index(ObjectIcon& icon)
   }
 
   return frameLayout->count();
+}
+
+
+DeleteIcon::DeleteIcon(QWidget* parent) :
+  QWidget(parent)
+{
+  QLabel* icon = new QLabel;
+  icon->setPixmap(QIcon::fromTheme("edit-delete-symbolic").pixmap(60, 60));
+
+  QLabel* text = new QLabel("delete");
+  text->setFont(QFont("Sans", 8, QFont::DemiBold));
+  text->setAlignment(Qt::AlignCenter);
+
+  QVBoxLayout* mainLayout = new QVBoxLayout(this);
+  mainLayout->setSpacing(0);
+  mainLayout->addWidget(icon);
+  mainLayout->addWidget(text);
 }

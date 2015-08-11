@@ -4,8 +4,7 @@
 #include "dialog.h"
 
 #include <QLabel>
-#include <QIcon>
-#include <QMouseEvent>
+#include <QDropEvent>
 #include <QDrag>
 #include <QMimeData>
 #include <QApplication>
@@ -13,61 +12,47 @@
 Scene::Scene(Config& config,
              QWidget* parent) :
   QWidget(parent),
-  config(config),
-  deleteLabel(new QLabel(this))
+  config(config)
 {
   setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
   setAcceptDrops(true);
 
-  deleteLabel->setPixmap(QIcon::fromTheme("edit-delete-symbolic").pixmap(40, 40));
-  deleteLabel->move(20, 20);
-  deleteLabel->hide();
+  DeleteIcon* deleteIcon = new DeleteIcon(this);
+  deleteIcon->move(20, 20);
+  deleteIcon->hide();
 }
 
 void Scene::add_object(std::shared_ptr<Object>& new_object, const QPoint& pos)
 {
   ObjectIcon* icon = new ObjectIcon(new_object, this);
-  icon->move(pos - QPoint(icon->width()/2, icon->height()/2));
-  icon->raise();
-  icon->show();
-
-  updateGeometry();
+  add_icon(icon, pos);
 }
 
 void Scene::add_logpath(std::shared_ptr<Logpath>& new_logpath, const QPoint& pos)
 {
   LogpathIcon* icon = new LogpathIcon(new_logpath, this);
+  add_icon(icon, pos);
+}
+
+void Scene::add_icon(Icon* icon, const QPoint& pos)
+{
   icon->move(pos - QPoint(icon->width()/2, icon->height()/2));
   icon->lower();
   icon->show();
 
   updateGeometry();
+
+  connect(icon, &Icon::pressed, this, &Scene::pressed);
+  connect(icon, &Icon::released, this, &Scene::released);
 }
 
-void Scene::reset()
+void Scene::pressed(Icon* icon)
 {
-  for (Icon* icon : findChildren<Icon*>())
-  {
-    delete icon;
-  }
+  DeleteIcon* deleteIcon = findChild<DeleteIcon*>();
+  deleteIcon->show();
+  deleteIcon->lower();
 
-  config.get_global_options()->restore_default_values();
-
-  updateGeometry();
-}
-
-void Scene::mousePressEvent(QMouseEvent* event)
-{
-  Icon* icon = select_nearest_icon();
-  if (!icon)
-  {
-    return;
-  }
-
-  deleteLabel->show();
-  deleteLabel->lower();
-
-  ObjectIcon* object_icon = select_nearest_object();
+  ObjectIcon* object_icon = dynamic_cast<ObjectIcon*>(icon);
   if (!object_icon)
   {
     return;
@@ -75,11 +60,12 @@ void Scene::mousePressEvent(QMouseEvent* event)
 
   if (object_icon->parentWidget() != this)
   {
+    QPoint pos = object_icon->parentWidget()->mapTo(this, object_icon->pos());
     LogpathIcon* icon = static_cast<LogpathIcon*>(object_icon->parent()->parent());
     icon->remove_object(*object_icon);
     object_icon->setParent(this);
     object_icon->show();
-    object_icon->move(event->pos() - QPoint(icon->width()/2, icon->height()/2));
+    object_icon->move(pos);
   }
 
   if (QApplication::queryKeyboardModifiers() == Qt::ControlModifier)
@@ -91,30 +77,53 @@ void Scene::mousePressEvent(QMouseEvent* event)
   object_icon->raise();
 }
 
-void Scene::mouseReleaseEvent(QMouseEvent* event)
+void Scene::released(Icon* icon)
 {
-  Icon* icon = select_nearest_icon();
-  if (icon &&
-    icon->geometry().intersects(deleteLabel->geometry()))
+  DeleteIcon* deleteIcon = findChild<DeleteIcon*>();
+  deleteIcon->hide();
+
+  if (icon->geometry().intersects(deleteIcon->geometry()))
   {
     delete icon;
+
     update();
+    return;
   }
 
-  ObjectIcon* object_icon = select_nearest_object();
-  LogpathIcon* logpath_icon = select_nearest_logpath(event->pos());
-  if (object_icon && logpath_icon &&
-    logpath_icon->geometry().intersects(object_icon->geometry()))
+  ObjectIcon* object_icon = dynamic_cast<ObjectIcon*>(icon);
+  if (!object_icon)
+  {
+    return;
+  }
+
+  LogpathIcon* logpath_icon = select_nearest_logpath(icon->pos());
+  if (!logpath_icon)
+  {
+    return;
+  }
+
+  if (logpath_icon->geometry().intersects(object_icon->geometry()))
   {
     logpath_icon ->add_object(*object_icon);
   }
+}
 
-  deleteLabel->hide();
+void Scene::reset()
+{
+  for (Icon* icon : findChildren<Icon*>(QString(), Qt::FindDirectChildrenOnly))
+  {
+    delete icon;
+  }
+
+  config.get_global_options()->restore_default_values();
+
+  updateGeometry();
 }
 
 void Scene::leaveEvent(QEvent *)
 {
-  deleteLabel->hide();
+  DeleteIcon* deleteIcon = findChild<DeleteIcon*>();
+  deleteIcon->hide();
 }
 
 void Scene::dragEnterEvent(QDragEnterEvent* event)
@@ -151,32 +160,6 @@ void Scene::dropEvent(QDropEvent* event)
 QSize Scene::sizeHint() const
 {
   return childrenRegion().united(QRect(0, 0, 1, 1)).boundingRect().size();
-}
-
-Icon* Scene::select_nearest_icon() const
-{
-  for (Icon* icon : findChildren<Icon*>())
-  {
-    if (icon->underMouse())
-    {
-      return icon;
-    }
-  }
-
-  return nullptr;
-}
-
-ObjectIcon* Scene::select_nearest_object() const
-{
-  for (ObjectIcon* icon : findChildren<ObjectIcon*>())
-  {
-    if (icon->underMouse())
-    {
-      return icon;
-    }
-  }
-
-  return nullptr;
 }
 
 LogpathIcon* Scene::select_nearest_logpath(const QPoint& pos) const

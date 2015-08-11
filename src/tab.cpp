@@ -3,6 +3,8 @@
 #include "icon.h"
 
 #include <QGridLayout>
+#include <QDrag>
+#include <QMimeData>
 
 Tab::Tab(QWidget* parent) :
   QWidget(parent)
@@ -22,6 +24,8 @@ void Tab::setupObjects(const std::string& type, const std::vector< std::unique_p
       ObjectIcon* icon = new ObjectIcon(object);
       mainLayout->addWidget(icon, row, col++);
 
+      connect(icon, &Icon::pressed, this, &Tab::drag);
+
       if (col == 2)
       {
         col = 0;
@@ -29,4 +33,25 @@ void Tab::setupObjects(const std::string& type, const std::vector< std::unique_p
       }
     }
   }
+}
+
+void Tab::drag(Icon* icon)
+{
+  std::shared_ptr<Object>& object = static_cast<ObjectIcon*>(icon)->get_object();
+
+  QByteArray itemData;
+  QDataStream dataStream(&itemData, QIODevice::WriteOnly);
+  dataStream << QString::fromStdString(object->get_name()) << QString::fromStdString(object->get_type());
+
+  QMimeData* mimeData = new QMimeData;
+  mimeData->setData("objecticon", itemData);
+
+  const QPixmap pixmap = icon->palette().brush(QPalette::Background).texture();
+
+  QDrag *drag = new QDrag(window());
+  drag->setMimeData(mimeData);
+  drag->setPixmap(pixmap);
+  drag->setHotSpot(pixmap.rect().center());
+
+  drag->exec();
 }

@@ -16,9 +16,15 @@ public:
   explicit Icon(QWidget* parent = 0);
   ~Icon() {}
 
+signals:
+  void pressed(Icon* icon);
+  void released(Icon* icon);
+
 protected:
-  virtual void mouseDoubleClickEvent(QMouseEvent *) = 0;
   void mouseMoveEvent(QMouseEvent* event);
+  void mousePressEvent(QMouseEvent* event);
+  void mouseReleaseEvent(QMouseEvent* event);
+  virtual void mouseDoubleClickEvent(QMouseEvent *) = 0;
 };
 
 class ObjectIcon : public Icon
@@ -35,13 +41,11 @@ public:
 
 protected:
   void mouseDoubleClickEvent(QMouseEvent *);
-  void mousePressEvent(QMouseEvent* event);
 
   void paintEvent(QPaintEvent *);
 
 private:
   void setupIcon();
-  void drag();
 };
 
 class LogpathIcon : public Icon
@@ -62,6 +66,14 @@ protected:
 
 private:
   int get_index(ObjectIcon& icon);
+};
+
+class DeleteIcon : public QWidget
+{
+  Q_OBJECT
+
+public:
+  explicit DeleteIcon(QWidget* parent = 0);
 };
 
 #endif  // ICON_H

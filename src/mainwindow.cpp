@@ -97,7 +97,7 @@ void MainWindow::setupConnections()
     Logpath* new_logpath = new Logpath(log_options);
 
     std::shared_ptr<Logpath> logpath = config->add_logpath(new_logpath);
-    scene->add_logpath(logpath, QPoint(100, 100));
+    scene->add_logpath(logpath, QPoint(150, 30));
   });
 
 

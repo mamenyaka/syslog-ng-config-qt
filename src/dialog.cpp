@@ -73,7 +73,7 @@ void Dialog::create_form()
 void Dialog::set_form_values()
 {
   QWidget* parent = findChild<QWidget*>("formWidget");
-  QList<QGroupBox*> groupBoxes = parent->findChildren<QGroupBox*>(QString(), Qt::FindChildOption::FindDirectChildrenOnly);
+  QList<QGroupBox*> groupBoxes = parent->findChildren<QGroupBox*>(QString(), Qt::FindDirectChildrenOnly);
   auto it = groupBoxes.begin();
 
   for (const std::unique_ptr<Option>& option : object.get_options())
@@ -86,7 +86,7 @@ void Dialog::set_form_values()
 bool Dialog::set_object_options()
 {
   QWidget* parent = findChild<QWidget*>("formWidget");
-  QList<QGroupBox*> groupBoxes = parent->findChildren<QGroupBox*>(QString(), Qt::FindChildOption::FindDirectChildrenOnly);
+  QList<QGroupBox*> groupBoxes = parent->findChildren<QGroupBox*>(QString(), Qt::FindDirectChildrenOnly);
   auto it = groupBoxes.begin();
 
   for (std::unique_ptr<Option>& option : object.get_options())
