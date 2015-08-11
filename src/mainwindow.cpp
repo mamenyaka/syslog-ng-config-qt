@@ -58,17 +58,6 @@ void MainWindow::closeEvent(QCloseEvent* event)
   }
 }
 
-bool MainWindow::eventFilter(QObject*, QEvent* event)
-{
-  if (event->type() == QEvent::KeyPress ||
-    event->type() == QEvent::KeyRelease)
-  {
-    QApplication::sendEvent(scene, event);
-  }
-
-  return false;
-}
-
 void MainWindow::setupConnections()
 {
   connect(ui->actionNew, &QAction::triggered, [&]() {

@@ -128,7 +128,7 @@ NumberOption::NumberOption(const std::string& name,
                            const std::string& description) :
   OptionBase(name, description)
 {
-  current_value = default_value = -1;
+  previous_value = current_value = default_value = -1;
 }
 
 const std::string NumberOption::get_current_value() const
@@ -175,7 +175,7 @@ ListOption::ListOption(const std::string& name,
                        const std::string& description) :
   OptionBase(name, description)
 {
-  current_value = default_value = -1;
+  previous_value = current_value = default_value = -1;
 
   values.reserve(10);
 }

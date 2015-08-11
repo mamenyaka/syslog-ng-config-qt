@@ -1,20 +1,38 @@
 #include "icon.h"
 #include "object.h"
+#include "dialog.h"
 
 #include <QLabel>
-#include <QPixmap>
 #include <QPainter>
 #include <QPalette>
 #include <QFrame>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <QEvent>
+#include <QMouseEvent>
+#include <QDrag>
+#include <QMimeData>
 
 #define ICON_SIZE 80
 
+Icon::Icon(QWidget* parent) :
+  QWidget(parent)
+{}
+
+void Icon::mouseMoveEvent(QMouseEvent* event)
+{
+  QPoint pos = event->globalPos() - QPoint(width()/2, height()/2);
+  QPoint new_pos = parentWidget()->mapFromGlobal(pos);
+
+  move(std::max(0, new_pos.x()), std::max(0, new_pos.y()));
+
+  parentWidget()->update();
+  parentWidget()->updateGeometry();
+}
+
+
 ObjectIcon::ObjectIcon(std::shared_ptr<Object>& object,
                        QWidget* parent) :
-  QWidget(parent),
+  Icon(parent),
   object(std::move(object))
 {
   setFixedSize(ICON_SIZE, ICON_SIZE);
@@ -35,6 +53,26 @@ ObjectIcon::ObjectIcon(std::shared_ptr<Object>& object,
 std::shared_ptr<Object>& ObjectIcon::get_object()
 {
   return object;
+}
+
+void ObjectIcon::mousePressEvent(QMouseEvent* event)
+{
+  if (object->get_id() < 0)
+  {
+    drag();
+  }
+  else
+  {
+    Icon::mousePressEvent(event);
+  }
+}
+
+void ObjectIcon::mouseDoubleClickEvent(QMouseEvent *)
+{
+  if (object->get_id() > -1)
+  {
+    Dialog(*object, this).exec();
+  }
 }
 
 void ObjectIcon::paintEvent(QPaintEvent *)
@@ -64,14 +102,31 @@ void ObjectIcon::setupIcon()
   setPalette(palette);
 }
 
+void ObjectIcon::drag()
+{
+  QByteArray itemData;
+  QDataStream dataStream(&itemData, QIODevice::WriteOnly);
+  dataStream << QString::fromStdString(object->get_name()) << QString::fromStdString(object->get_type());
+
+  QMimeData* mimeData = new QMimeData;
+  mimeData->setData("objecticon", itemData);
+
+  const QPixmap pixmap = palette().brush(QPalette::Background).texture();
+
+  QDrag *drag = new QDrag(window());
+  drag->setMimeData(mimeData);
+  drag->setPixmap(pixmap);
+  drag->setHotSpot(pixmap.rect().center());
+
+  drag->exec();
+}
+
 
 LogpathIcon::LogpathIcon(std::shared_ptr<Logpath>& logpath,
                          QWidget* parent) :
-  QWidget(parent),
+  Icon(parent),
   logpath(std::move(logpath))
 {
-  installEventFilter(this);
-
   QLabel* label = new QLabel("L\nO\nG");
   label->setAlignment(Qt::AlignCenter);
   label->setWordWrap(true);
@@ -86,11 +141,6 @@ LogpathIcon::LogpathIcon(std::shared_ptr<Logpath>& logpath,
   QHBoxLayout* mainLayout = new QHBoxLayout(this);
   mainLayout->addWidget(label);
   mainLayout->addWidget(frame);
-}
-
-std::shared_ptr<Logpath>& LogpathIcon::get_logpath()
-{
-  return logpath;
 }
 
 void LogpathIcon::add_object(ObjectIcon& icon)
@@ -124,20 +174,19 @@ void LogpathIcon::remove_object(ObjectIcon& icon)
   adjustSize();
 }
 
-bool LogpathIcon::eventFilter(QObject *, QEvent* event)
+void LogpathIcon::mouseDoubleClickEvent(QMouseEvent* event)
 {
-  event->ignore();
-  return true;
+  Dialog(logpath->get_options(), this).exec();
 }
 
 int LogpathIcon::get_index(ObjectIcon& icon)
 {
   QVBoxLayout* frameLayout = findChild<QVBoxLayout*>();
-  QPoint pos = mapFrom(icon.parentWidget(), icon.pos());
+  QPoint pos = mapFromParent(icon.pos());
 
   for (int i = 0; i < frameLayout->count(); i++)
   {
-    ObjectIcon* icon = static_cast<ObjectIcon*>(frameLayout->itemAt(i)->widget());
+    Icon* icon = static_cast<Icon*>(frameLayout->itemAt(i)->widget());
 
     if (icon->y() > pos.y())
     {

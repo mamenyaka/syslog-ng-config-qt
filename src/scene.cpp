@@ -8,6 +8,7 @@
 #include <QMouseEvent>
 #include <QDrag>
 #include <QMimeData>
+#include <QApplication>
 
 Scene::Scene(Config& config,
              QWidget* parent) :
@@ -16,7 +17,6 @@ Scene::Scene(Config& config,
   deleteLabel(new QLabel(this))
 {
   setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-  setMouseTracking(true);
   setAcceptDrops(true);
 
   deleteLabel->setPixmap(QIcon::fromTheme("edit-delete-symbolic").pixmap(40, 40));
@@ -27,176 +27,94 @@ Scene::Scene(Config& config,
 void Scene::add_object(std::shared_ptr<Object>& new_object, const QPoint& pos)
 {
   ObjectIcon* icon = new ObjectIcon(new_object, this);
-  icon->move(pos.x() - icon->width()/2, pos.y() - icon->height()/2);
+  icon->move(pos - QPoint(icon->width()/2, icon->height()/2));
   icon->raise();
   icon->show();
 
-  clear();
+  updateGeometry();
 }
 
 void Scene::add_logpath(std::shared_ptr<Logpath>& new_logpath, const QPoint& pos)
 {
   LogpathIcon* icon = new LogpathIcon(new_logpath, this);
-  icon->move(pos.x() - icon->width()/2, pos.y() - icon->height()/2);
+  icon->move(pos - QPoint(icon->width()/2, icon->height()/2));
   icon->lower();
   icon->show();
 
-  clear();
-}
-
-void Scene::move_icon(QWidget* icon, const QPoint& pos)
-{
-  const int x = pos.x() - icon->width()/2;
-  const int y = pos.y() - icon->height()/2;
-  icon->move(x, y);
-
-  update();
   updateGeometry();
-}
-
-void Scene::clear()
-{
-  selected_object_icon = nullptr;
-  selected_logpath_icon = nullptr;
-
-  deleteLabel->hide();
-  updateGeometry();
-  update();
 }
 
 void Scene::reset()
 {
-  for (ObjectIcon* icon : findChildren<ObjectIcon*>())
-  {
-    delete icon;
-  }
-
-  for (LogpathIcon* icon : findChildren<LogpathIcon*>())
+  for (Icon* icon : findChildren<Icon*>())
   {
     delete icon;
   }
 
   config.get_global_options()->restore_default_values();
 
-  clear();
+  updateGeometry();
 }
 
 void Scene::mousePressEvent(QMouseEvent* event)
 {
-  selected_object_icon = select_nearest_object();
-  selected_logpath_icon = select_nearest_logpath(event->pos());
-
-  if (selected_object_icon || selected_logpath_icon)
+  Icon* icon = select_nearest_icon();
+  if (!icon)
   {
-    deleteLabel->lower();
-    deleteLabel->show();
+    return;
   }
 
-  if (selected_object_icon)
-  {
-    selected_object_icon->raise();
+  deleteLabel->show();
+  deleteLabel->lower();
 
-    if (copy_icon)
-    {
-      std::shared_ptr<Object> object = selected_object_icon->get_object();
-      add_object(object, event->pos());
-      selected_object_icon = static_cast<ObjectIcon*>(children().last());
-    }
+  ObjectIcon* object_icon = select_nearest_object();
+  if (!object_icon)
+  {
+    return;
   }
+
+  if (object_icon->parentWidget() != this)
+  {
+    LogpathIcon* icon = static_cast<LogpathIcon*>(object_icon->parent()->parent());
+    icon->remove_object(*object_icon);
+    object_icon->setParent(this);
+    object_icon->show();
+    object_icon->move(event->pos() - QPoint(icon->width()/2, icon->height()/2));
+  }
+
+  if (QApplication::queryKeyboardModifiers() == Qt::ControlModifier)
+  {
+    std::shared_ptr<Object> object = object_icon->get_object();
+    add_object(object, object_icon->geometry().center());
+  }
+
+  object_icon->raise();
 }
 
 void Scene::mouseReleaseEvent(QMouseEvent* event)
 {
-  if (selected_object_icon &&
-    selected_object_icon->parentWidget() == this)
+  Icon* icon = select_nearest_icon();
+  if (icon &&
+    icon->geometry().intersects(deleteLabel->geometry()))
   {
-    const QRect geom = selected_object_icon->geometry();
-    LogpathIcon* icon = select_nearest_logpath(event->pos());
-
-    if (icon && icon->geometry().intersects(geom))
-    {
-      icon->add_object(*selected_object_icon);
-    }
-
-    if (deleteLabel->geometry().intersects(geom))
-    {
-      delete selected_object_icon;
-    }
-  }
-  else if (selected_logpath_icon)
-  {
-    const QRect geom = selected_logpath_icon->geometry();
-
-    if (deleteLabel->geometry().intersects(geom))
-    {
-      delete selected_logpath_icon;
-    }
+    delete icon;
+    update();
   }
 
-  clear();
-}
-
-void Scene::mouseMoveEvent(QMouseEvent* event)
-{
-  if (selected_object_icon)
-  {
-    if (selected_object_icon->parentWidget() != this)
-    {
-      LogpathIcon* icon = static_cast<LogpathIcon*>(selected_object_icon->parentWidget()->parentWidget());
-      icon->remove_object(*selected_object_icon);
-      selected_object_icon->setParent(this);
-      selected_object_icon->show();
-    }
-
-    if (event->x() > 0 && event->y() > 0)
-    {
-      move_icon(selected_object_icon, event->pos());
-    }
-  }
-  else if (selected_logpath_icon)
-  {
-    if (event->x() > 0 && event->y() > 0)
-    {
-      move_icon(selected_logpath_icon, event->pos());
-    }
-  }
-}
-
-void Scene::mouseDoubleClickEvent(QMouseEvent* event)
-{
   ObjectIcon* object_icon = select_nearest_object();
   LogpathIcon* logpath_icon = select_nearest_logpath(event->pos());
+  if (object_icon && logpath_icon &&
+    logpath_icon->geometry().intersects(object_icon->geometry()))
+  {
+    logpath_icon ->add_object(*object_icon);
+  }
 
-  if (object_icon)
-  {
-    Dialog(*object_icon->get_object(), this).exec();
-  }
-  else if (logpath_icon)
-  {
-    Dialog(logpath_icon->get_logpath()->get_options(), this).exec();
-  }
-}
-
-void Scene::keyPressEvent(QKeyEvent* event)
-{
-  if (event->key() == Qt::Key_Control)
-  {
-    copy_icon = true;
-  }
-}
-
-void Scene::keyReleaseEvent(QKeyEvent* event)
-{
-  if (event->key() == Qt::Key_Control)
-  {
-    copy_icon = false;
-  }
+  deleteLabel->hide();
 }
 
 void Scene::leaveEvent(QEvent *)
 {
-  clear();
-  copy_icon = false;
+  deleteLabel->hide();
 }
 
 void Scene::dragEnterEvent(QDragEnterEvent* event)
@@ -233,6 +151,19 @@ void Scene::dropEvent(QDropEvent* event)
 QSize Scene::sizeHint() const
 {
   return childrenRegion().united(QRect(0, 0, 1, 1)).boundingRect().size();
+}
+
+Icon* Scene::select_nearest_icon() const
+{
+  for (Icon* icon : findChildren<Icon*>())
+  {
+    if (icon->underMouse())
+    {
+      return icon;
+    }
+  }
+
+  return nullptr;
 }
 
 ObjectIcon* Scene::select_nearest_object() const

@@ -8,7 +8,20 @@
 class Object;
 class Logpath;
 
-class ObjectIcon : public QWidget
+class Icon : public QWidget
+{
+  Q_OBJECT
+
+public:
+  explicit Icon(QWidget* parent = 0);
+  ~Icon() {}
+
+protected:
+  virtual void mouseDoubleClickEvent(QMouseEvent *) = 0;
+  void mouseMoveEvent(QMouseEvent* event);
+};
+
+class ObjectIcon : public Icon
 {
   Q_OBJECT
 
@@ -21,13 +34,17 @@ public:
   std::shared_ptr<Object>& get_object();
 
 protected:
+  void mouseDoubleClickEvent(QMouseEvent *);
+  void mousePressEvent(QMouseEvent* event);
+
   void paintEvent(QPaintEvent *);
 
 private:
   void setupIcon();
+  void drag();
 };
 
-class LogpathIcon : public QWidget
+class LogpathIcon : public Icon
 {
   Q_OBJECT
 
@@ -37,13 +54,11 @@ public:
   explicit LogpathIcon(std::shared_ptr<Logpath>& logpath,
                        QWidget* parent = 0);
 
-  std::shared_ptr<Logpath>& get_logpath();
-
   void add_object(ObjectIcon& icon);
   void remove_object(ObjectIcon& icon);
 
 protected:
-  bool eventFilter(QObject *, QEvent* event);
+  void mouseDoubleClickEvent(QMouseEvent* event);
 
 private:
   int get_index(ObjectIcon& icon);
