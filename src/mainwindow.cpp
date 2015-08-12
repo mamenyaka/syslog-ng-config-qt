@@ -29,6 +29,8 @@ MainWindow::MainWindow(QWidget* parent) :
   installEventFilter(this);
 
   setupConnections();
+
+  ui->actionLogpath->trigger();
 }
 
 MainWindow::~MainWindow()
@@ -65,6 +67,8 @@ void MainWindow::setupConnections()
       "Current configuration will be lost! Are you sure?") == QMessageBox::Yes)
     {
       scene->reset();
+      config->get_global_options()->restore_default_values();
+      ui->actionLogpath->trigger();
     }
   });
 

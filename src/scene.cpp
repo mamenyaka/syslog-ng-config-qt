@@ -115,8 +115,6 @@ void Scene::reset()
     delete icon;
   }
 
-  config.get_global_options()->restore_default_values();
-
   updateGeometry();
 }
 
