@@ -14,6 +14,7 @@ class Config
 
 public:
   Config(const std::string& dir_name = "objects");
+  ~Config();
 
   const std::vector< std::unique_ptr<const Object> >& get_default_objects() const;
   const Object& get_default_object(const std::string& name, const std::string& type) const;
@@ -30,6 +31,8 @@ private:
   void update_objects_id(const std::string& name, const std::string& type);
   void delete_object(const Object* old_object);
   void delete_logpath(const Logpath* old_logpath);
+
+  bool deleted = false;
 };
 
 #endif  // CONFIG_H

@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "config.h"
 #include "scene.h"
 #include "dialog.h"
 
@@ -12,17 +11,16 @@
 MainWindow::MainWindow(QWidget* parent) :
   QMainWindow(parent),
   ui(new Ui::MainWindow),
-  config(new Config),
-  scene(new Scene(*config))
+  scene(new Scene(config))
 {
   ui->setupUi(this);
 
-  ui->sourceWidget->setupObjects("source", config->get_default_objects());
-  ui->destinationWidget->setupObjects("destination", config->get_default_objects());
-  ui->filterWidget->setupObjects("filter", config->get_default_objects());
-  ui->templateWidget->setupObjects("template", config->get_default_objects());
-  ui->rewriteWidget->setupObjects("rewrite", config->get_default_objects());
-  ui->parserWidget->setupObjects("parser", config->get_default_objects());
+  ui->sourceWidget->setupObjects("source", config.get_default_objects());
+  ui->destinationWidget->setupObjects("destination", config.get_default_objects());
+  ui->filterWidget->setupObjects("filter", config.get_default_objects());
+  ui->templateWidget->setupObjects("template", config.get_default_objects());
+  ui->rewriteWidget->setupObjects("rewrite", config.get_default_objects());
+  ui->parserWidget->setupObjects("parser", config.get_default_objects());
 
   ui->sceneScrollArea->setWidget(scene);
 
@@ -35,14 +33,12 @@ MainWindow::MainWindow(QWidget* parent) :
 
 MainWindow::~MainWindow()
 {
-  delete scene;
-  delete config;
   delete ui;
 }
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-  if (last_saved == QString::fromStdString(config->to_string()))
+  if (last_saved == QString::fromStdString(config.to_string()))
   {
     event->accept();
   }
@@ -67,7 +63,7 @@ void MainWindow::setupConnections()
       "Current configuration will be lost! Are you sure?") == QMessageBox::Yes)
     {
       scene->reset();
-      config->get_global_options()->restore_default_values();
+      config.get_global_options()->restore_default_values();
       ui->actionLogpath->trigger();
     }
   });
@@ -81,7 +77,7 @@ void MainWindow::setupConnections()
       return;
     }
 
-    last_saved = QString::fromStdString(config->to_string());
+    last_saved = QString::fromStdString(config.to_string());
 
     QTextStream out(&file);
     out << last_saved;
@@ -93,14 +89,14 @@ void MainWindow::setupConnections()
 
 
   connect(ui->actionOptions, &QAction::triggered, [&]() {
-    Dialog(config->get_global_options()->get_options(), this).exec();
+    Dialog(config.get_global_options()->get_options(), this).exec();
   });
 
   connect(ui->actionLogpath, &QAction::triggered, [&]() {
-    const Options& log_options = static_cast<const Options&>(config->get_default_object("log", "options"));
+    const Options& log_options = static_cast<const Options&>(config.get_default_object("log", "options"));
     Logpath* new_logpath = new Logpath(log_options);
 
-    std::shared_ptr<Logpath> logpath = config->add_logpath(new_logpath);
+    std::shared_ptr<Logpath> logpath = config.add_logpath(new_logpath);
     scene->add_logpath(logpath, QPoint(150, 30));
   });
 

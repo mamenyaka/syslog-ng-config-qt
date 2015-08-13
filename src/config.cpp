@@ -76,6 +76,11 @@ Config::Config(const std::string& dir_name)
   }
 }
 
+Config::~Config()
+{
+  deleted = true;
+}
+
 const std::vector< std::unique_ptr<const Object> >& Config::get_default_objects() const
 {
   return default_objects;
@@ -254,6 +259,11 @@ void Config::update_objects_id(const std::string& name, const std::string& type)
 
 void Config::delete_object(const Object* old_object)
 {
+  if (deleted)
+  {
+    return;
+  }
+
   const std::string name = old_object->get_name();
   const std::string type = old_object->get_type();
 
@@ -264,5 +274,10 @@ void Config::delete_object(const Object* old_object)
 
 void Config::delete_logpath(const Logpath* old_logpath)
 {
+  if (deleted)
+  {
+    return;
+  }
+
   logpaths.remove_if([old_logpath](const std::unique_ptr<Logpath>& logpath)->bool { return logpath.get() == old_logpath; });
 }

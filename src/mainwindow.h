@@ -1,12 +1,13 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "config.h"
+
 #include <QMainWindow>
 
 namespace Ui {
   class MainWindow;
 }
-class Config;
 class Scene;
 
 class MainWindow : public QMainWindow
@@ -14,11 +15,9 @@ class MainWindow : public QMainWindow
   Q_OBJECT
 
   Ui::MainWindow* ui;
-
-  Config* config;
   Scene* scene;
 
-  QString last_saved;
+  Config config;
 
 public:
   explicit MainWindow(QWidget* parent = 0);
@@ -33,6 +32,8 @@ private:
   // non copyable
   MainWindow(const MainWindow&) = delete;
   MainWindow& operator=(const MainWindow&) = delete;
+
+  QString last_saved;
 };
 
 #endif // MAINWINDOW_H
