@@ -3,31 +3,52 @@
 #include <QDirIterator>
 
 #include <yaml-cpp/yaml.h>
-
 #include <map>
 
-enum class OptionType : int { STRING, NUMBER, LIST, SET, TLS, VALUE_PAIRS };
-
-std::map<std::string, OptionType> option_type_map {
-  {"string", OptionType::STRING},
-  {"number", OptionType::NUMBER},
-  {"list", OptionType::LIST},
-  {"set", OptionType::SET},
-  {"tls", OptionType::TLS},
-  {"value-pairs", OptionType::VALUE_PAIRS}
+template <class T, class U>
+struct Typelist
+{
+  typedef T Head;
+  typedef U Tail;
 };
 
-enum class ObjectType : int { SOURCE, DESTINATION, FILTER, TEMPLATE, REWRITE, PARSER, OPTIONS };
+class NullType {};
 
-std::map<std::string, ObjectType> object_type_map {
-  {"source", ObjectType::SOURCE},
-  {"destination", ObjectType::DESTINATION},
-  {"options", ObjectType::OPTIONS},
-  {"filter", ObjectType::FILTER},
-  {"template", ObjectType::TEMPLATE},
-  {"rewrite", ObjectType::REWRITE},
-  {"parser", ObjectType::PARSER}
+typedef Typelist< Source, Typelist<Destination,
+  Typelist<Filter, Typelist<Template,
+  Typelist<Rewrite, Typelist<Parser,
+  Typelist<Options, NullType> > > > > > > ObjectTypes;
+
+typedef Typelist< StringOption, Typelist<NumberOption,
+  Typelist<ListOption, Typelist<SetOption,
+  Typelist<ExternOption, NullType> > > > > OptionTypes;
+
+template<class TList, unsigned int index>
+struct TypeAt;
+
+template <class Head, class Tail>
+struct TypeAt<Typelist<Head, Tail>, 0>
+{
+  typedef Head Result;
 };
+
+template<class Head, class Tail, unsigned int index>
+struct TypeAt<Typelist<Head, Tail>, index>
+{
+  typedef typename TypeAt<Tail, index - 1>::Result Result;
+};
+
+template<unsigned int index>
+Object* create_object(const std::string& name, const std::string& description)
+{
+  return new typename TypeAt<ObjectTypes, index>::Result(name, description);
+}
+
+template<unsigned int index>
+Option* create_option(const std::string& name, const std::string& description)
+{
+  return new typename TypeAt<OptionTypes, index>::Result(name, description);
+}
 
 
 Config::Config(const std::string& dir_name)
@@ -131,32 +152,17 @@ void Config::parse_yaml(const std::string& file_name)
   const std::string type = yaml_object["type"].as<std::string>();
   const std::string description = yaml_object["description"].as<std::string>();
 
-  Object* object;
-  ObjectType object_type = object_type_map[type];
-  switch (object_type)
-  {
-    case ObjectType::SOURCE:
-      object = new Source(name, description);
-      break;
-    case ObjectType::DESTINATION:
-      object = new Destination(name, description);
-      break;
-    case ObjectType::OPTIONS:
-      object = new Options(name, description);
-      break;
-    case ObjectType::FILTER:
-      object = new Filter(name, description);
-      break;
-    case ObjectType::TEMPLATE:
-      object = new Template(name, description);
-      break;
-    case ObjectType::REWRITE:
-      object = new Rewrite(name, description);
-      break;
-    case ObjectType::PARSER:
-      object = new Parser(name, description);
-      break;
-  }
+  std::map<std::string, void*> object_map {
+    {"source", create_object<0>(name, description)},
+    {"destination", create_object<1>(name, description)},
+    {"filter", create_object<2>(name, description)},
+    {"template", create_object<3>(name, description)},
+    {"rewrite", create_object<4>(name, description)},
+    {"parser", create_object<5>(name, description)},
+    {"options", create_object<6>(name, description)}
+  };
+
+  Object* object = static_cast<Object*>(object_map[type]);
 
   if (yaml_object["include"])
   {
@@ -173,38 +179,27 @@ void Config::parse_yaml(const std::string& file_name)
     const std::string type = yaml_option["type"].as<std::string>();
     const std::string description = yaml_option["description"].as<std::string>();
 
-    Option* option;
-    OptionType option_type = option_type_map[type];
-    switch (option_type)
-    {
-      case OptionType::STRING:
-        option = new StringOption(name, description);
-        break;
-      case OptionType::NUMBER:
-        option = new NumberOption(name, description);
-        break;
-      case OptionType::LIST:
-        option = new ListOption(name, description);
-        break;
-      case OptionType::SET:
-        option = new SetOption(name, description);
-        break;
-      case OptionType::TLS:
-      case OptionType::VALUE_PAIRS:
-        option = new ExternOption(name, description);
-        break;
-    }
+    std::map<std::string, void*> option_map {
+      {"string", create_option<0>(name, description)},
+      {"number", create_option<1>(name, description)},
+      {"list", create_option<2>(name, description)},
+      {"set", create_option<3>(name, description)},
+      {"tls", create_option<4>(name, description)},
+      {"value-pairs", create_option<4>(name, description)}
+    };
+
+    Option* option = static_cast<Option*>(option_map[type]);
 
     const YAML::Node& values = yaml_option["values"];
     for (YAML::const_iterator value_it = values.begin(); value_it != values.end(); ++value_it)
     {
       const std::string value = value_it->as<std::string>();
 
-      if (option_type == OptionType::LIST)
+      if (typeid(*option) == typeid(ListOption))
       {
         static_cast<ListOption*>(option)->add_value(value);
       }
-      else if (option_type == OptionType::SET)
+      else if (typeid(*option) == typeid(SetOption))
       {
         static_cast<SetOption*>(option)->add_value(value);
       }
