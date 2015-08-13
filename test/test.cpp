@@ -6,21 +6,17 @@
 #include <QTextStream>
 #include <QtTest/QTest>
 
-#include <iostream>
-
 void Test::is_config_valid_test_data()
 {
   QFile file("default.conf");
-  if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-  {
-    return;
-  }
+  file.open(QIODevice::ReadOnly | QIODevice::Text);
 
   QTextStream in(&file);
   QString conf = in.readAll();
 
-  QTest::addColumn<QString>("conf");
+  file.close();
 
+  QTest::addColumn<QString>("conf");
   QTest::newRow("default config") << conf;
 }
 
@@ -140,10 +136,15 @@ void Test::is_config_valid_test()
   logpaths.push_back(add_objects_to_logpath(config, system, internal, d_iptables));
   logpaths.push_back(add_objects_to_logpath(config, system, internal, d_console_all));
 
+  QFile file("test.conf");
+  file.open(QIODevice::WriteOnly | QIODevice::Text);
+
+  QTextStream out(&file);
+  out << QString::fromStdString(config.to_string());
+
+  file.close();
+
   QFETCH(QString, conf);
-
-  std::cerr << config.to_string() << std::endl << conf.toStdString() << std::endl;
-
   QCOMPARE(QString::fromStdString(config.to_string()), conf);
 }
 
