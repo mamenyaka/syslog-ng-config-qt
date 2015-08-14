@@ -9,6 +9,8 @@ class QVBoxLayout;
 class QGroupBox;
 class Options;
 
+enum class OptionType { STRING, NUMBER, LIST, SET, TLS, VALUEPAIRS };
+
 class Option
 {
 protected:
@@ -25,16 +27,14 @@ public:
 
   const std::string& get_name() const;
   const std::string& get_description() const;
+  virtual const std::string get_current_value() const = 0;
 
   bool is_required() const;
   void set_required(bool required);
-
-  virtual const std::string get_current_value() const = 0;
-
   virtual bool has_changed() const = 0;
 
   virtual void set_default(const std::string& default_value) = 0;
-  virtual void set_current(const std::string& default_value) = 0;
+  virtual void set_current(const std::string& current_value) = 0;
   virtual void set_previous() = 0;
 
   virtual void restore_default() = 0;
@@ -48,7 +48,7 @@ public:
 };
 
 template<typename Value, class Derived>
-class OptionBase : public Option
+class SimpleOption : public Option
 {
 protected:
   Value default_value;
@@ -56,8 +56,8 @@ protected:
   Value previous_value;
 
 public:
-  OptionBase(const std::string& name,
-             const std::string& description);
+  SimpleOption(const std::string& name,
+               const std::string& description);
 
   Option* clone() const;
 
@@ -69,7 +69,7 @@ public:
   virtual void restore_previous();
 };
 
-class StringOption : public OptionBase<std::string, StringOption>
+class StringOption : public SimpleOption<std::string, StringOption>
 {
 public:
   StringOption(const std::string& name,
@@ -85,7 +85,7 @@ public:
   bool set_option(QGroupBox* groupBox);
 };
 
-class NumberOption : public OptionBase<int, NumberOption>
+class NumberOption : public SimpleOption<int, NumberOption>
 {
 public:
   NumberOption(const std::string& name,
@@ -101,10 +101,20 @@ public:
   bool set_option(QGroupBox* groupBox);
 };
 
-class ListOption : public OptionBase<int, ListOption>
+
+class SelectOption
 {
+protected:
   std::vector<std::string> values;
 
+public:
+  SelectOption();
+
+  void add_value(const std::string& value);
+};
+
+class ListOption : public SimpleOption<int, ListOption>, public SelectOption
+{
 public:
   ListOption(const std::string& name,
              const std::string& description);
@@ -114,8 +124,6 @@ public:
   void set_default(const std::string& default_value);
   void set_current(const std::string& current_value);
 
-  void add_value(const std::string& value);
-
   void create_form(QVBoxLayout* vboxLayout) const;
   void set_form_value(QGroupBox* groupBox) const;
   bool set_option(QGroupBox* groupBox);
@@ -124,10 +132,8 @@ private:
   int find_index(const std::string& value) const;
 };
 
-class SetOption : public OptionBase<std::string, SetOption>
+class SetOption : public SimpleOption<std::string, SetOption>, public SelectOption
 {
-  std::vector<std::string> values;
-
 public:
   SetOption(const std::string& name,
             const std::string& description);
@@ -137,21 +143,29 @@ public:
   void set_default(const std::string& default_value);
   void set_current(const std::string& current_value);
 
-  void add_value(const std::string& value);
-
   void create_form(QVBoxLayout* vboxLayout) const;
   void set_form_value(QGroupBox* groupBox) const;
   bool set_option(QGroupBox* groupBox);
 };
 
-class ExternOption : public OptionBase<bool, ExternOption>
+
+template<class Derived>
+class ExternOption : public Option
 {
+protected:
   std::unique_ptr<Options> options;
 
 public:
   ExternOption(const std::string& name,
                const std::string& description);
   ExternOption(const ExternOption& other);
+
+  Option* clone() const;
+
+  void set_options(const Options& options)
+  {
+    this->options = std::make_unique<Options>(options);
+  }
 
   const std::string get_current_value() const;
 
@@ -164,11 +178,32 @@ public:
   void restore_default();
   void restore_previous();
 
-  void set_options(const Options& options);
-
   void create_form(QVBoxLayout* vboxLayout) const;
   void set_form_value(QGroupBox *) const {}
   bool set_option(QGroupBox *) { return true; }
+
+protected:
+  virtual const std::string get_type() const = 0;
+};
+
+class TLSOption : public ExternOption<TLSOption>
+{
+public:
+  TLSOption(const std::string& name,
+            const std::string& description);
+
+private:
+  const std::string get_type() const;
+};
+
+class ValuePairsOption : public ExternOption<ValuePairsOption>
+{
+public:
+  ValuePairsOption(const std::string& name,
+                   const std::string& description);
+
+private:
+  const std::string get_type() const;
 };
 
 #endif  // OPTION_H

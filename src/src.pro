@@ -8,25 +8,25 @@ QT += core gui widgets
 LIBS += -lyaml-cpp
 
 SOURCES += \
-    main.cpp \
-    mainwindow.cpp \
-    tab.cpp \
-    scene.cpp \
-    icon.cpp \
-    dialog.cpp \
     option.cpp \
     object.cpp \
-    config.cpp
+    config.cpp \
+    icon.cpp \
+    tab.cpp \
+    dialog.cpp \
+    scene.cpp \
+    mainwindow.cpp \
+    main.cpp
 
 HEADERS += \
-    mainwindow.h \
-    tab.h \
-    scene.h \
-    icon.h \
-    dialog.h \
     option.h \
     object.h \
-    config.h
+    config.h \
+    icon.h \
+    tab.h \
+    dialog.h \
+    scene.h \
+    mainwindow.h
 
 FORMS += \
     mainwindow.ui \

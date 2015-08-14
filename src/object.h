@@ -10,6 +10,8 @@
 
 class QPainter;
 
+enum class ObjectType { SOURCE, DESTINATION, FILTER, TEMPLATE, REWRITE, PARSER, OPTIONS };
+
 class Object
 {
 protected:

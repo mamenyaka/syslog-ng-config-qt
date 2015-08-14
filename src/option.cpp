@@ -45,37 +45,37 @@ const std::string Option::to_string() const
 
 
 template<typename Value, class Derived>
-OptionBase<Value, Derived>::OptionBase(const std::string& name,
-                                       const std::string& description) :
+SimpleOption<Value, Derived>::SimpleOption(const std::string& name,
+                                           const std::string& description) :
   Option(name, description)
 {}
 
 template<typename Value, class Derived>
-Option* OptionBase<Value, Derived>::clone() const
+Option* SimpleOption<Value, Derived>::clone() const
 {
   return new Derived(static_cast<const Derived&>(*this));
 }
 
 template<typename Value, class Derived>
-bool OptionBase<Value, Derived>::has_changed() const
+bool SimpleOption<Value, Derived>::has_changed() const
 {
   return required || current_value != default_value;
 }
 
 template<typename Value, class Derived>
-void OptionBase<Value, Derived>::set_previous()
+void SimpleOption<Value, Derived>::set_previous()
 {
   previous_value = current_value;
 }
 
 template<typename Value, class Derived>
-void OptionBase<Value, Derived>::restore_default()
+void SimpleOption<Value, Derived>::restore_default()
 {
   current_value = default_value;
 }
 
 template<typename Value, class Derived>
-void OptionBase<Value, Derived>::restore_previous()
+void SimpleOption<Value, Derived>::restore_previous()
 {
   current_value = previous_value;
 }
@@ -83,7 +83,7 @@ void OptionBase<Value, Derived>::restore_previous()
 
 StringOption::StringOption(const std::string& name,
                            const std::string& description) :
-  OptionBase(name, description)
+  SimpleOption(name, description)
 {}
 
 const std::string StringOption::get_current_value() const
@@ -126,7 +126,7 @@ bool StringOption::set_option(QGroupBox* groupBox)
 
 NumberOption::NumberOption(const std::string& name,
                            const std::string& description) :
-  OptionBase(name, description)
+  SimpleOption(name, description)
 {
   previous_value = current_value = default_value = -1;
 }
@@ -171,13 +171,22 @@ bool NumberOption::set_option(QGroupBox* groupBox)
 }
 
 
+SelectOption::SelectOption()
+{
+  values.reserve(10);
+}
+
+void SelectOption::add_value(const std::string& value)
+{
+  values.push_back(std::move(value));
+}
+
+
 ListOption::ListOption(const std::string& name,
                        const std::string& description) :
-  OptionBase(name, description)
+  SimpleOption(name, description)
 {
   previous_value = current_value = default_value = -1;
-
-  values.reserve(10);
 }
 
 const std::string ListOption::get_current_value() const
@@ -195,11 +204,6 @@ void ListOption::set_current(const std::string& current_value)
 {
   this->current_value = find_index(current_value);
   set_previous();
-}
-
-void ListOption::add_value(const std::string& value)
-{
-  values.push_back(std::move(value));
 }
 
 void ListOption::create_form(QVBoxLayout* vboxLayout) const
@@ -246,10 +250,8 @@ int ListOption::find_index(const std::string& value) const
 
 SetOption::SetOption(const std::string& name,
                      const std::string& description) :
-  OptionBase(name, description)
-{
-  values.reserve(10);
-}
+  SimpleOption(name, description)
+{}
 
 const std::string SetOption::get_current_value() const
 {
@@ -266,11 +268,6 @@ void SetOption::set_current(const std::string& current_value)
 {
   this->current_value = current_value;
   set_previous();
-}
-
-void SetOption::add_value(const std::string& value)
-{
-  values.push_back(std::move(value));
 }
 
 void SetOption::create_form(QVBoxLayout* vboxLayout) const
@@ -312,13 +309,15 @@ bool SetOption::set_option(QGroupBox* groupBox)
 }
 
 
-ExternOption::ExternOption(const std::string& name,
-                           const std::string& description) :
-  OptionBase(name, description)
+template<class Derived>
+ExternOption<Derived>::ExternOption(const std::string& name,
+                                    const std::string& description) :
+  Option(name, description)
 {}
 
-ExternOption::ExternOption(const ExternOption& other) :
-  OptionBase<bool, ExternOption>(other)
+template<class Derived>
+ExternOption<Derived>::ExternOption(const ExternOption& other) :
+  Option(other)
 {
   if (other.options.get())
   {
@@ -326,7 +325,14 @@ ExternOption::ExternOption(const ExternOption& other) :
   }
 }
 
-const std::string ExternOption::get_current_value() const
+template<class Derived>
+Option* ExternOption<Derived>::clone() const
+{
+  return new Derived(static_cast<const Derived&>(*this));
+}
+
+template<class Derived>
+const std::string ExternOption<Derived>::get_current_value() const
 {
   std::string config;
 
@@ -345,7 +351,8 @@ const std::string ExternOption::get_current_value() const
   return config;
 }
 
-bool ExternOption::has_changed() const
+template<class Derived>
+bool ExternOption<Derived>::has_changed() const
 {
   for (const std::unique_ptr<Option>& option : options->get_options())
   {
@@ -358,7 +365,8 @@ bool ExternOption::has_changed() const
   return false;
 }
 
-void ExternOption::set_previous()
+template<class Derived>
+void ExternOption<Derived>::set_previous()
 {
   for (std::unique_ptr<Option>& option : options->get_options())
   {
@@ -366,7 +374,8 @@ void ExternOption::set_previous()
   }
 }
 
-void ExternOption::restore_default()
+template<class Derived>
+void ExternOption<Derived>::restore_default()
 {
   for (std::unique_ptr<Option>& option : options->get_options())
   {
@@ -374,7 +383,8 @@ void ExternOption::restore_default()
   }
 }
 
-void ExternOption::restore_previous()
+template<class Derived>
+void ExternOption<Derived>::restore_previous()
 {
   for (std::unique_ptr<Option>& option : options->get_options())
   {
@@ -382,16 +392,34 @@ void ExternOption::restore_previous()
   }
 }
 
-void ExternOption::set_options(const Options& options)
+template<class Derived>
+void ExternOption<Derived>::create_form(QVBoxLayout* vboxLayout) const
 {
-  this->options = std::make_unique<Options>(options);
-}
-
-void ExternOption::create_form(QVBoxLayout* vboxLayout) const
-{
-  QPushButton* button = new QPushButton("set options");
+  QPushButton* button = new QPushButton(QString::fromStdString("set " + get_type() + " options"));
   vboxLayout->addWidget(button);
 
   Dialog* dialog = new Dialog(*options, vboxLayout->parentWidget());
   QObject::connect(button, &QPushButton::clicked, dialog, &Dialog::exec);
+}
+
+
+TLSOption::TLSOption(const std::string& name,
+                     const std::string& description) :
+  ExternOption(name, description)
+{}
+
+const std::string TLSOption::get_type() const
+{
+  return "TLS";
+}
+
+
+ValuePairsOption::ValuePairsOption(const std::string& name,
+                                   const std::string& description) :
+  ExternOption(name, description)
+{}
+
+const std::string ValuePairsOption::get_type() const
+{
+  return "value-pairs";
 }

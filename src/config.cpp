@@ -14,14 +14,20 @@ struct Typelist
 
 class NullType {};
 
-typedef Typelist< Source, Typelist<Destination,
-  Typelist<Filter, Typelist<Template,
-  Typelist<Rewrite, Typelist<Parser,
+typedef Typelist<Source,
+  Typelist<Destination,
+  Typelist<Filter,
+  Typelist<Template,
+  Typelist<Rewrite,
+  Typelist<Parser,
   Typelist<Options, NullType> > > > > > > ObjectTypes;
 
-typedef Typelist< StringOption, Typelist<NumberOption,
-  Typelist<ListOption, Typelist<SetOption,
-  Typelist<ExternOption, NullType> > > > > OptionTypes;
+typedef Typelist<StringOption,
+  Typelist<NumberOption,
+  Typelist<ListOption,
+  Typelist<SetOption,
+  Typelist<TLSOption,
+  Typelist<ValuePairsOption, NullType> > > > > > OptionTypes;
 
 template<class TList, unsigned int index>
 struct TypeAt;
@@ -38,16 +44,16 @@ struct TypeAt<Typelist<Head, Tail>, index>
   typedef typename TypeAt<Tail, index - 1>::Result Result;
 };
 
-template<unsigned int index>
+template<ObjectType type>
 Object* create_object(const std::string& name, const std::string& description)
 {
-  return new typename TypeAt<ObjectTypes, index>::Result(name, description);
+  return new typename TypeAt<ObjectTypes, (int) type>::Result(name, description);
 }
 
-template<unsigned int index>
+template<OptionType type>
 Option* create_option(const std::string& name, const std::string& description)
 {
-  return new typename TypeAt<OptionTypes, index>::Result(name, description);
+  return new typename TypeAt<OptionTypes, (int) type>::Result(name, description);
 }
 
 
@@ -82,16 +88,18 @@ Config::Config(const std::string& dir_name)
   {
     for (const std::unique_ptr<Option>& option : object->get_options())
     {
-      if (option->get_name() == "tls")
+      TLSOption* tls_option = dynamic_cast<TLSOption*>(option.get());
+      if (tls_option)
       {
-        static_cast<ExternOption&>(*option).set_options(options_tls);
-        break;
+        tls_option->set_options(options_tls);
+        continue;
       }
 
-      if (option->get_name() == "value-pairs")
+      ValuePairsOption* value_pairs_option = dynamic_cast<ValuePairsOption*>(option.get());
+      if (value_pairs_option)
       {
-        static_cast<ExternOption&>(*option).set_options(options_value_pairs);
-        break;
+        value_pairs_option->set_options(options_value_pairs);
+        continue;
       }
     }
   }
@@ -152,17 +160,17 @@ void Config::parse_yaml(const std::string& file_name)
   const std::string type = yaml_object["type"].as<std::string>();
   const std::string description = yaml_object["description"].as<std::string>();
 
-  std::map<std::string, void*> object_map {
-    {"source", create_object<0>(name, description)},
-    {"destination", create_object<1>(name, description)},
-    {"filter", create_object<2>(name, description)},
-    {"template", create_object<3>(name, description)},
-    {"rewrite", create_object<4>(name, description)},
-    {"parser", create_object<5>(name, description)},
-    {"options", create_object<6>(name, description)}
+  std::map<std::string, void*> create_object_map {
+    {"source", create_object<ObjectType::SOURCE>(name, description)},
+    {"destination", create_object<ObjectType::DESTINATION>(name, description)},
+    {"filter", create_object<ObjectType::FILTER>(name, description)},
+    {"template", create_object<ObjectType::TEMPLATE>(name, description)},
+    {"rewrite", create_object<ObjectType::REWRITE>(name, description)},
+    {"parser", create_object<ObjectType::PARSER>(name, description)},
+    {"options", create_object<ObjectType::OPTIONS>(name, description)}
   };
 
-  Object* object = static_cast<Object*>(object_map[type]);
+  Object* object = static_cast<Object*>(create_object_map[type]);
 
   if (yaml_object["include"])
   {
@@ -179,30 +187,22 @@ void Config::parse_yaml(const std::string& file_name)
     const std::string type = yaml_option["type"].as<std::string>();
     const std::string description = yaml_option["description"].as<std::string>();
 
-    std::map<std::string, void*> option_map {
-      {"string", create_option<0>(name, description)},
-      {"number", create_option<1>(name, description)},
-      {"list", create_option<2>(name, description)},
-      {"set", create_option<3>(name, description)},
-      {"tls", create_option<4>(name, description)},
-      {"value-pairs", create_option<4>(name, description)}
+    std::map<std::string, void*> create_option_map {
+      {"string", create_option<OptionType::STRING>(name, description)},
+      {"number", create_option<OptionType::NUMBER>(name, description)},
+      {"list", create_option<OptionType::LIST>(name, description)},
+      {"set", create_option<OptionType::SET>(name, description)},
+      {"tls", create_option<OptionType::TLS>(name, description)},
+      {"value-pairs", create_option<OptionType::VALUEPAIRS>(name, description)}
     };
 
-    Option* option = static_cast<Option*>(option_map[type]);
+    Option* option = static_cast<Option*>(create_option_map[type]);
 
     const YAML::Node& values = yaml_option["values"];
     for (YAML::const_iterator value_it = values.begin(); value_it != values.end(); ++value_it)
     {
       const std::string value = value_it->as<std::string>();
-
-      if (typeid(*option) == typeid(ListOption))
-      {
-        static_cast<ListOption*>(option)->add_value(value);
-      }
-      else if (typeid(*option) == typeid(SetOption))
-      {
-        static_cast<SetOption*>(option)->add_value(value);
-      }
+      dynamic_cast<SelectOption*>(option)->add_value(value);
     }
 
     if (yaml_option["default"])
