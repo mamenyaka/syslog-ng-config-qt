@@ -20,7 +20,7 @@ void Tab::setupObjects(const std::string& type, const std::vector< std::unique_p
   {
     if (default_object->get_type() == type)
     {
-      std::shared_ptr<Object> object(default_object->clone());
+      std::shared_ptr<Object> object(const_cast<Object*>(default_object.get()), [](const Object *){});
       ObjectIcon* icon = new ObjectIcon(object);
       mainLayout->addWidget(icon, row, col++);
 
@@ -46,7 +46,9 @@ void Tab::drag(Icon* icon)
   QMimeData* mimeData = new QMimeData;
   mimeData->setData("objecticon", itemData);
 
-  const QPixmap pixmap = icon->palette().brush(QPalette::Background).texture();
+  QPixmap pixmap(icon->size());
+  pixmap.fill(Qt::transparent);
+  icon->render(&pixmap);
 
   QDrag *drag = new QDrag(window());
   drag->setMimeData(mimeData);

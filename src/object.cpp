@@ -15,8 +15,7 @@ Object::Object(const std::string& name,
 Object::Object(const Object& other) :
  name(other.name),
  description(other.description),
- include(other.include),
- id(other.id)
+ include(other.include)
 {
   for (const std::unique_ptr<Option>& option : other.options)
   {
@@ -49,11 +48,6 @@ const std::string& Object::get_include() const
   return include;
 }
 
-int Object::get_id() const
-{
-  return id;
-}
-
 void Object::add_option(Option* option)
 {
   options.emplace_back(option);
@@ -64,42 +58,6 @@ void Object::set_include(const std::string& include)
   this->include = include;
 }
 
-void Object::set_id(int id)
-{
-  this->id = id;
-}
-
-void Object::set_previous_values()
-{
-  for (std::unique_ptr<Option>& option : options)
-  {
-    option->set_previous();
-  }
-}
-
-void Object::restore_previous_values()
-{
-  for (std::unique_ptr<Option>& option : options)
-  {
-    option->restore_previous();
-  }
-}
-
-void Object::restore_default_values()
-{
-  for (std::unique_ptr<Option>& option : options)
-  {
-    option->restore_default();
-  }
-}
-
-const std::string Object::get_id_name() const
-{
-  return std::string(1, get_type().at(0)) +
-         "_" + name +
-         (id > -1 ? std::to_string(id) : "");
-}
-
 const std::string Object::get_separator() const
 {
   return "";
@@ -107,15 +65,7 @@ const std::string Object::get_separator() const
 
 const std::string Object::to_string() const
 {
-  std::string config;
-
-  if (!include.empty())
-  {
-    config += "@include \"" + include + "\"\n\n";
-  }
-
-  config += get_type() + " " + get_id_name() + " {";
-  config += "\n    " + name + "(";
+  std::string config = name + "(";
 
   for (const std::unique_ptr<Option>& option : options)
   {
@@ -139,7 +89,6 @@ const std::string Object::to_string() const
   }
 
   config += "\n    );";
-  config += "\n};\n\n";
 
   return config;
 }
@@ -196,6 +145,16 @@ Filter::Filter(const std::string& name,
   ObjectBase<Filter>(name, description)
 {}
 
+void Filter::set_invert(bool invert)
+{
+  this->invert = invert;
+}
+
+void Filter::set_next(const std::string& next)
+{
+  this->next = next;
+}
+
 void Filter::draw(QPainter* painter, int width, int height) const
 {
   QPainterPath path;
@@ -213,6 +172,17 @@ void Filter::draw(QPainter* painter, int width, int height) const
 const std::string Filter::get_type() const
 {
   return "filter";
+}
+
+const std::string Filter::to_string() const
+{
+  std::string config;
+
+  config += (invert ? "not " : "");
+  config += Object::to_string();
+  config += "\b " + next;
+
+  return config;
 }
 
 
@@ -324,51 +294,6 @@ const std::string Options::to_string() const
 }
 
 
-Logpath::Logpath(const Options& options) :
-  options(options)
-{
-  this->options.set_separator(";");
-}
-
-Options& Logpath::get_options()
-{
-  return options;
-}
-
-void Logpath::add_object(const std::shared_ptr<Object>& object)
-{
-  objects.push_back(object);
-}
-
-void Logpath::remove_object(const std::shared_ptr<const Object>& object)
-{
-  objects.remove(object);
-}
-
-const std::string Logpath::to_string() const
-{
-  std::string config;
-
-  if (objects.empty())
-  {
-    return config;
-  }
-
-  config += "log {";
-
-  for (const std::shared_ptr<const Object>& object : objects)
-  {
-    config += "\n    " + object->get_type() + "(" + object->get_id_name() + ");";
-  }
-
-  config += options.to_string();
-
-  config += "\n};\n\n";
-
-  return config;
-}
-
-
 GlobalOptions::GlobalOptions(const Options& options) :
   options(options)
 {
@@ -380,23 +305,20 @@ Options& GlobalOptions::get_options()
   return options;
 }
 
-void GlobalOptions::restore_default_values()
-{
-  options.restore_default_values();
-}
-
 const std::string GlobalOptions::to_string() const
 {
   std::string config;
 
-  if (has_changed())
+  if (!has_changed())
   {
-    config += "options {";
-
-    config += options.to_string();
-
-    config += "\n};\n\n";
+    return config;
   }
+
+  config += "options {";
+
+  config += options.to_string();
+
+  config += "\n};\n\n";
 
   return config;
 }
@@ -412,4 +334,124 @@ bool GlobalOptions::has_changed() const
   }
 
   return false;
+}
+
+
+ObjectStatement::ObjectStatement(const std::string& name) :
+  name(name)
+{}
+
+const std::string& ObjectStatement::get_name() const
+{
+  return name;
+}
+
+const std::string& ObjectStatement::get_type() const
+{
+  return type;
+}
+
+const std::list< std::shared_ptr<const Object> >& ObjectStatement::get_objects() const
+{
+  return objects;
+}
+
+void ObjectStatement::add_object(const std::shared_ptr<const Object>& object, const int position)
+{
+  if (objects.empty())
+  {
+    type = object->get_type();
+  }
+
+  auto it = objects.begin();
+  std::advance(it, position);
+  objects.insert(it, object);
+}
+
+void ObjectStatement::remove_object(const std::shared_ptr<const Object>& object)
+{
+  objects.remove(object);
+
+  if (objects.empty())
+  {
+    type.clear();
+  }
+}
+
+const std::string ObjectStatement::to_string() const
+{
+  std::string config;
+
+  if (objects.empty())
+  {
+    return config;
+  }
+
+  config += type + " " + name + " {";
+
+  for (const std::shared_ptr<const Object>& object : objects)
+  {
+    config += "\n    " + object->to_string();
+  }
+
+  if (type == "filter")
+  {
+    config += "\b;";
+  }
+
+  config += "\n};\n\n";
+
+  return config;
+}
+
+
+LogStatement::LogStatement(const Options& options) :
+  options(options)
+{
+  this->options.set_separator(";");
+}
+
+Options& LogStatement::get_options()
+{
+  return options;
+}
+
+const std::list< std::shared_ptr<const ObjectStatement> >& LogStatement::get_object_statements() const
+{
+  return object_statements;
+}
+
+void LogStatement::add_object_statement(const std::shared_ptr<const ObjectStatement>& object_statement, const int position)
+{
+  auto it = object_statements.begin();
+  std::advance(it, position);
+  object_statements.insert(it, object_statement);
+}
+
+void LogStatement::remove_object_statement(const std::shared_ptr< const ObjectStatement >& object_statement)
+{
+  object_statements.remove(object_statement);
+}
+
+const std::string LogStatement::to_string() const
+{
+  std::string config;
+
+  if (object_statements.empty())
+  {
+    return config;
+  }
+
+  config += "log {";
+
+  for (const std::shared_ptr<const ObjectStatement>& object_statement : object_statements)
+  {
+    config += "\n    " + object_statement->get_type() + "(" + object_statement->get_name() + ");";
+  }
+
+  config += options.to_string();
+
+  config += "\n};\n\n";
+
+  return config;
 }

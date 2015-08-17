@@ -6,24 +6,28 @@
 #include <memory>
 
 class Object;
-class Logpath;
+class ObjectStatement;
+class LogStatement;
 
 class Icon : public QWidget
 {
   Q_OBJECT
 
+  bool pressed_but_not_moved = false;
+
 public:
   explicit Icon(QWidget* parent = 0);
-  ~Icon() {}
+  virtual ~Icon() {}
 
 signals:
   void pressed(Icon* icon);
   void released(Icon* icon);
 
 protected:
-  void mouseMoveEvent(QMouseEvent* event);
   void mousePressEvent(QMouseEvent *);
   void mouseReleaseEvent(QMouseEvent *);
+  void mouseMoveEvent(QMouseEvent* event);
+
   virtual void mouseDoubleClickEvent(QMouseEvent *) = 0;
 };
 
@@ -41,32 +45,74 @@ public:
 
 protected:
   void mouseDoubleClickEvent(QMouseEvent *);
-
-  void paintEvent(QPaintEvent *);
-
-private:
-  void setupIcon();
 };
 
-class LogpathIcon : public Icon
+class FilterIcon : public ObjectIcon
+{
+public:
+  explicit FilterIcon(std::shared_ptr<Object>& object,
+                      QWidget* parent = 0);
+};
+
+class StatementIcon : public Icon
 {
   Q_OBJECT
 
-  std::shared_ptr<Logpath> logpath;
-
 public:
-  explicit LogpathIcon(std::shared_ptr<Logpath>& logpath,
-                       QWidget* parent = 0);
+  explicit StatementIcon(QWidget* parent = 0);
 
-  void add_object(ObjectIcon& icon);
-  void remove_object(ObjectIcon& icon);
-
-protected:
-  void mouseDoubleClickEvent(QMouseEvent* event);
+  virtual void add_icon(Icon* icon);
+  virtual void remove_icon(Icon* icon);
 
 private:
-  int get_index(ObjectIcon& icon);
+  int get_index(Icon* icon);
 };
+
+class ObjectStatementIcon : public StatementIcon
+{
+  Q_OBJECT
+
+  std::shared_ptr<ObjectStatement> object_statement;
+
+public:
+  explicit ObjectStatementIcon(std::shared_ptr<ObjectStatement>& object_statement,
+                               QWidget* parent = 0);
+
+  std::shared_ptr<ObjectStatement>& get_object_statement();
+
+  void add_icon(Icon* icon);
+  void remove_icon(Icon* icon);
+
+protected:
+  void mouseDoubleClickEvent(QMouseEvent *) {}
+};
+
+class ObjectStatementIconCopy : public ObjectStatementIcon
+{
+public:
+  explicit ObjectStatementIconCopy(std::shared_ptr<ObjectStatement>& object_statement,
+                                   QWidget* parent = 0);
+
+  void add_icon(Icon *) {}
+};
+
+class LogStatementIcon : public StatementIcon
+{
+  Q_OBJECT
+
+  std::shared_ptr<LogStatement> log_statement;
+
+public:
+  explicit LogStatementIcon(std::shared_ptr<LogStatement>& log_statement,
+                            QWidget* parent = 0);
+
+  void add_icon(Icon* icon);
+  void remove_icon(Icon* icon);
+
+protected:
+  void mouseDoubleClickEvent(QMouseEvent *);
+};
+
 
 class DeleteIcon : public QWidget
 {

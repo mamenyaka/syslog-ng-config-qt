@@ -2,16 +2,15 @@
 #include "object.h"
 #include "dialog.h"
 
+#include <QMouseEvent>
 #include <QLabel>
-#include <QIcon>
 #include <QPainter>
 #include <QPalette>
+#include <QCheckBox>
+#include <QComboBox>
 #include <QFrame>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QMouseEvent>
-#include <QDrag>
-#include <QMimeData>
+#include <QBoxLayout>
+#include <QIcon>
 
 #define ICON_SIZE 80
 
@@ -19,8 +18,25 @@ Icon::Icon(QWidget* parent) :
   QWidget(parent)
 {}
 
+void Icon::mousePressEvent(QMouseEvent *)
+{
+  pressed_but_not_moved = true;
+}
+
+void Icon::mouseReleaseEvent(QMouseEvent *)
+{
+  emit released(this);
+}
+
 void Icon::mouseMoveEvent(QMouseEvent* event)
 {
+  if (pressed_but_not_moved)
+  {
+    emit pressed(this);
+    pressed_but_not_moved = false;
+    return;
+  }
+
   QPoint pos = event->globalPos() - QPoint(width()/2, height()/2);
   QPoint new_pos = parentWidget()->mapFromGlobal(pos);
 
@@ -28,16 +44,6 @@ void Icon::mouseMoveEvent(QMouseEvent* event)
 
   parentWidget()->update();
   parentWidget()->updateGeometry();
-}
-
-void Icon::mousePressEvent(QMouseEvent *)
-{
-  emit pressed(this);
-}
-
-void Icon::mouseReleaseEvent(QMouseEvent *)
-{
-  emit released(this);
 }
 
 
@@ -58,7 +64,20 @@ ObjectIcon::ObjectIcon(std::shared_ptr<Object>& object,
   mainLayout->setMargin(5);
   mainLayout->addWidget(label);
 
-  setupIcon();
+  QPixmap pixmap(size());
+  pixmap.fill(Qt::transparent);
+
+  QPainter painter(&pixmap);
+  painter.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
+  painter.setPen(Qt::black);
+
+  this->object->draw(&painter, width(), height());
+
+  painter.end();
+
+  QPalette palette;
+  palette.setBrush(QPalette::Background, QBrush(pixmap));
+  setPalette(palette);
 }
 
 std::shared_ptr<Object>& ObjectIcon::get_object()
@@ -68,113 +87,193 @@ std::shared_ptr<Object>& ObjectIcon::get_object()
 
 void ObjectIcon::mouseDoubleClickEvent(QMouseEvent *)
 {
-  if (object->get_id() > -1)
-  {
-    Dialog(*object, this).exec();
-  }
-}
-
-void ObjectIcon::paintEvent(QPaintEvent *)
-{
-  if (object->get_id() > -1)
-  {
-    QLabel* label = findChild<QLabel*>();
-    label->setText("\n" + QString::fromStdString(object->get_name()) + "\n" + QString::number(object->get_id()));
-  }
-}
-
-void ObjectIcon::setupIcon()
-{
-  QPixmap pixmap(size());
-  pixmap.fill(Qt::transparent);
-
-  QPainter painter(&pixmap);
-  painter.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
-  painter.setPen(Qt::black);
-
-  object->draw(&painter, width(), height());
-
-  painter.end();
-
-  QPalette palette;
-  palette.setBrush(QPalette::Background, QBrush(pixmap));
-  setPalette(palette);
+  Dialog(*object, this).exec();
 }
 
 
-LogpathIcon::LogpathIcon(std::shared_ptr<Logpath>& logpath,
-                         QWidget* parent) :
-  Icon(parent),
-  logpath(std::move(logpath))
+FilterIcon::FilterIcon(std::shared_ptr<Object>& object,
+                       QWidget* parent) :
+  ObjectIcon(object, parent)
 {
-  QLabel* label = new QLabel("L\nO\nG");
+  QCheckBox* checkBox = new QCheckBox("not", this);
+
+  QComboBox* comboBox = new QComboBox(this);
+  comboBox->addItem("and");
+  comboBox->addItem("or");
+  comboBox->setCurrentIndex(-1);
+
+  QVBoxLayout* mainLayout = static_cast<QVBoxLayout*>(layout());
+  mainLayout->insertWidget(0, checkBox);
+  mainLayout->addWidget(comboBox);
+
+  connect(checkBox, &QCheckBox::stateChanged, [&](int state) {
+    static_cast<Filter&>(*get_object()).set_invert(state);
+  });
+  connect(comboBox, static_cast<void(QComboBox::*)(const QString &)>(&QComboBox::activated), [&](const QString& text) {
+    static_cast<Filter&>(*get_object()).set_next(text.toStdString());
+  });
+}
+
+
+StatementIcon::StatementIcon(QWidget* parent) :
+  Icon(parent)
+{
+  QLabel* label = new QLabel(this);
   label->setAlignment(Qt::AlignCenter);
-  label->setWordWrap(true);
 
-  QFrame* frame = new QFrame;
-  frame->setLineWidth(2);
-  frame->setFrameStyle(QFrame::Box | QFrame::Plain);
+  QFrame* frame = new QFrame(this);
   frame->setMinimumSize(ICON_SIZE, ICON_SIZE);
+  frame->setObjectName("frame");
 
-  QVBoxLayout* frameLayout = new QVBoxLayout(frame);
+  QBoxLayout* frameLayout = new QBoxLayout(QBoxLayout::LeftToRight, frame);
+  frameLayout->setObjectName("frameLayout");
 
-  QHBoxLayout* mainLayout = new QHBoxLayout(this);
+  QBoxLayout* mainLayout = new QBoxLayout(QBoxLayout::TopToBottom, this);
+  mainLayout->setObjectName("mainLayout");
   mainLayout->addWidget(label);
   mainLayout->addWidget(frame);
 }
 
-void LogpathIcon::add_object(ObjectIcon& icon)
+void StatementIcon::add_icon(Icon* icon)
 {
-  if (icon.get_object()->get_type() == "template")
-  {
-    return;
-  }
-
-  std::shared_ptr<Object>& object = icon.get_object();
-  logpath->add_object(object);
-
   const int index = get_index(icon);
 
-  QVBoxLayout* frameLayout = findChild<QVBoxLayout*>();
-  frameLayout->insertWidget(index, &icon);
+  QBoxLayout* frameLayout = findChild<QBoxLayout*>("frameLayout");
+  frameLayout->insertWidget(index, icon);
 
-  icon.show();
+  icon->show();
   adjustSize();
 }
 
-void LogpathIcon::remove_object(ObjectIcon& icon)
+void StatementIcon::remove_icon(Icon* icon)
 {
-  std::shared_ptr<Object>& object = icon.get_object();
-  logpath->remove_object(object);
-
-  QVBoxLayout* frameLayout = findChild<QVBoxLayout*>();
-  frameLayout->removeWidget(&icon);
+  QBoxLayout* frameLayout = findChild<QBoxLayout*>("frameLayout");
+  frameLayout->removeWidget(icon);
 
   frameLayout->activate();
   adjustSize();
 }
 
-void LogpathIcon::mouseDoubleClickEvent(QMouseEvent *)
+int StatementIcon::get_index(Icon* icon)
 {
-  Dialog(logpath->get_options(), this).exec();
-}
-
-int LogpathIcon::get_index(ObjectIcon& icon)
-{
-  QVBoxLayout* frameLayout = findChild<QVBoxLayout*>();
-  QPoint pos = mapFromParent(icon.pos());
+  QBoxLayout* frameLayout = findChild<QBoxLayout*>("frameLayout");
+  QPoint pos = mapFrom(icon->parentWidget(), icon->pos());
 
   for (int i = 0; i < frameLayout->count(); i++)
   {
-    Icon* icon = static_cast<Icon*>(frameLayout->itemAt(i)->widget());
+    QWidget* widget = frameLayout->itemAt(i)->widget();
 
-    if (icon->y() > pos.y())
+    if ((frameLayout->direction() == QBoxLayout::LeftToRight && widget->x() > pos.x()) ||
+      ((frameLayout->direction() == QBoxLayout::TopToBottom && widget->y() > pos.y())))
     {
-      return frameLayout->indexOf(icon);
+      return frameLayout->indexOf(widget);
     }
   }
 
   return frameLayout->count();
+}
+
+
+ObjectStatementIcon::ObjectStatementIcon(std::shared_ptr<ObjectStatement>& object_statement,
+                                         QWidget* parent) :
+  StatementIcon(parent),
+  object_statement(std::move(object_statement))
+{
+  findChild<QLabel*>()->setText(QString::fromStdString(this->object_statement->get_name()));
+  findChild<QFrame*>("frame")->setStyleSheet("#frame { border: 2px solid yellow; }");
+}
+
+std::shared_ptr<ObjectStatement>& ObjectStatementIcon::get_object_statement()
+{
+  return object_statement;
+}
+
+void ObjectStatementIcon::add_icon(Icon* icon)
+{
+  ObjectIcon* object_icon = static_cast<ObjectIcon*>(icon);
+  const std::string& type = object_statement->get_type();
+  if (!type.empty() && type != object_icon->get_object()->get_type())
+  {
+    return;
+  }
+
+  StatementIcon::add_icon(icon);
+
+  parentWidget()->parentWidget()->adjustSize();
+
+  std::shared_ptr<Object>& object = object_icon->get_object();
+  int index = findChild<QBoxLayout*>("frameLayout")->indexOf(icon);
+
+  object_statement->add_object(object, index);
+}
+
+void ObjectStatementIcon::remove_icon(Icon* icon)
+{
+  StatementIcon::remove_icon(icon);
+
+  parent()->parent()->findChild<QBoxLayout*>("frameLayout")->activate();
+  parentWidget()->parentWidget()->adjustSize();
+
+  ObjectIcon* object_icon = static_cast<ObjectIcon*>(icon);
+  std::shared_ptr<Object>& object = object_icon->get_object();
+
+  object_statement->remove_object(object);
+}
+
+
+ObjectStatementIconCopy::ObjectStatementIconCopy(std::shared_ptr<ObjectStatement>& object_statement,
+                                                 QWidget* parent) :
+  ObjectStatementIcon(object_statement, parent)
+{
+  findChild<QLabel*>()->setText(QString::fromStdString(get_object_statement()->get_name()));
+
+  QFrame* frame = findChild<QFrame*>("frame");
+  frame->setStyleSheet("#frame { border: 2px solid gray; }");
+
+  QLabel* label = new QLabel("COPY", this);
+  label->setAlignment(Qt::AlignCenter);
+
+  frame->layout()->addWidget(label);
+}
+
+
+LogStatementIcon::LogStatementIcon(std::shared_ptr<LogStatement>& log_statement,
+                                   QWidget* parent) :
+  StatementIcon(parent),
+  log_statement(std::move(log_statement))
+{
+  findChild<QLabel*>()->setText("L\nO\nG");
+  findChild<QFrame*>("frame")->setStyleSheet("#frame { border: 2px solid black; }");
+  findChild<QBoxLayout*>("frameLayout")->setDirection(QBoxLayout::TopToBottom);
+  findChild<QBoxLayout*>("mainLayout")->setDirection(QBoxLayout::LeftToRight);
+}
+
+void LogStatementIcon::add_icon(Icon* icon)
+{
+  StatementIcon::add_icon(icon);
+
+  ObjectStatementIcon* statement_icon = static_cast<ObjectStatementIcon*>(icon);
+  std::shared_ptr<ObjectStatement>& object_statement = statement_icon->get_object_statement();
+  int index = findChild<QBoxLayout*>("frameLayout")->indexOf(icon);
+
+  log_statement->add_object_statement(object_statement, index);
+}
+
+void LogStatementIcon::remove_icon(Icon* icon)
+{
+  StatementIcon::remove_icon(icon);
+
+  icon->adjustSize();
+
+  ObjectStatementIcon* statement_icon = static_cast<ObjectStatementIcon*>(icon);
+  std::shared_ptr<ObjectStatement>& object_statement = statement_icon->get_object_statement();
+
+  log_statement->remove_object_statement(object_statement);
+}
+
+void LogStatementIcon::mouseDoubleClickEvent(QMouseEvent *)
+{
+  Dialog(log_statement->get_options(), this).exec();
 }
 
 

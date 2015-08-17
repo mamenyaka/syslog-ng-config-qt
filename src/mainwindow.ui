@@ -213,7 +213,8 @@
    <property name="movable">
     <bool>false</bool>
    </property>
-   <addaction name="actionLogpath"/>
+   <addaction name="actionObjectStatement"/>
+   <addaction name="actionLogStatement"/>
   </widget>
   <!--<widget class="QStatusBar" name="statusBar"/>-->
   <action name="actionNew">
@@ -249,14 +250,6 @@
     <string>Ctrl+X</string>
    </property>
   </action>
-  <action name="actionLogpath">
-   <property name="text">
-    <string>New &amp;log path</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+L</string>
-   </property>
-  </action>
   <action name="actionOptions">
    <property name="text">
     <string>Global options</string>
@@ -268,6 +261,22 @@
    </property>
    <property name="text">
     <string>About</string>
+   </property>
+  </action>
+  <action name="actionObjectStatement">
+   <property name="text">
+    <string>New &amp;object statement</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionLogStatement">
+   <property name="text">
+    <string>New &amp;log statement</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+L</string>
    </property>
   </action>
  </widget>

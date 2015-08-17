@@ -124,32 +124,67 @@ const Object& Config::get_default_object(const std::string& name, const std::str
   return **it;
 }
 
-std::unique_ptr<GlobalOptions>& Config::get_global_options()
+Options& Config::get_global_options()
 {
-  return global_options;
+  return global_options->get_options();
 }
 
-std::shared_ptr<Object> Config::add_object(Object* new_object)
+const std::list< std::unique_ptr<ObjectStatement> >& Config::get_object_statements() const
 {
-  const std::string name = new_object->get_name();
-  const std::string type = new_object->get_type();
-
-  objects.emplace_back(new_object);
-
-  update_objects_id(name, type);
-
-  std::unique_ptr<Object>& object = objects.back();
-
-  return std::shared_ptr<Object>(object.get(), [&](const Object* object) { delete_object(object); });
+  return object_statements;
 }
 
-std::shared_ptr<Logpath> Config::add_logpath(Logpath* new_logpath)
+const std::list< std::unique_ptr<LogStatement> >& Config::get_log_statements() const
 {
-  logpaths.emplace_back(new_logpath);
+  return log_statements;
+}
 
-  std::unique_ptr<Logpath>& logpath = logpaths.back();
+std::shared_ptr<ObjectStatement> Config::add_object_statement(ObjectStatement* new_object_statement)
+{
+  object_statements.emplace_back(new_object_statement);
 
-  return std::shared_ptr<Logpath>(logpath.get(), [&](const Logpath* logpath) { delete_logpath(logpath); });
+  std::unique_ptr<ObjectStatement>& object_statement = object_statements.back();
+
+  return std::shared_ptr<ObjectStatement>(object_statement.get(),
+                                          [&](const ObjectStatement* object_statement) {
+                                            delete_object_statement(object_statement);
+                                          });
+}
+
+std::shared_ptr<LogStatement> Config::add_log_statement(LogStatement* new_log_statement)
+{
+  log_statements.emplace_back(new_log_statement);
+
+  std::unique_ptr<LogStatement>& log_statement = log_statements.back();
+
+  return std::shared_ptr<LogStatement>(log_statement.get(),
+                                       [&](const LogStatement* log_statement) {
+                                         delete_log_statement(log_statement);
+                                       });
+}
+
+void Config::delete_object_statement(const ObjectStatement* old_object_statement)
+{
+  if (deleted)
+  {
+    return;
+  }
+
+  object_statements.remove_if([old_object_statement](const std::unique_ptr<ObjectStatement>& object_statement)->bool {
+    return object_statement.get() == old_object_statement;
+  });
+}
+
+void Config::delete_log_statement(const LogStatement* old_log_statement)
+{
+  if (deleted)
+  {
+    return;
+  }
+
+  log_statements.remove_if([old_log_statement](const std::unique_ptr<LogStatement>& log_statement)->bool {
+    return log_statement.get() == old_log_statement;
+  });
 }
 
 void Config::parse_yaml(const std::string& file_name)
@@ -221,58 +256,22 @@ void Config::parse_yaml(const std::string& file_name)
   default_objects.emplace_back(object);
 }
 
+// TODO includes
 const std::string Config::to_string() const
 {
   std::string config;
 
   config += global_options->to_string();
 
-  for (const std::unique_ptr<Object>& object : objects)
+  for (const std::unique_ptr<ObjectStatement>& object_statement : object_statements)
   {
-    config += object->to_string();
+    config += object_statement->to_string();
   }
 
-  for (const std::unique_ptr<Logpath>& logpath : logpaths)
+  for (const std::unique_ptr<LogStatement>& log_statement : log_statements)
   {
-    config += logpath->to_string();
+    config += log_statement->to_string();
   }
 
   return config;
-}
-
-void Config::update_objects_id(const std::string& name, const std::string& type)
-{
-  int id = 0;
-  for (std::unique_ptr<Object>& object : objects)
-  {
-    if (object->get_name() == name && object->get_type() == type)
-    {
-      object->set_id(id++);
-    }
-  }
-}
-
-void Config::delete_object(const Object* old_object)
-{
-  if (deleted)
-  {
-    return;
-  }
-
-  const std::string name = old_object->get_name();
-  const std::string type = old_object->get_type();
-
-  objects.remove_if([old_object](const std::unique_ptr<Object>& object)->bool { return object.get() == old_object; });
-
-  update_objects_id(name, type);
-}
-
-void Config::delete_logpath(const Logpath* old_logpath)
-{
-  if (deleted)
-  {
-    return;
-  }
-
-  logpaths.remove_if([old_logpath](const std::unique_ptr<Logpath>& logpath)->bool { return logpath.get() == old_logpath; });
 }

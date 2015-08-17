@@ -7,9 +7,13 @@
 
 class Config;
 class Object;
-class Logpath;
+class ObjectStatement;
+class LogStatement;
 class Icon;
-class LogpathIcon;
+class ObjectIcon;
+class ObjectStatementIcon;
+class ObjectStatementIconCopy;
+class LogStatementIcon;
 
 class Scene : public QWidget
 {
@@ -21,8 +25,10 @@ public:
   explicit Scene(Config& config,
                  QWidget* parent = 0);
 
-  void add_object(std::shared_ptr<Object>& new_object, const QPoint& pos);
-  void add_logpath(std::shared_ptr<Logpath>& new_logpath, const QPoint& pos);
+  ObjectIcon* add_object(std::shared_ptr<Object>& new_object, const QPoint& pos);
+  ObjectStatementIcon* add_object_statement(std::shared_ptr<ObjectStatement>& new_object_statement, const QPoint& pos);
+  ObjectStatementIconCopy* add_object_statement_copy(std::shared_ptr<ObjectStatement>& new_object_statement, const QPoint& pos);
+  LogStatementIcon* add_log_statement(std::shared_ptr<LogStatement>& new_log_statement, const QPoint& pos);
 
   void reset();
 
@@ -38,7 +44,9 @@ private:
   void add_icon(Icon* icon, const QPoint& pos);
   void pressed(Icon* icon);
   void released(Icon* icon);
-  LogpathIcon* select_nearest_logpath(const QPoint& pos) const;
+
+  ObjectStatementIcon* select_nearest_object_statement_icon(const QPoint& pos) const;
+  LogStatementIcon* select_nearest_log_statement_icon(const QPoint& pos) const;
 
   // non copyable
   Scene(const Scene&) = delete;

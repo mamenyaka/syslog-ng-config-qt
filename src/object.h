@@ -3,10 +3,7 @@
 
 #include "option.h"
 
-#include <string>
-#include <vector>
 #include <list>
-#include <memory>
 
 class QPainter;
 
@@ -19,7 +16,6 @@ protected:
   std::string description;
   std::vector< std::unique_ptr<Option> > options;
   std::string include;
-  int id = -1;
 
 public:
   Object(const std::string& name,
@@ -34,20 +30,13 @@ public:
   std::vector< std::unique_ptr<Option> >& get_options();
   const std::vector< std::unique_ptr<Option> >& get_options() const;
   const std::string& get_include() const;
-  int get_id() const;
 
   void add_option(Option* option);
   void set_include(const std::string& include);
-  void set_id(int id);
-
-  void set_previous_values();
-  void restore_previous_values();
-  void restore_default_values();
 
   virtual void draw(QPainter* painter, int width, int height) const = 0;
 
   virtual const std::string get_type() const = 0;
-  virtual const std::string get_id_name() const;
   virtual const std::string get_separator() const;
   virtual const std::string to_string() const;
 };
@@ -86,13 +75,20 @@ public:
 
 class Filter : public ObjectBase<Filter>
 {
+  bool invert = false;
+  std::string next;
+
 public:
   Filter(const std::string& name,
          const std::string& description);
 
+  void set_invert(bool invert);
+  void set_next(const std::string& next);
+
   void draw(QPainter* painter, int width, int height) const;
 
   const std::string get_type() const;
+  const std::string to_string() const;
 };
 
 class Template : public ObjectBase<Template>
@@ -143,29 +139,6 @@ public:
 
   const std::string get_type() const;
   const std::string to_string() const;
-
-  const std::string& get_include() const = delete;
-  int get_id() const = delete;
-
-  void add_option(Option* option) = delete;
-  void set_include(const std::string& include) = delete;
-  void set_id(int id) = delete;
-};
-
-class Logpath
-{
-  Options options;
-  std::list< std::shared_ptr<const Object> > objects;
-
-public:
-  Logpath(const Options& options);
-
-  Options& get_options();
-
-  void add_object(const std::shared_ptr<Object>& object);
-  void remove_object(const std::shared_ptr<const Object>& object);
-
-  const std::string to_string() const;
 };
 
 class GlobalOptions
@@ -173,16 +146,50 @@ class GlobalOptions
   Options options;
 
 public:
-  GlobalOptions(const Options& options);
+  explicit GlobalOptions(const Options& options);
 
   Options& get_options();
-
-  void restore_default_values();
 
   const std::string to_string() const;
 
 private:
   bool has_changed() const;
+};
+
+class ObjectStatement
+{
+  std::string name;
+  std::string type;
+  std::list< std::shared_ptr<const Object> > objects;
+
+public:
+  explicit ObjectStatement(const std::string& name);
+
+  const std::string& get_name() const;
+  const std::string& get_type() const;
+  const std::list< std::shared_ptr<const Object> >& get_objects() const;
+
+  void add_object(const std::shared_ptr<const Object>& object, const int position);
+  void remove_object(const std::shared_ptr<const Object>& object);
+
+  const std::string to_string() const;
+};
+
+class LogStatement
+{
+  Options options;
+  std::list< std::shared_ptr<const ObjectStatement> > object_statements;
+
+public:
+  explicit LogStatement(const Options& options);
+
+  Options& get_options();
+  const std::list< std::shared_ptr<const ObjectStatement> >& get_object_statements() const;
+
+  void add_object_statement(const std::shared_ptr<const ObjectStatement>& object_statement, const int position);
+  void remove_object_statement(const std::shared_ptr<const ObjectStatement>& object_statement);
+
+  const std::string to_string() const;
 };
 
 #endif  // OBJECT_H

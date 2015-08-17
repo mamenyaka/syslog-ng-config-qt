@@ -5,6 +5,7 @@
 
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QInputDialog>
 #include <QTextStream>
 #include <QCloseEvent>
 
@@ -24,11 +25,9 @@ MainWindow::MainWindow(QWidget* parent) :
 
   ui->sceneScrollArea->setWidget(scene);
 
-  installEventFilter(this);
-
   setupConnections();
 
-  ui->actionLogpath->trigger();
+  ui->actionLogStatement->trigger();
 }
 
 MainWindow::~MainWindow()
@@ -62,9 +61,13 @@ void MainWindow::setupConnections()
     if (QMessageBox::question(this, "New configuration",
       "Current configuration will be lost! Are you sure?") == QMessageBox::Yes)
     {
+      for (std::unique_ptr<Option>& option : config.get_global_options().get_options())
+      {
+        option->restore_default();
+      }
+
       scene->reset();
-      config.get_global_options()->restore_default_values();
-      ui->actionLogpath->trigger();
+      ui->actionLogStatement->trigger();
     }
   });
 
@@ -89,17 +92,41 @@ void MainWindow::setupConnections()
 
 
   connect(ui->actionOptions, &QAction::triggered, [&]() {
-    Dialog(config.get_global_options()->get_options(), this).exec();
+    Dialog(config.get_global_options(), this).exec();
   });
 
-  connect(ui->actionLogpath, &QAction::triggered, [&]() {
+  connect(ui->actionLogStatement, &QAction::triggered, [&]() {
     const Options& log_options = static_cast<const Options&>(config.get_default_object("log", "options"));
-    Logpath* new_logpath = new Logpath(log_options);
+    LogStatement* new_log_statement = new LogStatement(log_options);
 
-    std::shared_ptr<Logpath> logpath = config.add_logpath(new_logpath);
-    scene->add_logpath(logpath, QPoint(150, 30));
+    std::shared_ptr<LogStatement> log_statement = config.add_log_statement(new_log_statement);
+    scene->add_log_statement(log_statement, QPoint(200, 30));
   });
 
+  connect(ui->actionObjectStatement, &QAction::triggered, [&]() {
+    QString text = QInputDialog::getText(this, tr("Object statement"), tr("ID:"));
+    std::string name = text.toStdString();
+
+    if (name.empty())
+    {
+      QMessageBox::warning(this, "Warning", "Name cannot be empty!");
+      return;
+    }
+
+    for (const std::unique_ptr<ObjectStatement>& statement : config.get_object_statements())
+    {
+      if (statement->get_name() == name)
+      {
+        QMessageBox::warning(this, "Warning", "Name already in use!");
+        return;
+      }
+    }
+
+    ObjectStatement* new_object_statement = new ObjectStatement(name);
+
+    std::shared_ptr<ObjectStatement> object_statement = config.add_object_statement(new_object_statement);
+    scene->add_object_statement(object_statement, QPoint(50, 150));
+  });
 
   connect(ui->actionAbout, &QAction::triggered, [&]() {
     QMessageBox::aboutQt(this);

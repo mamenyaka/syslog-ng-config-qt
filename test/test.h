@@ -6,7 +6,8 @@
 #include <memory>
 
 class Object;
-class Logpath;
+class ObjectStatement;
+class LogStatement;
 class Config;
 
 class Test : public QObject
@@ -21,13 +22,15 @@ private:
   void set_option(Object& object, const std::string& option_name, const std::string& option_value);
 
   std::shared_ptr<Object> add_object(Config& config, const std::string& object_name, const std::string& object_type);
+  std::shared_ptr<ObjectStatement> add_object_statement(Config& config, const std::string& object_statement_name);
 
   template<typename... Targs>
-  std::shared_ptr<Logpath> add_objects_to_logpath(Config& config, Targs&... more);
+  void add_objects_to_log_statement(Config& config, Targs&... more);
 
   template<typename... Targs>
-  void add_object_to_logpath_recursive(std::shared_ptr<Logpath>& logpath, std::shared_ptr<Object>& object, Targs&... more);
-  void add_object_to_logpath_recursive(std::shared_ptr<Logpath> &) {}
+  void add_object_to_log_statement_recursive(std::shared_ptr<LogStatement>& log_statement,
+                                             std::shared_ptr<ObjectStatement>& object_statement, Targs&... more);
+  void add_object_to_log_statement_recursive(std::shared_ptr<LogStatement> &) {}
 };
 
 #endif  // TEST_H

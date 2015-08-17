@@ -5,7 +5,6 @@
 
 #include <QLabel>
 #include <QDropEvent>
-#include <QDrag>
 #include <QMimeData>
 #include <QApplication>
 
@@ -22,16 +21,38 @@ Scene::Scene(Config& config,
   deleteIcon->hide();
 }
 
-void Scene::add_object(std::shared_ptr<Object>& new_object, const QPoint& pos)
+ObjectIcon* Scene::add_object(std::shared_ptr<Object>& new_object, const QPoint& pos)
 {
-  ObjectIcon* icon = new ObjectIcon(new_object, this);
+  ObjectIcon* icon = new_object->get_type() == "filter" ?
+    new FilterIcon(new_object, this) :
+    new ObjectIcon(new_object, this);
   add_icon(icon, pos);
+
+  return icon;
 }
 
-void Scene::add_logpath(std::shared_ptr<Logpath>& new_logpath, const QPoint& pos)
+ObjectStatementIcon* Scene::add_object_statement(std::shared_ptr<ObjectStatement>& new_object_statement, const QPoint& pos)
 {
-  LogpathIcon* icon = new LogpathIcon(new_logpath, this);
+  ObjectStatementIcon* icon = new ObjectStatementIcon(new_object_statement, this);
   add_icon(icon, pos);
+
+  return icon;
+}
+
+ObjectStatementIconCopy* Scene::add_object_statement_copy(std::shared_ptr<ObjectStatement>& new_object_statement, const QPoint& pos)
+{
+  ObjectStatementIconCopy* icon = new ObjectStatementIconCopy(new_object_statement, this);
+  add_icon(icon, pos);
+
+  return icon;
+}
+
+LogStatementIcon* Scene::add_log_statement(std::shared_ptr<LogStatement>& new_log_statement, const QPoint& pos)
+{
+  LogStatementIcon* icon = new LogStatementIcon(new_log_statement, this);
+  add_icon(icon, pos);
+
+  return icon;
 }
 
 void Scene::add_icon(Icon* icon, const QPoint& pos)
@@ -52,29 +73,26 @@ void Scene::pressed(Icon* icon)
   deleteIcon->show();
   deleteIcon->lower();
 
-  ObjectIcon* object_icon = dynamic_cast<ObjectIcon*>(icon);
-  if (!object_icon)
+  icon->raise();
+
+  if (icon->parent() != this)
   {
-    return;
+    QPoint pos = mapFromGlobal(QCursor::pos()) - QPoint(icon->width()/2, icon->height()/2);
+    StatementIcon* statement_icon = static_cast<StatementIcon*>(icon->parent()->parent());
+    statement_icon->remove_icon(icon);
+    icon->setParent(this);
+    icon->move(pos);
+    icon->show();
   }
 
-  if (object_icon->parentWidget() != this)
+  ObjectStatementIcon* statement_icon = dynamic_cast<ObjectStatementIcon*>(icon);
+  if (statement_icon &&
+    QApplication::queryKeyboardModifiers() == Qt::ControlModifier)
   {
-    QPoint pos = object_icon->parentWidget()->mapTo(this, object_icon->pos());
-    LogpathIcon* icon = static_cast<LogpathIcon*>(object_icon->parent()->parent());
-    icon->remove_object(*object_icon);
-    object_icon->setParent(this);
-    object_icon->show();
-    object_icon->move(pos);
+    QPoint pos = mapFromGlobal(QCursor::pos()) - QPoint(icon->width()/2, icon->height()/2);
+    std::shared_ptr<ObjectStatement> new_object_statement = statement_icon->get_object_statement();
+    add_object_statement_copy(new_object_statement, pos);
   }
-
-  if (QApplication::queryKeyboardModifiers() == Qt::ControlModifier)
-  {
-    std::shared_ptr<Object> object = object_icon->get_object();
-    add_object(object, object_icon->geometry().center());
-  }
-
-  object_icon->raise();
 }
 
 void Scene::released(Icon* icon)
@@ -82,7 +100,12 @@ void Scene::released(Icon* icon)
   DeleteIcon* deleteIcon = findChild<DeleteIcon*>();
   deleteIcon->hide();
 
-  if (icon->geometry().intersects(deleteIcon->geometry()))
+  if (icon->parent() != this)
+  {
+    return;
+  }
+
+  if( icon->geometry().intersects(deleteIcon->geometry()))
   {
     delete icon;
 
@@ -90,21 +113,21 @@ void Scene::released(Icon* icon)
     return;
   }
 
-  ObjectIcon* object_icon = dynamic_cast<ObjectIcon*>(icon);
-  if (!object_icon)
+  QPoint pos = mapFromGlobal(QCursor::pos());
+  StatementIcon* statement_icon = nullptr;
+
+  if (dynamic_cast<ObjectIcon*>(icon))
   {
-    return;
+    statement_icon = select_nearest_object_statement_icon(pos);
+  }
+  else if (dynamic_cast<ObjectStatementIcon*>(icon))
+  {
+    statement_icon = select_nearest_log_statement_icon(pos);
   }
 
-  LogpathIcon* logpath_icon = select_nearest_logpath(icon->pos());
-  if (!logpath_icon)
+  if (statement_icon)
   {
-    return;
-  }
-
-  if (logpath_icon->geometry().intersects(object_icon->geometry()))
-  {
-    logpath_icon ->add_object(*object_icon);
+    statement_icon->add_icon(icon);
   }
 }
 
@@ -150,7 +173,7 @@ void Scene::dropEvent(QDropEvent* event)
 
   if (Dialog(*new_object, this).exec() == QDialog::Accepted)
   {
-    std::shared_ptr<Object> object = config.add_object(new_object);
+    std::shared_ptr<Object> object(new_object);
     add_object(object, event->pos());
   }
 }
@@ -160,11 +183,26 @@ QSize Scene::sizeHint() const
   return childrenRegion().united(QRect(0, 0, 1, 1)).boundingRect().size();
 }
 
-LogpathIcon* Scene::select_nearest_logpath(const QPoint& pos) const
+ObjectStatementIcon* Scene::select_nearest_object_statement_icon(const QPoint& pos) const
 {
-  for (LogpathIcon* icon : findChildren<LogpathIcon*>())
+  for (ObjectStatementIcon* icon : findChildren<ObjectStatementIcon*>())
   {
-    if (icon->geometry().contains(pos))
+    QPoint converted_pos = icon->parentWidget()->mapFrom(this, pos);
+    if (icon->geometry().contains(converted_pos))
+    {
+      return icon;
+    }
+  }
+
+  return nullptr;
+}
+
+LogStatementIcon* Scene::select_nearest_log_statement_icon(const QPoint& pos) const
+{
+  for (LogStatementIcon* icon : findChildren<LogStatementIcon*>())
+  {
+    QPoint converted_pos = icon->parentWidget()->mapFrom(this, pos);
+    if (icon->geometry().contains(converted_pos))
     {
       return icon;
     }

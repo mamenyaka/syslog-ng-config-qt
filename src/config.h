@@ -6,11 +6,10 @@
 class Config
 {
   std::vector< std::unique_ptr<const Object> > default_objects;
-  std::list< std::unique_ptr<Object> > objects;
-
-  std::list< std::unique_ptr<Logpath> > logpaths;
 
   std::unique_ptr<GlobalOptions> global_options;
+  std::list< std::unique_ptr<ObjectStatement> > object_statements;
+  std::list< std::unique_ptr<LogStatement> > log_statements;
 
 public:
   Config(const std::string& dir_name = "objects");
@@ -18,19 +17,21 @@ public:
 
   const std::vector< std::unique_ptr<const Object> >& get_default_objects() const;
   const Object& get_default_object(const std::string& name, const std::string& type) const;
-  std::unique_ptr<GlobalOptions>& get_global_options();
 
-  std::shared_ptr<Object> add_object(Object* new_object);
-  std::shared_ptr<Logpath> add_logpath(Logpath* new_logpath);
+  Options& get_global_options();
+  const std::list< std::unique_ptr<ObjectStatement> >& get_object_statements() const;
+  const std::list< std::unique_ptr<LogStatement> >& get_log_statements() const;
+
+  std::shared_ptr<ObjectStatement> add_object_statement(ObjectStatement* new_object_statement);
+  std::shared_ptr<LogStatement> add_log_statement(LogStatement* new_log_statement);
 
   void parse_yaml(const std::string& file_name);
 
   const std::string to_string() const;
 
 private:
-  void update_objects_id(const std::string& name, const std::string& type);
-  void delete_object(const Object* old_object);
-  void delete_logpath(const Logpath* old_logpath);
+  void delete_object_statement(const ObjectStatement* old_object_statement);
+  void delete_log_statement(const LogStatement* old_log_statement);
 
   bool deleted = false;
 };

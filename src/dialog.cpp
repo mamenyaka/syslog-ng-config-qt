@@ -21,7 +21,11 @@ Dialog::Dialog(Object& object, QWidget* parent) :
   connect(ui->buttonBox, &QDialogButtonBox::clicked, [&](QAbstractButton* button) {
     if (ui->buttonBox->standardButton(button) == QDialogButtonBox::RestoreDefaults)
     {
-      object.restore_default_values();
+      for (std::unique_ptr<Option>& option : object.get_options())
+      {
+        option->restore_default();
+      }
+
       set_form_values();
     }
   });
@@ -35,6 +39,7 @@ Dialog::~Dialog()
 int Dialog::exec()
 {
   set_form_values();
+
   return QDialog::exec();
 }
 
@@ -42,14 +47,22 @@ void Dialog::accept()
 {
   if (set_object_options())
   {
-    object.set_previous_values();
+    for (std::unique_ptr<Option>& option : object.get_options())
+    {
+      option->set_previous();
+    }
+
     QDialog::accept();
   }
 }
 
 void Dialog::reject()
 {
-  object.restore_previous_values();
+  for (std::unique_ptr<Option>& option : object.get_options())
+  {
+    option->restore_previous();
+  }
+
   QDialog::reject();
 }
 

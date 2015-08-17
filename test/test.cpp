@@ -24,8 +24,7 @@ void Test::is_config_valid_test()
 {
   Config config("../objects");
 
-  std::unique_ptr<GlobalOptions>& global_options = config.get_global_options();
-  Options& options_global = global_options->get_options();
+  Options& options_global = config.get_global_options();
   set_option(options_global, "stats-freq", "0");
   set_option(options_global, "flush-lines", "0");
   set_option(options_global, "time-reopen", "10");
@@ -36,6 +35,10 @@ void Test::is_config_valid_test()
 
   std::shared_ptr<Object> system = add_object(config, "system", "source");
   std::shared_ptr<Object> internal = add_object(config, "internal", "source");
+
+  std::shared_ptr<ObjectStatement> src = add_object_statement(config, "src");
+  src->add_object(system, 0);
+  src->add_object(internal, 1);
 
   std::shared_ptr<Object> d_authlog = add_object(config, "file", "destination");
   std::shared_ptr<Object> d_syslog = add_object(config, "file", "destination");
@@ -114,28 +117,27 @@ void Test::is_config_valid_test()
   set_option(*f_crit, "level", "crit");
   set_option(*f_err, "level", "err");
   set_option(*f_acpid, "program", "acpid");
-
-  std::vector< std::shared_ptr<Logpath> > logpaths;
-  logpaths.push_back(add_objects_to_logpath(config, system, internal, f_acpid, d_acpid));
-  logpaths.push_back(add_objects_to_logpath(config, system, internal, f_authpriv, d_authlog));
-  logpaths.push_back(add_objects_to_logpath(config, system, internal, f_syslog, d_syslog));
-  logpaths.push_back(add_objects_to_logpath(config, system, internal, f_cron, d_cron));
-  logpaths.push_back(add_objects_to_logpath(config, system, internal, f_daemon, d_daemon));
-  logpaths.push_back(add_objects_to_logpath(config, system, internal, d_kernel));
-  logpaths.push_back(add_objects_to_logpath(config, system, internal, f_lpr, d_lpr));
-  logpaths.push_back(add_objects_to_logpath(config, system, internal, f_mail, d_mail));
-  logpaths.push_back(add_objects_to_logpath(config, system, internal, f_news, d_news));
-  logpaths.push_back(add_objects_to_logpath(config, system, internal, f_ppp, d_ppp));
-  logpaths.push_back(add_objects_to_logpath(config, system, internal, f_user, d_user));
-  logpaths.push_back(add_objects_to_logpath(config, system, internal, f_uucp, d_uucp));
-  logpaths.push_back(add_objects_to_logpath(config, system, internal, d_debug));
-  logpaths.push_back(add_objects_to_logpath(config, system, internal, d_messages));
-  logpaths.push_back(add_objects_to_logpath(config, system, internal, f_err, d_errors));
-  logpaths.push_back(add_objects_to_logpath(config, system, internal, f_emergency, d_console));
-  logpaths.push_back(add_objects_to_logpath(config, system, internal, d_everything));
-  logpaths.push_back(add_objects_to_logpath(config, system, internal, d_iptables));
-  logpaths.push_back(add_objects_to_logpath(config, system, internal, d_console_all));
-
+/*
+  add_objects_to_log_statement(config, src, f_acpid, d_acpid);
+  add_objects_to_log_statement(config, src, f_authpriv, d_authlog);
+  add_objects_to_log_statement(config, src, f_syslog, d_syslog);
+  add_objects_to_log_statement(config, src, f_cron, d_cron);
+  add_objects_to_log_statement(config, src, f_daemon, d_daemon);
+  add_objects_to_log_statement(config, src, d_kernel);
+  add_objects_to_log_statement(config, src, f_lpr, d_lpr);
+  add_objects_to_log_statement(config, src, f_mail, d_mail);
+  add_objects_to_log_statement(config, src, f_news, d_news);
+  add_objects_to_log_statement(config, src, f_ppp, d_ppp);
+  add_objects_to_log_statement(config, src, f_user, d_user);
+  add_objects_to_log_statement(config, src, f_uucp, d_uucp);
+  add_objects_to_log_statement(config, src, d_debug);
+  add_objects_to_log_statement(config, src, d_messages);
+  add_objects_to_log_statement(config, src, f_err, d_errors);
+  add_objects_to_log_statement(config, src, f_emergency, d_console);
+  add_objects_to_log_statement(config, src, d_everything);
+  add_objects_to_log_statement(config, src, d_iptables);
+  add_objects_to_log_statement(config, src, d_console_all);
+*/
   QFile file("test.conf");
   file.open(QIODevice::WriteOnly | QIODevice::Text);
 
@@ -166,30 +168,38 @@ void Test::set_option(Object& object, const std::string& option_name, const std:
 std::shared_ptr<Object> Test::add_object(Config& config, const std::string& object_name, const std::string& object_type)
 {
   const Object& default_object = config.get_default_object(object_name, object_type);
-  Object* new_object = default_object.clone();
+  Object* object = default_object.clone();
+  std::shared_ptr<Object> new_object(object);
 
-  return config.add_object(new_object);
+  return new_object;
+}
+
+std::shared_ptr<ObjectStatement> Test::add_object_statement(Config& config, const std::string& object_statement_name)
+{
+  ObjectStatement* object_statement = new ObjectStatement(object_statement_name);
+  std::shared_ptr<ObjectStatement> new_object_statement = config.add_object_statement(object_statement);
+
+  return new_object_statement;
 }
 
 template<typename... Targs>
-std::shared_ptr<Logpath> Test::add_objects_to_logpath(Config& config, Targs&... more)
+void Test::add_objects_to_log_statement(Config& config, Targs&... more)
 {
-  const Options& logpath_options = static_cast<const Options&>(config.get_default_object("log", "options"));
-  Logpath* new_logpath = new Logpath(logpath_options);
+  const Options& options = static_cast<const Options&>(config.get_default_object("log", "options"));
+  LogStatement* new_log_statement = new LogStatement(options);
 
-  std::shared_ptr<Logpath> logpath = config.add_logpath(new_logpath);
-  add_object_to_logpath_recursive(logpath, more...);
-
-  return logpath;
+  std::shared_ptr<LogStatement> log_statement = config.add_log_statement(new_log_statement);
+  add_object_to_log_statement_recursive(log_statement, more...);
 }
 
 template<typename... Targs>
-void Test::add_object_to_logpath_recursive(std::shared_ptr<Logpath>& logpath, std::shared_ptr<Object>& object, Targs&... more)
+void Test::add_object_to_log_statement_recursive(std::shared_ptr<LogStatement>& log_statement,
+                                                 std::shared_ptr<ObjectStatement>& object_statement, Targs&... more)
 {
-  const std::shared_ptr<Object> d = object;
-  logpath->add_object(d);
+  const std::shared_ptr<ObjectStatement> new_object_statement = object_statement;
+  log_statement->add_object_statement(new_object_statement, 0);
 
-  add_object_to_logpath_recursive(logpath, more...);
+  add_object_to_log_statement_recursive(log_statement, more...);
 }
 
 QTEST_MAIN(Test)
