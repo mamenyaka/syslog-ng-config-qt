@@ -98,9 +98,9 @@ FilterIcon::FilterIcon(std::shared_ptr<Object>& object,
   QCheckBox* checkBox = new QCheckBox("not", this);
 
   QComboBox* comboBox = new QComboBox(this);
+  comboBox->addItem("");
   comboBox->addItem("and");
   comboBox->addItem("or");
-  comboBox->setCurrentIndex(-1);
 
   QVBoxLayout* mainLayout = static_cast<QVBoxLayout*>(layout());
   mainLayout->insertWidget(0, checkBox);
