@@ -61,10 +61,20 @@ void Scene::add_icon(Icon* icon, const QPoint& pos)
   icon->lower();
   icon->show();
 
-  updateGeometry();
-
   connect(icon, &Icon::pressed, this, &Scene::pressed);
   connect(icon, &Icon::released, this, &Scene::released);
+
+  updateGeometry();
+}
+
+void Scene::reset()
+{
+  for (Icon* icon : findChildren<Icon*>(QString(), Qt::FindDirectChildrenOnly))
+  {
+    icon->deleteLater();
+  }
+
+  updateGeometry();
 }
 
 void Scene::pressed(Icon* icon)
@@ -77,7 +87,7 @@ void Scene::pressed(Icon* icon)
 
   if (icon->parent() != this)
   {
-    QPoint pos = mapFromGlobal(QCursor::pos()) - QPoint(icon->width()/2, icon->height()/2);
+    QPoint pos = icon->parentWidget()->mapTo(this, icon->pos());
     StatementIcon* statement_icon = static_cast<StatementIcon*>(icon->parent()->parent());
     statement_icon->remove_icon(icon);
     icon->setParent(this);
@@ -89,7 +99,7 @@ void Scene::pressed(Icon* icon)
   if (statement_icon &&
     QApplication::queryKeyboardModifiers() == Qt::ControlModifier)
   {
-    QPoint pos = mapFromGlobal(QCursor::pos()) - QPoint(icon->width()/2, icon->height()/2);
+    QPoint pos = icon->parentWidget()->mapTo(this, icon->pos()) + QPoint(statement_icon->width()/2, 20);
     std::shared_ptr<ObjectStatement> new_object_statement = statement_icon->get_object_statement();
     add_object_statement_copy(new_object_statement, pos);
   }
@@ -105,15 +115,17 @@ void Scene::released(Icon* icon)
     return;
   }
 
-  if( icon->geometry().intersects(deleteIcon->geometry()))
+  if(icon->geometry().intersects(deleteIcon->geometry()))
   {
+    check_for_copies(dynamic_cast<ObjectStatementIcon*>(icon));
+
     delete icon;
 
     update();
     return;
   }
 
-  QPoint pos = mapFromGlobal(QCursor::pos());
+  QPoint pos = icon->pos() + QPoint(icon->width()/2, icon->height()/2);
   StatementIcon* statement_icon = nullptr;
 
   if (dynamic_cast<ObjectIcon*>(icon))
@@ -131,14 +143,26 @@ void Scene::released(Icon* icon)
   }
 }
 
-void Scene::reset()
+void Scene::check_for_copies(ObjectStatementIcon* icon)
 {
-  for (Icon* icon : findChildren<Icon*>(QString(), Qt::FindDirectChildrenOnly))
+  if (!icon || dynamic_cast<ObjectStatementIconCopy*>(icon))
   {
-    delete icon;
+    return;
   }
 
-  updateGeometry();
+  for (ObjectStatementIconCopy* copy : findChildren<ObjectStatementIconCopy*>())
+  {
+    if (copy->get_object_statement()->get_name() == icon->get_object_statement()->get_name())
+    {
+      if (copy->parent() != this)
+      {
+        StatementIcon* statement_icon = static_cast<StatementIcon*>(copy->parent()->parent());
+        statement_icon->remove_icon(copy);
+      }
+
+      copy->deleteLater();
+    }
+  }
 }
 
 void Scene::leaveEvent(QEvent *)

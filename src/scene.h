@@ -45,6 +45,8 @@ private:
   void pressed(Icon* icon);
   void released(Icon* icon);
 
+  void check_for_copies(ObjectStatementIcon* icon);
+
   ObjectStatementIcon* select_nearest_object_statement_icon(const QPoint& pos) const;
   LogStatementIcon* select_nearest_log_statement_icon(const QPoint& pos) const;
 
