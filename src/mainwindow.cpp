@@ -16,6 +16,10 @@ MainWindow::MainWindow(QWidget* parent) :
 {
   ui->setupUi(this);
 
+  ui->actionNew->setShortcut(QKeySequence::New);
+  ui->actionSave->setShortcut(QKeySequence::Save);
+  ui->actionQuit->setShortcut(QKeySequence::Quit);
+
   ui->sourceWidget->setupObjects("source", config.get_default_objects());
   ui->destinationWidget->setupObjects("destination", config.get_default_objects());
   ui->filterWidget->setupObjects("filter", config.get_default_objects());
@@ -88,7 +92,7 @@ void MainWindow::setupConnections()
     file.close();
   });
 
-  connect(ui->actionExit, &QAction::triggered, this, &MainWindow::close);
+  connect(ui->actionQuit, &QAction::triggered, this, &MainWindow::close);
 
 
   connect(ui->actionOptions, &QAction::triggered, [&]() {

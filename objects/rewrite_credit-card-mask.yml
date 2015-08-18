@@ -1,7 +1,6 @@
 name: credit-card-mask
 type: rewrite
 description: Replace the 7-12th character of any credit card numbers with asterisks.
-include: scl/rewrite/cc-mask.conf
 options:
   - value:
       type: string

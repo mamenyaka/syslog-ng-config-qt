@@ -207,11 +207,6 @@ void Config::parse_yaml(const std::string& file_name)
 
   Object* object = static_cast<Object*>(create_object_map[type]);
 
-  if (yaml_object["include"])
-  {
-    object->set_include(yaml_object["include"].as<std::string>());
-  }
-
   const YAML::Node& options = yaml_object["options"];
   for (YAML::const_iterator option_it = options.begin(); option_it != options.end(); ++option_it)
   {
@@ -256,10 +251,12 @@ void Config::parse_yaml(const std::string& file_name)
   default_objects.emplace_back(object);
 }
 
-// TODO includes
 const std::string Config::to_string() const
 {
   std::string config;
+
+  config += "@version: 3.7\n";
+  config += "@include \"scl.conf\"\n\n";
 
   config += global_options->to_string();
 

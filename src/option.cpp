@@ -88,6 +88,11 @@ StringOption::StringOption(const std::string& name,
 
 const std::string StringOption::get_current_value() const
 {
+  if (name == "perm" || name == "dir-perm")
+  {
+    return current_value;
+  }
+
   return "\"" + current_value + "\"";
 }
 
@@ -255,7 +260,7 @@ SetOption::SetOption(const std::string& name,
 
 const std::string SetOption::get_current_value() const
 {
-  return "\"" + current_value + "\"";
+  return current_value;
 }
 
 void SetOption::set_default(const std::string& default_value)

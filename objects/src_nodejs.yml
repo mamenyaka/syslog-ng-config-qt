@@ -1,7 +1,6 @@
 name: nodejs
 type: source
 description: All messages generated internally by syslog-ng use this special source.
-include: scl.conf
 options:
   - ip:
       type: string

@@ -14,8 +14,7 @@ Object::Object(const std::string& name,
 
 Object::Object(const Object& other) :
  name(other.name),
- description(other.description),
- include(other.include)
+ description(other.description)
 {
   for (const std::unique_ptr<Option>& option : other.options)
   {
@@ -43,19 +42,9 @@ const std::vector< std::unique_ptr<Option> >& Object::get_options() const
   return options;
 }
 
-const std::string& Object::get_include() const
-{
-  return include;
-}
-
 void Object::add_option(Option* option)
 {
   options.emplace_back(option);
-}
-
-void Object::set_include(const std::string& include)
-{
-  this->include = include;
 }
 
 const std::string Object::get_separator() const
@@ -65,7 +54,9 @@ const std::string Object::get_separator() const
 
 const std::string Object::to_string() const
 {
-  std::string config = name + "(";
+  std::string config;
+
+  config += name + "(";
 
   for (const std::unique_ptr<Option>& option : options)
   {
@@ -88,7 +79,7 @@ const std::string Object::to_string() const
     config.pop_back();
   }
 
-  config += "\n    );";
+  config += ");";
 
   return config;
 }
@@ -180,7 +171,8 @@ const std::string Filter::to_string() const
 
   config += (invert ? "not " : "");
   config += Object::to_string();
-  config += "\b " + next;
+  config.pop_back();
+  config += " " + next;
 
   return config;
 }
@@ -396,7 +388,8 @@ const std::string ObjectStatement::to_string() const
 
   if (type == "filter")
   {
-    config += "\b;";
+    config.pop_back();
+    config += ";";
   }
 
   config += "\n};\n\n";

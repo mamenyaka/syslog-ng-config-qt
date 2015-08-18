@@ -1,7 +1,6 @@
 name: pacct
 type: source
 description: Collect process accounting logs on Linux systems.
-include: scl.conf
 options:
   - file:
       type: string

@@ -15,7 +15,6 @@ protected:
   std::string name;
   std::string description;
   std::vector< std::unique_ptr<Option> > options;
-  std::string include;
 
 public:
   Object(const std::string& name,
@@ -29,10 +28,8 @@ public:
   const std::string& get_description() const;
   std::vector< std::unique_ptr<Option> >& get_options();
   const std::vector< std::unique_ptr<Option> >& get_options() const;
-  const std::string& get_include() const;
 
   void add_option(Option* option);
-  void set_include(const std::string& include);
 
   virtual void draw(QPainter* painter, int width, int height) const = 0;
 
