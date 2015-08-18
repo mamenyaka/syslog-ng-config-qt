@@ -77,6 +77,7 @@ class ObjectStatementIcon : public StatementIcon
 public:
   explicit ObjectStatementIcon(std::shared_ptr<ObjectStatement>& object_statement,
                                QWidget* parent = 0);
+  ~ObjectStatementIcon();
 
   std::shared_ptr<ObjectStatement>& get_object_statement();
 

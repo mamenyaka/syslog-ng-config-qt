@@ -13,6 +13,7 @@ Scene::Scene(Config& config,
   QWidget(parent),
   config(config)
 {
+  setObjectName("Scene");
   setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
   setAcceptDrops(true);
 
@@ -117,9 +118,7 @@ void Scene::released(Icon* icon)
 
   if(icon->geometry().intersects(deleteIcon->geometry()))
   {
-    check_for_copies(dynamic_cast<ObjectStatementIcon*>(icon));
-
-    delete icon;
+    icon->deleteLater();
 
     update();
     return;
@@ -140,28 +139,6 @@ void Scene::released(Icon* icon)
   if (statement_icon)
   {
     statement_icon->add_icon(icon);
-  }
-}
-
-void Scene::check_for_copies(ObjectStatementIcon* icon)
-{
-  if (!icon || dynamic_cast<ObjectStatementIconCopy*>(icon))
-  {
-    return;
-  }
-
-  for (ObjectStatementIconCopy* copy : findChildren<ObjectStatementIconCopy*>())
-  {
-    if (copy->get_object_statement()->get_name() == icon->get_object_statement()->get_name())
-    {
-      if (copy->parent() != this)
-      {
-        StatementIcon* statement_icon = static_cast<StatementIcon*>(copy->parent()->parent());
-        statement_icon->remove_icon(copy);
-      }
-
-      copy->deleteLater();
-    }
   }
 }
 
