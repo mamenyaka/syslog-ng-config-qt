@@ -8,6 +8,7 @@
 #include <QInputDialog>
 #include <QTextStream>
 #include <QCloseEvent>
+#include <QProcess>
 
 MainWindow::MainWindow(QWidget* parent) :
   QMainWindow(parent),
@@ -76,9 +77,13 @@ void MainWindow::setupConnections()
   });
 
   connect(ui->actionSave, &QAction::triggered, [&]() {
-    QString file_name = QFileDialog::getSaveFileName(this, tr("Save config"), QDir::homePath());
-    QFile file(file_name);
+    QString file_name = QFileDialog::getSaveFileName(this, tr("Save syslog-ng configuration"), QDir::homePath());
+    if (file_name.isEmpty())
+    {
+      return;
+    }
 
+    QFile file(file_name);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
     {
       return;
@@ -90,6 +95,17 @@ void MainWindow::setupConnections()
     out << last_saved;
 
     file.close();
+
+    QProcess* process = new QProcess(this);
+    process->start("syslog-ng", { "-s", "-f", file_name });
+
+    connect(process, static_cast<void(QProcess::*)(int)>(&QProcess::finished), [this, process](int ) {
+      QByteArray array = process->readAllStandardError();
+      if (!array.isEmpty())
+      {
+        QMessageBox::warning(this, "Configuration file syntax", QString(array));
+      }
+    });
   });
 
   connect(ui->actionQuit, &QAction::triggered, this, &MainWindow::close);
