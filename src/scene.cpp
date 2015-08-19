@@ -86,6 +86,16 @@ void Scene::pressed(Icon* icon)
 
   icon->raise();
 
+  ObjectStatementIcon* statement_icon = dynamic_cast<ObjectStatementIcon*>(icon);
+  if (statement_icon &&
+    QApplication::queryKeyboardModifiers() == Qt::ControlModifier)
+  {
+    QPoint pos = icon->parentWidget()->mapTo(this, icon->pos()) + QPoint(statement_icon->width()/2, 20);
+    std::shared_ptr<ObjectStatement> new_object_statement = statement_icon->get_object_statement();
+    add_object_statement_copy(new_object_statement, pos);
+    return;
+  }
+
   if (icon->parent() != this)
   {
     QPoint pos = icon->parentWidget()->mapTo(this, icon->pos());
@@ -95,19 +105,12 @@ void Scene::pressed(Icon* icon)
     icon->move(pos);
     icon->show();
   }
-
-  ObjectStatementIcon* statement_icon = dynamic_cast<ObjectStatementIcon*>(icon);
-  if (statement_icon &&
-    QApplication::queryKeyboardModifiers() == Qt::ControlModifier)
-  {
-    QPoint pos = icon->parentWidget()->mapTo(this, icon->pos()) + QPoint(statement_icon->width()/2, 20);
-    std::shared_ptr<ObjectStatement> new_object_statement = statement_icon->get_object_statement();
-    add_object_statement_copy(new_object_statement, pos);
-  }
 }
 
 void Scene::released(Icon* icon)
 {
+  icon->releaseMouse();
+
   DeleteIcon* deleteIcon = findChild<DeleteIcon*>();
   deleteIcon->hide();
 
@@ -116,8 +119,14 @@ void Scene::released(Icon* icon)
     return;
   }
 
-  if(icon->geometry().intersects(deleteIcon->geometry()))
+  if (icon->geometry().intersects(deleteIcon->geometry()))
   {
+    ObjectStatementIcon* statement_icon = dynamic_cast<ObjectStatementIcon*>(icon);
+    if (statement_icon && !dynamic_cast<ObjectStatementIconCopy*>(icon))
+    {
+      delete_copies(statement_icon->get_object_statement()->get_name());
+    }
+
     icon->deleteLater();
 
     update();
@@ -139,6 +148,25 @@ void Scene::released(Icon* icon)
   if (statement_icon)
   {
     statement_icon->add_icon(icon);
+  }
+}
+
+void Scene::delete_copies(const std::string& name)
+{
+  for (ObjectStatementIconCopy* copy : findChildren<ObjectStatementIconCopy*>())
+  {
+    if (copy->get_object_statement()->get_name() != name)
+    {
+      continue;
+    }
+
+    if (copy->parent() != this)
+    {
+      LogStatementIcon* icon = static_cast<LogStatementIcon*>(copy->parent()->parent());
+      icon->remove_icon(copy);
+    }
+
+    copy->deleteLater();
   }
 }
 

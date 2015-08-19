@@ -183,29 +183,6 @@ ObjectStatementIcon::ObjectStatementIcon(std::shared_ptr<ObjectStatement>& objec
   findChild<QFrame*>("frame")->setStyleSheet("#frame { border: 2px solid yellow; }");
 }
 
-ObjectStatementIcon::~ObjectStatementIcon()
-{
-  QObject* p = parent();
-  while (p->objectName() != "Scene")
-  {
-    p = p->parent();
-  }
-
-  for (ObjectStatementIconCopy* copy : p->findChildren<ObjectStatementIconCopy*>())
-  {
-    if (copy->get_object_statement()->get_name() == object_statement->get_name())
-    {
-      if (copy->parent() != p)
-      {
-        LogStatementIcon* icon = static_cast<LogStatementIcon*>(copy->parent()->parent());
-        icon->remove_icon(copy);
-      }
-
-      copy->deleteLater();
-    }
-  }
-}
-
 std::shared_ptr<ObjectStatement>& ObjectStatementIcon::get_object_statement()
 {
   return object_statement;
@@ -257,6 +234,8 @@ ObjectStatementIconCopy::ObjectStatementIconCopy(std::shared_ptr<ObjectStatement
   label->setAlignment(Qt::AlignCenter);
 
   frame->layout()->addWidget(label);
+
+  grabMouse();
 }
 
 
