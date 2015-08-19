@@ -104,6 +104,7 @@ void Scene::pressed(Icon* icon)
     icon->setParent(this);
     icon->move(pos);
     icon->show();
+    icon->grabMouse();
   }
 }
 
