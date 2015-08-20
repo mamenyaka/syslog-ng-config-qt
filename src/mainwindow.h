@@ -53,7 +53,8 @@ private:
   MainWindow(const MainWindow&) = delete;
   MainWindow& operator=(const MainWindow&) = delete;
 
-  QString last_saved;
+  // used at application exit to warn the user if there are changes to the last saved config
+  QString last_saved_config;
 };
 
 #endif // MAINWINDOW_H

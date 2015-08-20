@@ -122,6 +122,7 @@ Source::Source(const std::string& name,
   ObjectBase<Source>(name, description)
 {}
 
+// circle shape
 void Source::draw(QPainter* painter, int width, int height) const
 {
   painter->setBrush(QColor(255, 128, 128, 192));
@@ -139,6 +140,7 @@ Destination::Destination(const std::string& name,
   ObjectBase<Destination>(name, description)
 {}
 
+// rectangle shape
 void Destination::draw(QPainter* painter, int width, int height) const
 {
   painter->setBrush(QColor(128, 128, 225, 192));
@@ -166,6 +168,7 @@ void Filter::set_next(const std::string& next)
   this->next = next;
 }
 
+// rhombus shape
 void Filter::draw(QPainter* painter, int width, int height) const
 {
   QPainterPath path;
@@ -203,6 +206,7 @@ Template::Template(const std::string& name,
   ObjectBase<Template>(name, description)
 {}
 
+// circle shape, no fill
 void Template::draw(QPainter* painter, int width, int height) const
 {
   painter->setPen(QColor(255, 128, 255, 192));
@@ -220,6 +224,7 @@ Rewrite::Rewrite(const std::string& name,
   ObjectBase<Rewrite>(name, description)
 {}
 
+// hexagon shape
 void Rewrite::draw(QPainter* painter, int width, int height) const
 {
   const double pi = std::acos(-1);
@@ -255,6 +260,7 @@ Parser::Parser(const std::string& name,
   ObjectBase<Parser>(name, description)
 {}
 
+// Google-themed shape, a tribute to GSoC
 void Parser::draw(QPainter* painter, int width, int height) const
 {
   painter->setBrush(QColor(255, 16, 32));
@@ -349,18 +355,18 @@ bool GlobalOptions::has_changed() const
 }
 
 
-ObjectStatement::ObjectStatement(const std::string& name) :
-  name(name)
+ObjectStatement::ObjectStatement(const std::string& id) :
+  id(id)
 {}
-
-const std::string& ObjectStatement::get_name() const
-{
-  return name;
-}
 
 const std::string& ObjectStatement::get_type() const
 {
   return type;
+}
+
+const std::string& ObjectStatement::get_id() const
+{
+  return id;
 }
 
 const std::list< std::shared_ptr<const Object> >& ObjectStatement::get_objects() const
@@ -399,7 +405,7 @@ const std::string ObjectStatement::to_string() const
     return config;
   }
 
-  config += type + " " + name + " {";
+  config += type + " " + id + " {";
 
   for (const std::shared_ptr<const Object>& object : objects)
   {
@@ -424,14 +430,14 @@ LogStatement::LogStatement(const Options& options) :
   this->options.set_separator(";");
 }
 
-Options& LogStatement::get_options()
-{
-  return options;
-}
-
 const std::list< std::shared_ptr<const ObjectStatement> >& LogStatement::get_object_statements() const
 {
   return object_statements;
+}
+
+Options& LogStatement::get_options()
+{
+  return options;
 }
 
 void LogStatement::add_object_statement(const std::shared_ptr<const ObjectStatement>& object_statement, const int position)
@@ -459,7 +465,7 @@ const std::string LogStatement::to_string() const
 
   for (const std::shared_ptr<const ObjectStatement>& object_statement : object_statements)
   {
-    config += "\n    " + object_statement->get_type() + "(" + object_statement->get_name() + ");";
+    config += "\n    " + object_statement->get_type() + "(" + object_statement->get_id() + ");";
   }
 
   config += options.to_string();

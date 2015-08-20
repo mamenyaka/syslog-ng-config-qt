@@ -261,9 +261,9 @@ void Test::is_config_valid_test()
     f_iptables->add_object(f_match_out, 1);
   }
 
-  for (const std::vector<std::string>& names : logs)
+  for (const std::vector<std::string>& ids : logs)
   {
-    add_object_statements_to_log_statement(config, names);
+    add_object_statements_to_log_statement(config, ids);
   }
 
   QFile file("test.conf");
@@ -301,9 +301,9 @@ std::shared_ptr<Object> Test::add_object(Config& config, const std::string& obje
   return std::shared_ptr<Object>(object);
 }
 
-std::shared_ptr<ObjectStatement>& Test::add_object_statement(Config& config, const std::string& object_statement_name)
+std::shared_ptr<ObjectStatement>& Test::add_object_statement(Config& config, const std::string& object_statement_id)
 {
-  ObjectStatement* new_object_statement = new ObjectStatement(object_statement_name);
+  ObjectStatement* new_object_statement = new ObjectStatement(object_statement_id);
   std::shared_ptr<ObjectStatement> object_statement = config.add_object_statement(new_object_statement);
 
   object_statements.push_back(std::move(object_statement));
@@ -311,7 +311,7 @@ std::shared_ptr<ObjectStatement>& Test::add_object_statement(Config& config, con
   return object_statements.back();
 }
 
-void Test::add_object_statements_to_log_statement(Config& config, const std::vector<std::string>& object_statement_names)
+void Test::add_object_statements_to_log_statement(Config& config, const std::vector<std::string>& object_statement_ids)
 {
   const Options& options = static_cast<const Options&>(config.get_default_object("log", "options"));
   LogStatement* new_log_statement = new LogStatement(options);
@@ -319,20 +319,20 @@ void Test::add_object_statements_to_log_statement(Config& config, const std::vec
   std::shared_ptr<LogStatement> log_statement = config.add_log_statement(new_log_statement);
 
   int i = 0;
-  for (const std::string& name : object_statement_names)
+  for (const std::string& id : object_statement_ids)
   {
-    std::shared_ptr<ObjectStatement>& object_statement = find_object_statement(name);
+    std::shared_ptr<ObjectStatement>& object_statement = find_object_statement(id);
     log_statement->add_object_statement(object_statement, i++);
   }
 
   log_statements.push_back(std::move(log_statement));
 }
 
-std::shared_ptr<ObjectStatement>& Test::find_object_statement(const std::string& name)
+std::shared_ptr<ObjectStatement>& Test::find_object_statement(const std::string& id)
 {
   for (std::shared_ptr<ObjectStatement>& object_statement : object_statements)
   {
-    if (object_statement->get_name() == name)
+    if (object_statement->get_id() == id)
     {
       return object_statement;
     }

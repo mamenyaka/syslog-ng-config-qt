@@ -26,11 +26,13 @@
 #include <QDrag>
 #include <QMimeData>
 
+#define N_GRID_COLUMN 2
+
 Tab::Tab(QWidget* parent) :
   QWidget(parent)
 {}
 
-void Tab::setupObjects(const std::string& type, const std::vector< std::unique_ptr<const Object> >& default_objects)
+void Tab::setupObjects(const std::string& object_type, const std::vector< std::unique_ptr<const Object> >& default_objects)
 {
   QGridLayout* mainLayout = static_cast<QGridLayout*>(layout());
   mainLayout->setSpacing(10);
@@ -38,15 +40,15 @@ void Tab::setupObjects(const std::string& type, const std::vector< std::unique_p
   int row = 0, col = 0;
   for (const std::unique_ptr<const Object>& default_object : default_objects)
   {
-    if (default_object->get_type() == type)
+    if (default_object->get_type() == object_type)
     {
-      std::shared_ptr<Object> object(const_cast<Object*>(default_object.get()), [](const Object *){});
-      ObjectIcon* icon = new ObjectIcon(object);
+      std::shared_ptr<Object> object(default_object->clone());
+      DefaultObjectIcon* icon = new DefaultObjectIcon(object, this);
       mainLayout->addWidget(icon, row, col++);
 
       connect(icon, &Icon::pressed, this, &Tab::drag);
 
-      if (col == 2)
+      if (col == N_GRID_COLUMN)
       {
         col = 0;
         row++;
@@ -57,7 +59,7 @@ void Tab::setupObjects(const std::string& type, const std::vector< std::unique_p
 
 void Tab::drag(Icon* icon)
 {
-  std::shared_ptr<Object>& object = static_cast<ObjectIcon*>(icon)->get_object();
+  std::shared_ptr<Object>& object = static_cast<DefaultObjectIcon*>(icon)->get_object();
 
   QByteArray itemData;
   QDataStream dataStream(&itemData, QIODevice::WriteOnly);

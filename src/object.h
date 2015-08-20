@@ -29,6 +29,9 @@ class QPainter;
 
 enum class ObjectType { SOURCE, DESTINATION, FILTER, TEMPLATE, REWRITE, PARSER, OPTIONS };
 
+/*
+ * Abstract base class for simple objects with options.
+ */
 class Object
 {
 protected:
@@ -142,6 +145,11 @@ public:
   const std::string get_type() const;
 };
 
+/*
+ * Special class holding options for global options,
+ * log options, tls and value-pairs options.
+ * Doesn't have a visual representation.
+ */
 class Options : public ObjectBase<Options>
 {
   std::string separator;
@@ -173,17 +181,20 @@ private:
   bool has_changed() const;
 };
 
+/*
+ * Holds Objects.
+ */
 class ObjectStatement
 {
-  std::string name;
   std::string type;
+  std::string id;
   std::list< std::shared_ptr<const Object> > objects;
 
 public:
-  explicit ObjectStatement(const std::string& name);
+  explicit ObjectStatement(const std::string& id);
 
-  const std::string& get_name() const;
   const std::string& get_type() const;
+  const std::string& get_id() const;
   const std::list< std::shared_ptr<const Object> >& get_objects() const;
 
   void add_object(const std::shared_ptr<const Object>& object, const int position);
@@ -192,16 +203,19 @@ public:
   const std::string to_string() const;
 };
 
+/*
+ * Holds ObjectStatements.
+ */
 class LogStatement
 {
-  Options options;
   std::list< std::shared_ptr<const ObjectStatement> > object_statements;
+  Options options;
 
 public:
   explicit LogStatement(const Options& options);
 
-  Options& get_options();
   const std::list< std::shared_ptr<const ObjectStatement> >& get_object_statements() const;
+  Options& get_options();
 
   void add_object_statement(const std::shared_ptr<const ObjectStatement>& object_statement, const int position);
   void remove_object_statement(const std::shared_ptr<const ObjectStatement>& object_statement);

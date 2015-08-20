@@ -50,6 +50,7 @@ void Icon::mouseReleaseEvent(QMouseEvent *)
 
 void Icon::mouseMoveEvent(QMouseEvent* event)
 {
+  // pressed signal is only emitted after the icon has moved to avoid double click issues
   if (pressed_but_not_moved)
   {
     emit pressed(this);
@@ -75,7 +76,7 @@ ObjectIcon::ObjectIcon(std::shared_ptr<Object>& object,
   setFixedSize(ICON_SIZE, ICON_SIZE);
   setAutoFillBackground(true);
 
-  QLabel* label = new QLabel(QString::fromStdString(this->object->get_name()), this);
+  QLabel* label = new QLabel(QString::fromStdString(get_object()->get_name()), this);
   label->setFont(QFont("Sans", 8, QFont::DemiBold));
   label->setAlignment(Qt::AlignCenter);
   label->setWordWrap(true);
@@ -84,6 +85,7 @@ ObjectIcon::ObjectIcon(std::shared_ptr<Object>& object,
   mainLayout->setMargin(5);
   mainLayout->addWidget(label);
 
+  // a shape is set as the widget's background
   QPixmap pixmap(size());
   pixmap.fill(Qt::transparent);
 
@@ -91,7 +93,7 @@ ObjectIcon::ObjectIcon(std::shared_ptr<Object>& object,
   painter.setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
   painter.setPen(Qt::black);
 
-  this->object->draw(&painter, width(), height());
+  get_object()->draw(&painter, width(), height());
 
   painter.end();
 
@@ -107,8 +109,15 @@ std::shared_ptr<Object>& ObjectIcon::get_object()
 
 void ObjectIcon::mouseDoubleClickEvent(QMouseEvent *)
 {
+  // Modify Object options
   Dialog(*object, this).exec();
 }
+
+
+DefaultObjectIcon::DefaultObjectIcon(std::shared_ptr<Object>& object,
+                                     QWidget* parent) :
+  ObjectIcon(object, parent)
+{}
 
 
 FilterIcon::FilterIcon(std::shared_ptr<Object>& object,
@@ -161,6 +170,7 @@ void StatementIcon::add_icon(Icon* icon)
   QBoxLayout* frameLayout = findChild<QBoxLayout*>("frameLayout");
   frameLayout->insertWidget(index, icon);
 
+  // spent lots of time trying to find the right combination for the widget to set its size properly
   icon->show();
   adjustSize();
 }
@@ -170,6 +180,7 @@ void StatementIcon::remove_icon(Icon* icon)
   QBoxLayout* frameLayout = findChild<QBoxLayout*>("frameLayout");
   frameLayout->removeWidget(icon);
 
+  // spent lots of time trying to find the right combination for the widget to set its size properly
   frameLayout->activate();
   adjustSize();
 }
@@ -199,7 +210,7 @@ ObjectStatementIcon::ObjectStatementIcon(std::shared_ptr<ObjectStatement>& objec
   StatementIcon(parent),
   object_statement(std::move(object_statement))
 {
-  findChild<QLabel*>()->setText(QString::fromStdString(this->object_statement->get_name()));
+  findChild<QLabel*>()->setText(QString::fromStdString(get_object_statement()->get_id()));
   findChild<QFrame*>("frame")->setStyleSheet("#frame { border: 2px solid yellow; }");
 }
 
@@ -210,6 +221,7 @@ std::shared_ptr<ObjectStatement>& ObjectStatementIcon::get_object_statement()
 
 void ObjectStatementIcon::add_icon(Icon* icon)
 {
+  // only add icons of the same type
   ObjectIcon* object_icon = static_cast<ObjectIcon*>(icon);
   const std::string& type = object_statement->get_type();
   if (!type.empty() && type != object_icon->get_object()->get_type())
@@ -219,6 +231,7 @@ void ObjectStatementIcon::add_icon(Icon* icon)
 
   StatementIcon::add_icon(icon);
 
+  // if the Icon is inside a LogStatementIcon
   parentWidget()->parentWidget()->adjustSize();
 
   std::shared_ptr<Object>& object = object_icon->get_object();
@@ -231,6 +244,7 @@ void ObjectStatementIcon::remove_icon(Icon* icon)
 {
   StatementIcon::remove_icon(icon);
 
+  // if the Icon is inside a LogStatementIcon
   parent()->parent()->findChild<QBoxLayout*>("frameLayout")->activate();
   parentWidget()->parentWidget()->adjustSize();
 
@@ -245,7 +259,7 @@ ObjectStatementIconCopy::ObjectStatementIconCopy(std::shared_ptr<ObjectStatement
                                                  QWidget* parent) :
   ObjectStatementIcon(object_statement, parent)
 {
-  findChild<QLabel*>()->setText(QString::fromStdString(get_object_statement()->get_name()));
+  findChild<QLabel*>()->setText(QString::fromStdString(get_object_statement()->get_id()));
 
   QFrame* frame = findChild<QFrame*>("frame");
   frame->setStyleSheet("#frame { border: 2px solid gray; }");
@@ -255,6 +269,7 @@ ObjectStatementIconCopy::ObjectStatementIconCopy(std::shared_ptr<ObjectStatement
 
   frame->layout()->addWidget(label);
 
+  // to be able to move the newly created copy right away, releaseMouse handled by Scene widget
   grabMouse();
 }
 
@@ -285,6 +300,7 @@ void LogStatementIcon::remove_icon(Icon* icon)
 {
   StatementIcon::remove_icon(icon);
 
+  // each ObjectStatementIcon has the same size inside the LogStatementIcon, so after it's removed it can return to its original size
   icon->adjustSize();
 
   ObjectStatementIcon* statement_icon = static_cast<ObjectStatementIcon*>(icon);
@@ -295,6 +311,7 @@ void LogStatementIcon::remove_icon(Icon* icon)
 
 void LogStatementIcon::mouseDoubleClickEvent(QMouseEvent *)
 {
+  // modify log options
   Dialog(log_statement->get_options(), this).exec();
 }
 

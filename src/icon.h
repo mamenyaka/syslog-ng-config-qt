@@ -29,10 +29,14 @@ class Object;
 class ObjectStatement;
 class LogStatement;
 
+/*
+ * Base abstract class for all icons, the graphical building blocks for the syslog-ng config.
+ */
 class Icon : public QWidget
 {
   Q_OBJECT
 
+  // controls when the pressed signal is emitted
   bool pressed_but_not_moved = false;
 
 public:
@@ -51,6 +55,11 @@ protected:
   virtual void mouseDoubleClickEvent(QMouseEvent *) = 0;
 };
 
+/*
+ * Icon for Objects.
+ * Different types represented by different shapes.
+ * Created with drag&drop from the Tab widget.
+ */
 class ObjectIcon : public Icon
 {
   Q_OBJECT
@@ -67,6 +76,22 @@ protected:
   void mouseDoubleClickEvent(QMouseEvent *);
 };
 
+/*
+ * Tab widget icons with double click disabled.
+ */
+class DefaultObjectIcon : public ObjectIcon
+{
+public:
+  explicit DefaultObjectIcon(std::shared_ptr<Object>& object,
+                             QWidget* parent = 0);
+
+protected:
+  void mouseDoubleClickEvent(QMouseEvent *) {}
+};
+
+/*
+ * Special icon for Filters.
+ */
 class FilterIcon : public ObjectIcon
 {
 public:
@@ -74,6 +99,9 @@ public:
                       QWidget* parent = 0);
 };
 
+/*
+ * Base class for statement icons (Object or Log)
+ */
 class StatementIcon : public Icon
 {
   Q_OBJECT
@@ -85,9 +113,16 @@ public:
   virtual void remove_icon(Icon* icon);
 
 private:
+  /*
+   * Calculate where to insert the new icon based on its position relative to the others.
+   */
   int get_index(Icon* icon);
 };
 
+/*
+ * Icon for ObjectStatements.
+ * Holds ObjectIcons.
+ */
 class ObjectStatementIcon : public StatementIcon
 {
   Q_OBJECT
@@ -107,6 +142,9 @@ protected:
   void mouseDoubleClickEvent(QMouseEvent *) {}
 };
 
+/*
+ * Special icon created when an ObjectStatementIcon is copied.
+ */
 class ObjectStatementIconCopy : public ObjectStatementIcon
 {
 public:
@@ -116,6 +154,10 @@ public:
   void add_icon(Icon *) {}
 };
 
+/*
+ * Icon for LogStatements.
+ * Holds ObjectStatementIcons.
+ */
 class LogStatementIcon : public StatementIcon
 {
   Q_OBJECT
@@ -134,6 +176,9 @@ protected:
 };
 
 
+/*
+ * Special icon used in the Scene widget for deleting icons.
+ */
 class DeleteIcon : public QWidget
 {
   Q_OBJECT

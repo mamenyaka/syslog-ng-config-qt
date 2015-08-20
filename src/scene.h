@@ -35,6 +35,9 @@ class ObjectStatementIcon;
 class ObjectStatementIconCopy;
 class LogStatementIcon;
 
+/*
+ * Widget for displaying all the icons that make up the config.
+ */
 class Scene : public QWidget
 {
   Q_OBJECT
@@ -50,6 +53,9 @@ public:
   ObjectStatementIconCopy* add_object_statement_copy(std::shared_ptr<ObjectStatement>& new_object_statement, const QPoint& pos);
   LogStatementIcon* add_log_statement(std::shared_ptr<LogStatement>& new_log_statement, const QPoint& pos);
 
+  /*
+   * Connected to File > New, this method deletes all icons.
+   */
   void reset();
 
 protected:
@@ -61,11 +67,25 @@ protected:
   QSize sizeHint() const;
 
 private:
-  void add_icon(Icon* icon, const QPoint& pos);
+  /*
+   * Connected to each Icon's press signal.
+   */
   void pressed(Icon* icon);
+
+  /*
+   * Connected to each Icon's release signal.
+   */
   void released(Icon* icon);
 
-  void delete_copies(const std::string& name);
+  /*
+   * Adds the newly created icon to the widget and sets up it's connections.
+   */
+  void add_icon(Icon* icon, const QPoint& pos);
+
+  /*
+   * When deleting an ObjectStatementIcon, make sure that all it's copies are also deleted.
+   */
+  void delete_copies(const std::string& id);
 
   ObjectStatementIcon* select_nearest_object_statement_icon(const QPoint& pos) const;
   LogStatementIcon* select_nearest_log_statement_icon(const QPoint& pos) const;

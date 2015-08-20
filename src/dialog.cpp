@@ -65,7 +65,7 @@ int Dialog::exec()
 
 void Dialog::accept()
 {
-  if (set_object_options())
+  if (set_object_options())  // dialog remains open if there are empty required options
   {
     for (std::unique_ptr<Option>& option : object.get_options())
     {
@@ -125,8 +125,7 @@ bool Dialog::set_object_options()
   for (std::unique_ptr<Option>& option : object.get_options())
   {
     QGroupBox* groupBox = *it++;
-
-    const bool valid = option->set_option(groupBox);
+    bool valid = option->set_option(groupBox);
 
     if (!valid)
     {

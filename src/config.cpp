@@ -25,6 +25,7 @@
 #include <yaml-cpp/yaml.h>
 #include <map>
 
+// Typelist and TypeAt from the Loki library, described in Alexandrescu's Modern C++ Design book
 template <class T, class U>
 struct Typelist
 {
@@ -99,10 +100,11 @@ Config::Config(const std::string& dir_name)
             });
 
   const Options& options_global = static_cast<const Options&>(get_default_object("global", "options"));
+  global_options = std::make_unique<GlobalOptions>(options_global);
+
+  // some objects have tls or value-pairs options, which are creted from separate yaml files and need to be set after
   const Options& options_tls = static_cast<const Options&>(get_default_object("tls", "options"));
   const Options& options_value_pairs = static_cast<const Options&>(get_default_object("value-pairs", "options"));
-
-  global_options = std::make_unique<GlobalOptions>(options_global);
 
   for (std::unique_ptr<const Object>& object : default_objects)
   {
@@ -127,6 +129,8 @@ Config::Config(const std::string& dir_name)
 
 Config::~Config()
 {
+  // if not implemented, the program segfaults at exit when the shared_ptr's deleters are called,
+  // accessing resources from the already deleted Config object
   deleted = true;
 }
 
@@ -215,6 +219,7 @@ void Config::parse_yaml(const std::string& file_name)
   const std::string type = yaml_object["type"].as<std::string>();
   const std::string description = yaml_object["description"].as<std::string>();
 
+  // Template Meta Programming magic
   std::map<std::string, void*> create_object_map {
     {"source", create_object<ObjectType::SOURCE>(name, description)},
     {"destination", create_object<ObjectType::DESTINATION>(name, description)},

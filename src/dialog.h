@@ -28,6 +28,9 @@ namespace Ui {
 }
 class Object;
 
+/*
+ * Custom QDialog class for setting Object options.
+ */
 class Dialog : public QDialog
 {
   Q_OBJECT
@@ -47,8 +50,22 @@ public slots:
   void reject();
 
 private:
+  /*
+   * Fills the dialog with line edits, spinboxes, comboboxes, checkboxes.
+   * Called only once in constructor.
+   */
   void create_form();
+
+  /*
+   * Display the current value of the Object's options.
+   * Called at dialog exec and when RestoreDefaults is pressed.
+   */
   void set_form_values();
+
+  /*
+   * @return: true if all required options are set, false otherwise.
+   * Called when OK is pressed.
+   */
   bool set_object_options();
 
   // non copyable

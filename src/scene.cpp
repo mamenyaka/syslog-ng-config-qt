@@ -98,6 +98,9 @@ void Scene::reset()
   updateGeometry();
 }
 
+/*
+ * Responsible for making ObjectStatementIcon copies and removing icons from their parent StatementIcons.
+ */
 void Scene::pressed(Icon* icon)
 {
   DeleteIcon* deleteIcon = findChild<DeleteIcon*>();
@@ -106,6 +109,7 @@ void Scene::pressed(Icon* icon)
 
   icon->raise();
 
+  // make copies
   ObjectStatementIcon* statement_icon = dynamic_cast<ObjectStatementIcon*>(icon);
   if (statement_icon &&
     QApplication::queryKeyboardModifiers() == Qt::ControlModifier)
@@ -116,6 +120,7 @@ void Scene::pressed(Icon* icon)
     return;
   }
 
+  // icons not belonging to this widget are the ones in StatementIcons
   if (icon->parent() != this)
   {
     QPoint pos = icon->parentWidget()->mapTo(this, icon->pos());
@@ -124,28 +129,33 @@ void Scene::pressed(Icon* icon)
     icon->setParent(this);
     icon->move(pos);
     icon->show();
-    icon->grabMouse();
+    icon->grabMouse();  // workaround, because sometimes when clicking on the edge of an icon, the icon gets stuck
   }
 }
 
+/*
+ * Responsible for deleting icons and also for addig icons to statement icons.
+ */
 void Scene::released(Icon* icon)
 {
-  icon->releaseMouse();
+  icon->releaseMouse();  // necessary, because of the workaround
 
   DeleteIcon* deleteIcon = findChild<DeleteIcon*>();
   deleteIcon->hide();
 
+  // if icons inside StatementIcons break loose (hopefully never), this prevents them from getting deleted
   if (icon->parent() != this)
   {
     return;
   }
 
+  // delete icons
   if (icon->geometry().intersects(deleteIcon->geometry()))
   {
     ObjectStatementIcon* statement_icon = dynamic_cast<ObjectStatementIcon*>(icon);
     if (statement_icon && !dynamic_cast<ObjectStatementIconCopy*>(icon))
     {
-      delete_copies(statement_icon->get_object_statement()->get_name());
+      delete_copies(statement_icon->get_object_statement()->get_id());
     }
 
     icon->deleteLater();
@@ -154,6 +164,7 @@ void Scene::released(Icon* icon)
     return;
   }
 
+  // add icons to the corresponding StatementIcon
   QPoint pos = icon->pos() + QPoint(icon->width()/2, icon->height()/2);
   StatementIcon* statement_icon = nullptr;
 
@@ -176,7 +187,7 @@ void Scene::delete_copies(const std::string& name)
 {
   for (ObjectStatementIconCopy* copy : findChildren<ObjectStatementIconCopy*>())
   {
-    if (copy->get_object_statement()->get_name() != name)
+    if (copy->get_object_statement()->get_id() != name)
     {
       continue;
     }
@@ -228,6 +239,10 @@ void Scene::dropEvent(QDropEvent* event)
   }
 }
 
+/*
+ * The widget is inside a QScrollArea.
+ * The size is calculated based on the positions of the icons.
+ */
 QSize Scene::sizeHint() const
 {
   return childrenRegion().united(QRect(0, 0, 1, 1)).boundingRect().size();

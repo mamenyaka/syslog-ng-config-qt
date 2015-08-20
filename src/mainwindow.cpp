@@ -52,7 +52,7 @@ MainWindow::MainWindow(QWidget* parent) :
 
   setupConnections();
 
-  ui->actionLogStatement->trigger();
+  ui->actionLogStatement->trigger();  // the Scene widget has a LogStatement by default
 }
 
 MainWindow::~MainWindow()
@@ -62,7 +62,8 @@ MainWindow::~MainWindow()
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-  if (last_saved == QString::fromStdString(config.to_string()))
+  // Check if the configuration has changed since the last save
+  if (last_saved_config == QString::fromStdString(config.to_string()))
   {
     event->accept();
   }
@@ -109,13 +110,14 @@ void MainWindow::setupConnections()
       return;
     }
 
-    last_saved = QString::fromStdString(config.to_string());
+    last_saved_config = QString::fromStdString(config.to_string());
 
     QTextStream out(&file);
-    out << last_saved;
+    out << last_saved_config;
 
     file.close();
 
+    // check config file syntax with the "syslog-ng -s -f FILE" command
     QProcess* process = new QProcess(this);
     process->start("syslog-ng", { "-s", "-f", file_name });
 
@@ -144,31 +146,41 @@ void MainWindow::setupConnections()
   });
 
   connect(ui->actionObjectStatement, &QAction::triggered, [&]() {
-    QString text = QInputDialog::getText(this, tr("Object statement"), tr("ID:"));
-    std::string name = text.toStdString();
-
-    if (name.empty())
+    bool ok;
+    QString text = QInputDialog::getText(this, tr("Object statement"), tr("ID:"), QLineEdit::Normal, QString(), &ok);
+    if (!ok)
     {
-      QMessageBox::warning(this, "Warning", "Name cannot be empty!");
       return;
     }
 
+    if (text.isEmpty())
+    {
+      QMessageBox::warning(this, "Warning", "ID cannot be empty!");
+      return;
+    }
+
+    std::string id = text.toStdString();
     for (const std::unique_ptr<ObjectStatement>& statement : config.get_object_statements())
     {
-      if (statement->get_name() == name)
+      if (statement->get_id() == id)
       {
-        QMessageBox::warning(this, "Warning", "Name already in use!");
+        QMessageBox::warning(this, "Warning", "ID already in use!");
         return;
       }
     }
 
-    ObjectStatement* new_object_statement = new ObjectStatement(name);
+    ObjectStatement* new_object_statement = new ObjectStatement(id);
 
     std::shared_ptr<ObjectStatement> object_statement = config.add_object_statement(new_object_statement);
     scene->add_object_statement(object_statement, QPoint(50, 150));
   });
 
   connect(ui->actionAbout, &QAction::triggered, [&]() {
-    QMessageBox::aboutQt(this);
+    QString about = ""
+    "Version 1.0\n\n"
+    "A standalone graphical tool for creating syslog-ng configuration files.\n\n"
+    "Copyright (C) 2015\n"
+    "Created by: Andras Mamenyak";
+    QMessageBox::about(this, "About", about);
   });
 }

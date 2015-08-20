@@ -31,6 +31,10 @@ class Options;
 
 enum class OptionType { STRING, NUMBER, LIST, SET, TLS, VALUEPAIRS };
 
+/*
+ * Abstract base class for every option.
+ * Values added later.
+ */
 class Option
 {
 protected:
@@ -89,6 +93,9 @@ public:
   virtual void restore_previous();
 };
 
+/*
+ * Represented by a QLineEdit.
+ */
 class StringOption : public SimpleOption<std::string, StringOption>
 {
 public:
@@ -105,6 +112,9 @@ public:
   bool set_option(QGroupBox* groupBox);
 };
 
+/*
+ * Represented by a QSpinBox.
+ */
 class NumberOption : public SimpleOption<int, NumberOption>
 {
 public:
@@ -121,7 +131,10 @@ public:
   bool set_option(QGroupBox* groupBox);
 };
 
-
+/*
+ * Secondary class for multiple choice options.
+ * Holds the available values to select from.
+ */
 class SelectOption
 {
 protected:
@@ -133,6 +146,10 @@ public:
   void add_value(const std::string& value);
 };
 
+/*
+ * Represented by a QComboBox.
+ * Holds the index of the selected value.
+ */
 class ListOption : public SimpleOption<int, ListOption>, public SelectOption
 {
 public:
@@ -149,9 +166,16 @@ public:
   bool set_option(QGroupBox* groupBox);
 
 private:
-  int find_index(const std::string& value) const;
+  /*
+   * @return: returns the position of the @value in the @values vector.
+   */
+  int find_value(const std::string& value) const;
 };
 
+/*
+ * Represented by multiple QCheckBoxes.
+ * The selected values are stored as a string.
+ */
 class SetOption : public SimpleOption<std::string, SetOption>, public SelectOption
 {
 public:
@@ -168,7 +192,10 @@ public:
   bool set_option(QGroupBox* groupBox);
 };
 
-
+/*
+ * Special class for options that contain other options.
+ * Represented by a button which opens a new dialog with options.
+ */
 template<class Derived>
 class ExternOption : public Option
 {
@@ -182,6 +209,10 @@ public:
 
   Option* clone() const;
 
+  /*
+   * New method, doesn't override anything from base class.
+   * Non-virtual template class method, needs to be defined in header file.
+   */
   void set_options(const Options& options)
   {
     this->options = std::make_unique<Options>(options);
@@ -203,6 +234,10 @@ public:
   bool set_option(QGroupBox *) { return true; }
 
 protected:
+  /*
+   * So the class remains abstract.
+   * Could be replaced by Template MP, but code gets too messy.
+   */
   virtual const std::string get_type() const = 0;
 };
 

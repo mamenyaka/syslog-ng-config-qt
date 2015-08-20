@@ -108,6 +108,7 @@ StringOption::StringOption(const std::string& name,
 
 const std::string StringOption::get_current_value() const
 {
+  // should be NumberOption, but spinbox wouldn't be suitable
   if (name == "perm" || name == "dir-perm")
   {
     return current_value;
@@ -221,13 +222,13 @@ const std::string ListOption::get_current_value() const
 
 void ListOption::set_default(const std::string& default_value)
 {
-  this->default_value = find_index(default_value);
+  this->default_value = find_value(default_value);
   set_current(default_value);
 }
 
 void ListOption::set_current(const std::string& current_value)
 {
-  this->current_value = find_index(current_value);
+  this->current_value = find_value(current_value);
   set_previous();
 }
 
@@ -255,7 +256,7 @@ bool ListOption::set_option(QGroupBox* groupBox)
   return !(is_required() && current_value == -1);
 }
 
-int ListOption::find_index(const std::string& value) const
+int ListOption::find_value(const std::string& value) const
 {
   auto it = std::find_if(values.cbegin(), values.cend(),
                          [&value](const std::string& v)->bool {
@@ -318,6 +319,7 @@ bool SetOption::set_option(QGroupBox* groupBox)
 {
   current_value.clear();
 
+  // quirks
   std::string sep = (name == "scope" ? " " : ", ");
 
   QList<QCheckBox*> checkBoxes = groupBox->findChildren<QCheckBox*>();

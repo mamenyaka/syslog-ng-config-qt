@@ -45,11 +45,11 @@ private:
   void set_option(Object& object, const std::string& option_name, const std::string& option_value);
 
   std::shared_ptr<Object> add_object(Config& config, const std::string& object_name, const std::string& object_type);
-  std::shared_ptr<ObjectStatement>& add_object_statement(Config& config, const std::string& object_statement_name);
+  std::shared_ptr<ObjectStatement>& add_object_statement(Config& config, const std::string& object_statement_id);
 
-  void add_object_statements_to_log_statement(Config& config, const std::vector<std::string>& object_statement_names);
+  void add_object_statements_to_log_statement(Config& config, const std::vector<std::string>& object_statement_ids);
 
-  std::shared_ptr<ObjectStatement>& find_object_statement(const std::string& name);
+  std::shared_ptr<ObjectStatement>& find_object_statement(const std::string& id);
 };
 
 #endif  // TEST_H

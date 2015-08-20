@@ -28,6 +28,10 @@
 class Object;
 class Icon;
 
+/*
+ * A widget for holding icons for the default syslog-ng Objects.
+ * The icons can be dragged.
+ */
 class Tab : public QWidget
 {
   Q_OBJECT
@@ -35,7 +39,10 @@ class Tab : public QWidget
 public:
   explicit Tab(QWidget* parent = 0);
 
-  void setupObjects(const std::string& type, const std::vector< std::unique_ptr<const Object> >& default_objects);
+  /*
+   * Create and insert DefaultObjectIcons into the widget's grid layout.
+   */
+  void setupObjects(const std::string& object_type, const std::vector< std::unique_ptr<const Object> >& default_objects);
 
 private:
   void drag(Icon* icon);
