@@ -18,8 +18,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef TEST_H
-#define TEST_H
+#ifndef DEFAULT_H
+#define DEFAULT_H
 
 #include <QObject>
 
@@ -52,4 +52,5 @@ private:
   std::shared_ptr<ObjectStatement>& find_object_statement(const std::string& id);
 };
 
-#endif  // TEST_H
+#endif  // DEFAULT_H
+

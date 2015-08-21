@@ -18,8 +18,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "test.h"
-#include "../src/config.h"
+#include "default.h"
+#include "config.h"
 
 #include <QString>
 #include <QFile>
@@ -42,7 +42,7 @@ void Test::is_config_valid_test_data()
 
 void Test::is_config_valid_test()
 {
-  Config config("../objects");
+  Config config("../../objects");
 
   Options& options_global = config.get_global_options();
   set_option(options_global, "stats-freq", "0");
@@ -340,3 +340,4 @@ std::shared_ptr<ObjectStatement>& Test::find_object_statement(const std::string&
 }
 
 QTEST_MAIN(Test)
+

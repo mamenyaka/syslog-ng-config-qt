@@ -2,7 +2,7 @@ name: nodejs
 type: source
 description: All messages generated internally by syslog-ng use this special source.
 options:
-  - ip:
+  - localip:
       type: string
       description: The IP address to bind to.
       default: 0.0.0.0
