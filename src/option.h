@@ -29,7 +29,7 @@ class QVBoxLayout;
 class QGroupBox;
 class Options;
 
-enum class OptionType { STRING, NUMBER, LIST, SET, TLS, VALUEPAIRS };
+enum class OptionType { STRING, NUMBER, LIST, SET, OPTIONS };
 
 /*
  * Abstract base class for every option.
@@ -196,10 +196,10 @@ public:
  * Special class for options that contain other options.
  * Represented by a button which opens a new dialog with options.
  */
-template<class Derived>
 class ExternOption : public Option
 {
 protected:
+  std::string type;
   std::unique_ptr<Options> options;
 
 public:
@@ -209,16 +209,11 @@ public:
 
   Option* clone() const;
 
-  /*
-   * New method, doesn't override anything from base class.
-   * Non-virtual template class method, needs to be defined in header file.
-   */
-  void set_options(const Options& options)
-  {
-    this->options = std::make_unique<Options>(options);
-  }
-
+  const std::string& get_type() const;
   const std::string get_current_value() const;
+
+  void set_type(const std::string& type);
+  void set_options(const Options& options);
 
   bool has_changed() const;
 
@@ -232,33 +227,6 @@ public:
   void create_form(QVBoxLayout* vboxLayout) const;
   void set_form_value(QGroupBox *) const {}
   bool set_option(QGroupBox *) { return true; }
-
-protected:
-  /*
-   * So the class remains abstract.
-   * Could be replaced by Template MP, but code gets too messy.
-   */
-  virtual const std::string get_type() const = 0;
-};
-
-class TLSOption : public ExternOption<TLSOption>
-{
-public:
-  TLSOption(const std::string& name,
-            const std::string& description);
-
-private:
-  const std::string get_type() const;
-};
-
-class ValuePairsOption : public ExternOption<ValuePairsOption>
-{
-public:
-  ValuePairsOption(const std::string& name,
-                   const std::string& description);
-
-private:
-  const std::string get_type() const;
 };
 
 #endif  // OPTION_H

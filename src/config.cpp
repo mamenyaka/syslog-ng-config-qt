@@ -47,8 +47,7 @@ typedef Typelist<StringOption,
   Typelist<NumberOption,
   Typelist<ListOption,
   Typelist<SetOption,
-  Typelist<TLSOption,
-  Typelist<ValuePairsOption, NullType> > > > > > OptionTypes;
+  Typelist<ExternOption, NullType> > > > > OptionTypes;
 
 template<class TList, unsigned int index>
 struct TypeAt;
@@ -77,6 +76,25 @@ Option* create_option(const std::string& name, const std::string& description)
   return new typename TypeAt<OptionTypes, (int) type>::Result(name, description);
 }
 
+std::map<std::string, Object*(*)(const std::string&, const std::string&)> create_object_map {
+  {"source", create_object<ObjectType::SOURCE>},
+  {"destination", create_object<ObjectType::DESTINATION>},
+  {"filter", create_object<ObjectType::FILTER>},
+  {"template", create_object<ObjectType::TEMPLATE>},
+  {"rewrite", create_object<ObjectType::REWRITE>},
+  {"parser", create_object<ObjectType::PARSER>},
+  {"options", create_object<ObjectType::OPTIONS>}
+};
+
+std::map<std::string, Option*(*)(const std::string&, const std::string&)> create_option_map {
+  {"string", create_option<OptionType::STRING>},
+  {"number", create_option<OptionType::NUMBER>},
+  {"list", create_option<OptionType::LIST>},
+  {"set", create_option<OptionType::SET>},
+  {"tls", create_option<OptionType::OPTIONS>},
+  {"value-pairs", create_option<OptionType::OPTIONS>}
+};
+
 
 Config::Config(const std::string& dir_name)
 {
@@ -103,25 +121,15 @@ Config::Config(const std::string& dir_name)
   global_options = std::make_unique<GlobalOptions>(options_global);
 
   // some objects have tls or value-pairs options, which are creted from separate yaml files and need to be set after
-  const Options& options_tls = static_cast<const Options&>(get_default_object("tls", "options"));
-  const Options& options_value_pairs = static_cast<const Options&>(get_default_object("value-pairs", "options"));
-
   for (std::unique_ptr<const Object>& object : default_objects)
   {
     for (const std::unique_ptr<Option>& option : object->get_options())
     {
-      TLSOption* tls_option = dynamic_cast<TLSOption*>(option.get());
-      if (tls_option)
+      ExternOption* extern_option = dynamic_cast<ExternOption*>(option.get());
+      if (extern_option)
       {
-        tls_option->set_options(options_tls);
-        continue;
-      }
-
-      ValuePairsOption* value_pairs_option = dynamic_cast<ValuePairsOption*>(option.get());
-      if (value_pairs_option)
-      {
-        value_pairs_option->set_options(options_value_pairs);
-        continue;
+        const Options& options = static_cast<const Options&>(get_default_object(extern_option->get_type(), "options"));
+        extern_option->set_options(options);
       }
     }
   }
@@ -219,18 +227,7 @@ void Config::parse_yaml(const std::string& file_name)
   const std::string type = yaml_object["type"].as<std::string>();
   const std::string description = yaml_object["description"].as<std::string>();
 
-  // Template Meta Programming magic
-  std::map<std::string, void*> create_object_map {
-    {"source", create_object<ObjectType::SOURCE>(name, description)},
-    {"destination", create_object<ObjectType::DESTINATION>(name, description)},
-    {"filter", create_object<ObjectType::FILTER>(name, description)},
-    {"template", create_object<ObjectType::TEMPLATE>(name, description)},
-    {"rewrite", create_object<ObjectType::REWRITE>(name, description)},
-    {"parser", create_object<ObjectType::PARSER>(name, description)},
-    {"options", create_object<ObjectType::OPTIONS>(name, description)}
-  };
-
-  Object* object = static_cast<Object*>(create_object_map[type]);
+  Object* object = static_cast<Object*>(create_object_map[type](name, description));
 
   const YAML::Node& options = yaml_object["options"];
   for (YAML::const_iterator option_it = options.begin(); option_it != options.end(); ++option_it)
@@ -242,22 +239,13 @@ void Config::parse_yaml(const std::string& file_name)
     const std::string type = yaml_option["type"].as<std::string>();
     const std::string description = yaml_option["description"].as<std::string>();
 
-    std::map<std::string, void*> create_option_map {
-      {"string", create_option<OptionType::STRING>(name, description)},
-      {"number", create_option<OptionType::NUMBER>(name, description)},
-      {"list", create_option<OptionType::LIST>(name, description)},
-      {"set", create_option<OptionType::SET>(name, description)},
-      {"tls", create_option<OptionType::TLS>(name, description)},
-      {"value-pairs", create_option<OptionType::VALUEPAIRS>(name, description)}
-    };
-
-    Option* option = static_cast<Option*>(create_option_map[type]);
+    Option* option = static_cast<Option*>(create_option_map[type](name, description));
 
     const YAML::Node& values = yaml_option["values"];
     for (YAML::const_iterator value_it = values.begin(); value_it != values.end(); ++value_it)
     {
       const std::string value = value_it->as<std::string>();
-      dynamic_cast<SelectOption*>(option)->add_value(value);
+      dynamic_cast<SelectOption*>(option)->add_value(value);  // not static_cast, because multiple inheritance
     }
 
     if (yaml_option["default"])
@@ -268,6 +256,12 @@ void Config::parse_yaml(const std::string& file_name)
     if (yaml_option["required"])
     {
       option->set_required(yaml_option["required"].as<bool>());
+    }
+
+    ExternOption* extern_option = dynamic_cast<ExternOption*>(option);
+    if (extern_option)
+    {
+      extern_option->set_type(type);
     }
 
     object->add_option(option);

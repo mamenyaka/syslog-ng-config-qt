@@ -336,30 +336,28 @@ bool SetOption::set_option(QGroupBox* groupBox)
 }
 
 
-template<class Derived>
-ExternOption<Derived>::ExternOption(const std::string& name,
-                                    const std::string& description) :
+ExternOption::ExternOption(const std::string& name,
+                           const std::string& description) :
   Option(name, description)
 {}
 
-template<class Derived>
-ExternOption<Derived>::ExternOption(const ExternOption& other) :
-  Option(other)
+ExternOption::ExternOption(const ExternOption& other) :
+  Option(other),
+  type(other.type),
+  options(static_cast<Options*>(other.options->clone()))
+{}
+
+Option* ExternOption::clone() const
 {
-  if (other.options.get())
-  {
-    options = std::make_unique<Options>(*other.options);
-  }
+  return new ExternOption(static_cast<const ExternOption&>(*this));
 }
 
-template<class Derived>
-Option* ExternOption<Derived>::clone() const
+const std::string& ExternOption::get_type() const
 {
-  return new Derived(static_cast<const Derived&>(*this));
+  return type;
 }
 
-template<class Derived>
-const std::string ExternOption<Derived>::get_current_value() const
+const std::string ExternOption::get_current_value() const
 {
   std::string config;
 
@@ -378,8 +376,17 @@ const std::string ExternOption<Derived>::get_current_value() const
   return config;
 }
 
-template<class Derived>
-bool ExternOption<Derived>::has_changed() const
+void ExternOption::set_type(const std::string& type)
+{
+  this->type = type;
+}
+
+void ExternOption::set_options(const Options& options)
+{
+  this->options = std::make_unique<Options>(options);
+}
+
+bool ExternOption::has_changed() const
 {
   for (const std::unique_ptr<Option>& option : options->get_options())
   {
@@ -392,8 +399,7 @@ bool ExternOption<Derived>::has_changed() const
   return false;
 }
 
-template<class Derived>
-void ExternOption<Derived>::set_previous()
+void ExternOption::set_previous()
 {
   for (std::unique_ptr<Option>& option : options->get_options())
   {
@@ -401,8 +407,7 @@ void ExternOption<Derived>::set_previous()
   }
 }
 
-template<class Derived>
-void ExternOption<Derived>::restore_default()
+void ExternOption::restore_default()
 {
   for (std::unique_ptr<Option>& option : options->get_options())
   {
@@ -410,8 +415,7 @@ void ExternOption<Derived>::restore_default()
   }
 }
 
-template<class Derived>
-void ExternOption<Derived>::restore_previous()
+void ExternOption::restore_previous()
 {
   for (std::unique_ptr<Option>& option : options->get_options())
   {
@@ -419,34 +423,11 @@ void ExternOption<Derived>::restore_previous()
   }
 }
 
-template<class Derived>
-void ExternOption<Derived>::create_form(QVBoxLayout* vboxLayout) const
+void ExternOption::create_form(QVBoxLayout* vboxLayout) const
 {
-  QPushButton* button = new QPushButton(QString::fromStdString("set " + get_type() + " options"));
+  QPushButton* button = new QPushButton(QString::fromStdString("set " + type + " options"));
   vboxLayout->addWidget(button);
 
   Dialog* dialog = new Dialog(*options, vboxLayout->parentWidget());
   QObject::connect(button, &QPushButton::clicked, dialog, &Dialog::exec);
-}
-
-
-TLSOption::TLSOption(const std::string& name,
-                     const std::string& description) :
-  ExternOption(name, description)
-{}
-
-const std::string TLSOption::get_type() const
-{
-  return "TLS";
-}
-
-
-ValuePairsOption::ValuePairsOption(const std::string& name,
-                                   const std::string& description) :
-  ExternOption(name, description)
-{}
-
-const std::string ValuePairsOption::get_type() const
-{
-  return "value-pairs";
 }

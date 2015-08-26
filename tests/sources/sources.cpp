@@ -127,7 +127,7 @@ void Test::is_config_valid_test()
                            [](std::unique_ptr<Option>& option)->bool {
                              return option->get_name() == "tls";
                            });
-    TLSOption* tls = dynamic_cast<TLSOption*>(it->get());
+    ExternOption* tls = dynamic_cast<ExternOption*>(it->get());
     tls->set_options(options);
 
     s_syslog->add_object(syslog, 0);
