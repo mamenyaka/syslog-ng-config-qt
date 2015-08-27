@@ -53,6 +53,7 @@ MainWindow::MainWindow(QWidget* parent) :
   setupConnections();
 
   ui->actionLogStatement->trigger();  // the Scene widget has a LogStatement by default
+  last_saved_config = QString::fromStdString(config.to_string());  // empty config contains version information
 }
 
 MainWindow::~MainWindow()
