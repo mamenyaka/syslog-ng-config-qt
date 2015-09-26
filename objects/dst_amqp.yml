@@ -17,8 +17,8 @@ options:
   - exchange-type:
       type: list
       description: The type of the AMQP exchange.
-      values: [direct, fanout, topic, header]
-      default: header
+      values: [direct, fanout, topic, headers]
+      default: fanout
   - host:
       type: string
       description: The hostname or IP address of the AMQP server.

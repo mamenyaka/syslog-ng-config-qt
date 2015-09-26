@@ -3,8 +3,9 @@ type: destination
 description: Publishe messages using the Simple (or Streaming) Text Oriented Message Protocol.
 options:
   - ack:
-      type: string
+      type: list
       description: Request the STOMP server to acknowledge the receipt of the messages.
+      values: [yes, no]
       default: no
   - body:
       type: string
