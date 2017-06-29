@@ -1,9 +1,6 @@
 # syslog-ng-config-qt
 A standalone graphical tool for creating syslog-ng configuration files
 
-![Design]
-(http://kepfeltoltes.hu/150819/syslog-ng-config_www.kepfeltoltes.hu_.png)
-
 # Prerequisites
 - Qt5
 - yaml-cpp
